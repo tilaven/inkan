@@ -1,0 +1,9 @@
+---
+/** Replaces the empty SidebarBottom slot: a link to the company handbook under the navigation. */
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<p class="sidebar-note">Not sure where a decision belongs? Read the <a href={`${base}/handbook/`}>handbook</a>.</p>
+
+<style>
+  .sidebar-note { margin: 1rem 0 0; padding-top: 1rem; border-top: 1px solid var(--inkan-border); font-size: var(--inkan-text-xs); color: var(--inkan-fg-muted); }
+</style>

@@ -1,0 +1,7 @@
+name: "Checkout"
+description: "Cart, pricing and the order funnel. Records live in the checkout service repo."
+ink: g
+motif: ticker
+icon: coin
+owners: [jules]
+order: 25

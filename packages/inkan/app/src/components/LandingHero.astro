@@ -1,0 +1,55 @@
+---
+/**
+ * The landing's hero: eyebrow, display title, lede, the config's action buttons and the four stats.
+ * Overridable (`components.LandingHero`); the page passes the computed numbers in.
+ * "Review overdue" counts decided records whose next scheduled review is in the past, the same
+ * rule as /reviews/, and links there. It is recounted in the browser from the due dates so the
+ * static page never goes stale; the build-time count shows with JS off.
+ */
+import PageHead from './PageHead.astro';
+import { actionClass, titleAccent } from '../lib/home';
+import { url } from '../lib/decisions';
+import { t } from '../lib/i18n';
+
+interface Props {
+  title: string;
+  eyebrow: string;
+  lede: string;
+  actions: { text: string; link: string; variant?: string }[];
+  /** The numbers; absent when 'stats' is not among the landing sections. `reviewDates` are the due dates behind `overdue`. */
+  stats?: { decisions: number; teams: number; inForce: number; overdue: number; reviewDates: string[] };
+}
+
+const { title, eyebrow, lede, actions, stats } = Astro.props;
+const link = (l: string) => (/^[a-z]+:/.test(l) ? l : url(l));
+---
+
+<PageHead title={title} accent={titleAccent(title)} eyebrow={eyebrow} lede={lede}>
+  {
+    actions.length > 0 && (
+      <p class="actions">
+        {actions.map((a) => (
+          <a class:list={['btn', actionClass(a.variant)]} href={link(a.link)}>
+            {a.text}
+          </a>
+        ))}
+      </p>
+    )
+  }
+  {
+    stats && (
+      <div class="stats">
+        <div class="stat"><b>{stats.decisions}</b><span>{t('landing.statDecisions')}</span></div>
+        <div class="stat"><b>{stats.teams}</b><span>{t('landing.statTeams')}</span></div>
+        <div class="stat"><b>{stats.inForce}</b><span>{t('landing.statInForce')}</span></div>
+        <a class="stat hot" href={url('reviews/')}><b data-review-dates={stats.reviewDates.join(',')}>{stats.overdue}</b><span>{t('landing.statOverdue')}</span></a>
+      </div>
+    )
+  }
+</PageHead>
+
+<script>
+  import { overdueCount } from '../lib/dates';
+  const el = document.querySelector<HTMLElement>('[data-review-dates]');
+  if (el) el.textContent = String(overdueCount((el.dataset.reviewDates ?? '').split(',').filter(Boolean)));
+</script>

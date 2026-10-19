@@ -1,0 +1,40 @@
+---
+import { statuses } from '../lib/config';
+import { glyphFor, stickerFor } from '../lib/stickers';
+
+interface Props {
+  status: string;
+  /** CSS length, e.g. `24px`. Defaults to the `--s` set by the surrounding CSS. */
+  size?: string;
+  /** Adds a visually hidden status label for screen readers. */
+  label?: boolean;
+  class?: string;
+}
+
+const { status, size, label = false, class: className } = Astro.props;
+const info = statuses[status] as { label?: string; sticker?: string; color?: string } | undefined;
+const text = info?.label ?? status;
+const sticker = stickerFor(status, info?.sticker);
+const style = [size && `--s:${size}`, !sticker && info?.color && `--fill:${info.color}`].filter(Boolean).join(';');
+---
+
+<span
+  class:list={['stk', sticker ? `stk--${sticker}` : 'stk--custom', className]}
+  data-status={status}
+  style={style || undefined}
+  title={text}
+>
+  <i class="stk__cut"></i>
+  {
+    sticker === 'superseded' ? (
+      <>
+        <i class="stk__fill stk__fill--back" />
+        <i class="stk__fill stk__fill--front" />
+      </>
+    ) : (
+      <i class="stk__fill" />
+    )
+  }
+  <svg class="stk__glyph" viewBox="0 0 72 72" aria-hidden="true" set:html={glyphFor(sticker, text)} />
+  {label && <span class="sr-only">{text}</span>}
+</span>

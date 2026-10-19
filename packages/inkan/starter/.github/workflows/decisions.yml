@@ -1,0 +1,65 @@
+# Checks and builds every pull request (broken references or invalid front matter fail the job)
+# and publishes main to GitHub Pages (Settings → Pages → Source: GitHub Actions).
+name: Decisions site
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for "Last updated"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx inkan check # broken links, duplicate numbers, unknown statuses … as PR annotations
+      - run: npm run build
+        env:
+          # Project sites live under /<repo>/. Remove for a custom domain.
+          BASE_PATH: /${{ github.event.repository.name }}
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: dist
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  # Posts newly accepted records to Slack or Teams. Add the webhook as a repository secret
+  # (Settings → Secrets and variables → Actions); without one the job only lists the changes.
+  notify:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # compares with the commit before the push
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx inkan notify
+        env:
+          BASE_PATH: /${{ github.event.repository.name }} # same as the build, so links point at the right pages
+          INKAN_SLACK_WEBHOOK: ${{ secrets.INKAN_SLACK_WEBHOOK }}
+          INKAN_TEAMS_WEBHOOK: ${{ secrets.INKAN_TEAMS_WEBHOOK }}

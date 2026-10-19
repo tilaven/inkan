@@ -1,0 +1,122 @@
+---
+/**
+ * Every Markdown file in the content folder, and every Markdown page in `pagesDir`, becomes a page at the same path.
+ * A project's `index.md` or `README.md` is the intro of its team page (`[project]/index.astro`), not a page of its own.
+ */
+import { render } from 'astro:content';
+import mdxComponents from 'virtual:inkan/mdx-components';
+import Docs from '../layouts/Docs.astro';
+import RecordCard from 'virtual:inkan/components/RecordCard';
+import RecordHeader from 'virtual:inkan/components/RecordHeader';
+import RecordHistory from 'virtual:inkan/components/RecordHistory';
+import RecordFooter from 'virtual:inkan/components/RecordFooter';
+import Comments from '../components/Comments.astro';
+import ReviewPins from '../comments/ReviewPins.astro';
+import RecordTop from 'virtual:inkan/components/RecordTop';
+import RecordBottom from 'virtual:inkan/components/RecordBottom';
+import { docTypes, site } from '../lib/config';
+import { editProvider, editUrl, getAllProjects, projectHref, getDocs, getPeople, getProjectStyles, projectStyle, lastUpdated, statusInfo, toDecision, url, type DocEntry } from '../lib/decisions';
+import { introOf } from '../lib/team';
+import { providerName } from '../lib/links';
+import { markdownUrl } from '../lib/markdown';
+import { t } from '../lib/i18n';
+import { getNav, pad, prevNext, type Crumb } from '../lib/nav';
+import { pagePaths, type PageEntry } from '../lib/pages';
+import { ogUrl } from '../lib/og-data';
+
+export async function getStaticPaths() {
+  const docs = (await getDocs()).filter((d) => !introOf(d.id));
+  return [...docs.map((entry) => ({ params: { slug: entry.id }, props: { entry } })), ...(await pagePaths())];
+}
+
+const { entry } = Astro.props as { entry: DocEntry | PageEntry };
+const d = entry.collection === 'docs' ? toDecision(entry) : null;
+const { Content, headings } = await render(entry);
+const project = d ? (await getAllProjects()).find((p) => p.id === d.project) : undefined;
+const projectName = project?.name ?? d?.project ?? '';
+const styles = await getProjectStyles();
+const ink = project ? `ink-${(styles.get(project.id) ?? projectStyle(project.id)).ink}` : undefined;
+const { group, prev, next } = prevNext(await getNav(), Astro.url.pathname);
+const edit = editUrl(entry);
+const updated = lastUpdated(entry);
+const record = d?.type ? d : null;
+const cardProject = record && (styles.get(record.project) ?? projectStyle(record.project));
+const people = record ? await getPeople() : undefined;
+
+/** What the search index knows about a record, one element per key: ids as metadata, labels as filters. */
+const facets = record
+  ? ([
+      ['project', record.project],
+      ['type', docTypes[record.type!].label],
+      ['status', statusInfo(record.status)?.label ?? record.status ?? ''],
+      ...record.tags.map((t) => ['tag', t]),
+    ].filter(([, v]) => v) as [string, string][])
+  : [];
+const meta = record
+  ? ([
+      ['title', record.title],
+      ['ref', record.ref],
+      ['projectName', projectName],
+      ['project', record.project],
+      ['type', docTypes[record.type!].label],
+      ['status', record.status],
+    ].filter(([, v]) => v) as [string, string][])
+  : [];
+
+const crumbs: Crumb[] = [{ label: site.title, href: url('/') }];
+if (project) crumbs.push({ label: projectName, href: projectHref(project.id) });
+if (record) crumbs.push({ label: docTypes[record.type!].label }, { label: record.number !== null ? pad(record.number) : record.title });
+else crumbs.push({ label: entry.data.title });
+---
+
+{
+  record ? (
+    <Docs title={record.ref ? `${pad(record.number)} ${record.title}` : record.title} description={record.description} image={ogUrl(record.id)} crumbs={crumbs} headings={headings} status={record.status} ink={ink}>
+      <div data-pagefind-body>
+        <div hidden data-pagefind-ignore>
+          {meta.map(([k, v]) => <span data-pagefind-meta={k}>{v}</span>)}
+          {facets.map(([k, v]) => <span data-pagefind-filter={k}>{v}</span>)}
+        </div>
+        <RecordTop d={record} />
+        <RecordHeader d={record} project={{ id: record.project, name: projectName }} />
+        <div class="prose">
+          <Content components={mdxComponents} />
+        </div>
+        <ReviewPins d={record} />
+        <RecordBottom d={record} />
+      </div>
+      <RecordHistory d={record} />
+      <RecordFooter d={record} />
+      <Comments d={record} />
+      {(prev || next) && (
+        <nav class="pager" aria-label={t('page.moreFrom', { project: projectName, group: group?.label ?? '' })} data-pagefind-ignore>
+          {prev ? <a href={prev.href}><span>← {projectName} {group?.label}</span><b>{prev.number} {prev.title}</b></a> : <span />}
+          {next && <a href={next.href}><span>{projectName} {group?.label} →</span><b>{next.number} {next.title}</b></a>}
+        </nav>
+      )}
+      <Fragment slot="rail">
+        <RecordCard decision={record} project={cardProject} people={people} flippable width={240} />
+      </Fragment>
+      <div class="rail__sec" slot="rail-end">
+        <h2 class="rail__h">{t('page.machineReadable')}</h2>
+        <div class="rail__links">
+          <a href={markdownUrl(record)}>{record.id}.md <span aria-hidden="true">↗</span></a>
+          <a href={url('decisions.json')}>decisions.json <span aria-hidden="true">↗</span></a>
+          <a href={url('llms.txt')}>llms.txt <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </Docs>
+  ) : (
+    <Docs title={entry.data.title} description={entry.data.description} crumbs={crumbs} headings={headings} head eyebrow={project ? projectName : t('page.eyebrow')} lede={entry.data.description} ink={ink}>
+      <div class="prose prose--page" data-pagefind-body>
+        <Content components={mdxComponents} />
+      </div>
+      {(edit || updated) && (
+        <footer class="docfoot" data-pagefind-ignore>
+          {edit && <a class="pill" href={edit}>{t('page.editOn', { provider: providerName(editProvider(entry)) })}</a>}
+          {updated && <span>{t('page.lastUpdated')} <time datetime={updated.toISOString()}>{updated.toISOString().slice(0, 10)}</time></span>}
+        </footer>
+      )}
+    </Docs>
+  )
+}

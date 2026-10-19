@@ -1,0 +1,161 @@
+---
+/**
+ * The site's one search entry point: a header button and ⌘K / Ctrl K open a palette whose results come from the
+ * configured provider (`virtual:inkan/search`). Arrow keys move the active hit, Enter opens it, Escape closes.
+ */
+import config from 'virtual:inkan/config';
+import Icon from './Icon.astro';
+import StatusSticker from './StatusSticker.astro';
+import { t } from '../lib/i18n';
+import { getAllProjects, getDecisions, getProjectStyles, projectStyle } from '../lib/decisions';
+
+const enabled = config.search.enabled;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+
+const projects = enabled ? await getAllProjects() : [];
+const styles = enabled ? await getProjectStyles() : new Map();
+const recent = enabled
+  ? (await getDecisions()).slice(0, 7).map((d) => ({
+      url: d.href,
+      title: d.title,
+      excerpt: d.description ?? '',
+      status: d.status ?? '',
+      project: projects.find((p) => p.id === d.project)?.name ?? d.project,
+      type: d.type ?? '',
+      ref: d.ref ?? '',
+      ink: (styles.get(d.project) ?? projectStyle(d.project)).ink,
+    }))
+  : [];
+const names = Object.fromEntries(projects.map((p) => [p.id, { name: p.name, ink: (styles.get(p.id) ?? projectStyle(p.id)).ink }]));
+const statusLabels = Object.fromEntries(Object.entries(config.statuses).map(([id, s]) => [id, s.label]));
+---
+
+{
+  enabled && (
+    <>
+      <button class="pal-trigger" type="button" id="search" data-pal-open aria-haspopup="dialog">
+        <Icon name="search" size="1.1rem" />
+        <span class="pal-trigger__text">{t('search.trigger')}</span>
+        <kbd class="pal-trigger__key" data-pal-key>Ctrl K</kbd>
+      </button>
+
+      <dialog class="pal" aria-label={t('search.label')} data-pal data-base={base} data-limit={config.search.maxResults} data-projects={JSON.stringify(names)} data-statuses={JSON.stringify(statusLabels)} data-recent={JSON.stringify(recent)}>
+        <div class="pal__box">
+          <div class="pal__in">
+            <Icon name="search" size="1.15rem" />
+            <input
+              type="text"
+              placeholder={t('search.placeholder')}
+              aria-label={t('search.label')}
+              autocomplete="off"
+              spellcheck="false"
+              role="combobox"
+              aria-expanded="false"
+              aria-controls="pal-list"
+              aria-autocomplete="list"
+              data-pal-input
+            />
+            <kbd aria-hidden="true">esc</kbd>
+            <button class="pal__close" type="button" aria-label={t('search.close')} data-pal-close>
+              <Icon name="x" size="1.2rem" />
+            </button>
+          </div>
+          <div class="pal__list" id="pal-list" role="listbox" aria-label={t('search.results')} tabindex="-1" data-pal-list></div>
+          <p class="pal__empty" data-pal-msg hidden></p>
+          <div class="pal__foot">
+            <span class="pal__hint">{t('search.hintMove')}</span>
+            <span class="pal__hint">{t('search.hintOpen')}</span>
+            <span data-pal-count />
+          </div>
+          <span class="pal-sr" role="status" data-pal-live></span>
+        </div>
+        {Object.keys(config.statuses).map((status) => (
+          <template data-pal-sticker={status}>
+            <StatusSticker status={status} />
+          </template>
+        ))}
+      </dialog>
+    </>
+  )
+}
+
+<script>
+  import { setupSearch } from '../lib/search-client';
+
+  const dialog = document.querySelector<HTMLDialogElement>('dialog[data-pal]');
+  if (dialog) setupSearch(dialog);
+</script>
+
+<style is:global>
+  .pal-trigger {
+    display: flex; align-items: center; gap: 0.6rem; width: 100%; min-height: 2.4rem; padding: 0 0.75rem;
+    border: 1.5px solid var(--inkan-rule-strong); border-radius: var(--inkan-radius-pill); background: var(--inkan-surface);
+    color: var(--inkan-fg-3); font: 500 0.8rem/1 var(--inkan-font-mono); cursor: pointer;
+  }
+  .pal-trigger:hover { color: var(--inkan-fg); }
+  .pal-trigger__text { flex: 1; text-align: left; }
+  .pal-trigger__key { font-size: 0.7rem; }
+  @media (max-width: 720px) {
+    .pal-trigger { width: 2.4rem; padding: 0; justify-content: center; }
+    .pal-trigger__key { display: none; }
+    .pal-trigger__text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  }
+
+  .pal {
+    position: fixed; inset: 0; width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 12vh 16px 16px;
+    border: 0; background: color-mix(in srgb, #05060a 62%, transparent); backdrop-filter: blur(3px);
+    color: var(--inkan-fg); overflow: hidden; justify-items: center; align-items: start;
+  }
+  .pal[open] { display: grid; }
+  .pal::backdrop { background: none; }
+  .pal__box {
+    width: min(680px, 100%); background: var(--inkan-bg); border: 1.5px solid var(--inkan-rule-strong); border-radius: 10px;
+    box-shadow: 10px 12px 0 0 color-mix(in srgb, var(--inkan-fg) 22%, transparent); overflow: hidden;
+  }
+  .pal__in { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1.5px solid var(--inkan-rule-strong); }
+  .pal__in svg { flex: none; }
+  .pal__in input {
+    flex: 1; min-width: 0; min-height: 32px; border: 0; background: transparent; color: var(--inkan-fg);
+    font: 500 1.0625rem/1.2 var(--inkan-font-mono);
+  }
+  .pal__in input::placeholder { color: var(--inkan-fg-3); opacity: 1; }
+  .pal__close { display: none; appearance: none; border: 0; background: transparent; color: var(--inkan-fg); padding: 6px; cursor: pointer; }
+  .pal__list { max-height: min(56vh, 480px); overflow: auto; padding: 8px; }
+  .pal__empty { margin: 0; padding: 18px 12px; color: var(--inkan-fg-3); font: 500 .8125rem/1.5 var(--inkan-font-mono); }
+  .pal__empty code { color: var(--inkan-fg); }
+  .hit {
+    display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+    padding: 10px 12px; border-radius: 6px; cursor: pointer; text-decoration: none; color: inherit;
+  }
+  .hit[aria-selected='true'] { background: color-mix(in srgb, var(--ink) 26%, transparent); box-shadow: inset 0 0 0 1.5px var(--ink); }
+  .hit[aria-selected='true'] :is(.hit__meta, small, .hit__id) { color: var(--inkan-fg-2); }
+  @media (forced-colors: active) {
+    .hit[aria-selected='true'] { forced-color-adjust: none; background: Highlight; color: HighlightText; outline: 2px solid Highlight; outline-offset: -2px; }
+    .hit[aria-selected='true'] :is(.hit__meta, small, .hit__id) { color: HighlightText; }
+  }
+  .hit .stk { --s: 28px; }
+  .hit b { display: block; font: 700 .90625rem/1.25 var(--inkan-font-text); }
+  .hit__meta { display: block; margin-top: 2px; font: 700 .625rem/1.3 var(--inkan-font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--inkan-fg-3); }
+  .hit small {
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; margin-top: 3px;
+    font: 500 .6875rem/1.4 var(--inkan-font-mono); color: var(--inkan-fg-3);
+  }
+  .hit__id { font: 700 .6875rem/1 var(--inkan-font-mono); color: var(--inkan-fg-3); white-space: nowrap; }
+  .pal mark { background: var(--inkan-ink-y); color: #0a0d17; border-radius: 2px; padding: 0 2px; }
+  .pal__foot {
+    display: flex; gap: 16px; padding: 10px 16px; border-top: 1.5px dashed var(--inkan-rule);
+    font: 500 .65625rem/1 var(--inkan-font-mono); letter-spacing: 0.05em; color: var(--inkan-fg-3); text-transform: uppercase;
+  }
+  .pal-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  @media (max-width: 720px) {
+    .pal { padding: 0; }
+    .pal__box { width: 100%; height: 100%; border: 0; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; }
+    .pal__list { flex: 1; max-height: none; }
+    .pal__in kbd { display: none; }
+    .pal__close { display: grid; }
+    .pal__hint { display: none; }
+    .hit { grid-template-columns: 30px minmax(0, 1fr); }
+    .hit__id { display: none; }
+  }
+</style>

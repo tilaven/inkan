@@ -1,0 +1,219 @@
+---
+import Page from '../layouts/Page.astro';
+import RecordCard from 'virtual:inkan/components/RecordCard';
+import StatusSticker from '../components/StatusSticker.astro';
+import Icon from '../components/Icon.astro';
+import { docTypes, statuses } from '../lib/config';
+import {
+  allFields,
+  countBy,
+  formatDate,
+  getAllProjects,
+  getDecisions,
+  getPeople,
+  getProjectStyles,
+  person,
+  projectStyle,
+  type Decision,
+} from '../lib/decisions';
+import { pad4 } from '../lib/card';
+import { recordText, type FieldSpec } from '../lib/list';
+import { CHIP_TYPES, filterValues, formatValue, type Field } from '../../../lib/fields.mjs';
+import { t, yesNo } from '../lib/i18n';
+
+/** Chips shown per group before "+N more". */
+const CHIP_LIMIT = 10;
+/** Cards rendered in the HTML; the rest wait in `<template>` chunks the script mounts on demand. */
+const EAGER_CARDS = 120;
+const CHUNK = 60;
+
+const decisions = await getDecisions();
+const styles = await getProjectStyles();
+const people = await getPeople();
+const styleOf = (id: string) => styles.get(id) ?? projectStyle(id);
+
+const count = (pick: (d: Decision) => string[]) => {
+  const counts = new Map(countBy(decisions.flatMap(pick)));
+  return (value: string) => counts.get(value) ?? 0;
+};
+const byProject = count((d) => [d.project]);
+const byType = count((d) => (d.type ? [d.type] : []));
+const byStatus = count((d) => (d.status ? [d.status] : []));
+const byAuthor = count((d) => d.authors);
+
+const projects = (await getAllProjects()).map((p) => styleOf(p.id));
+const used = new Set(decisions.flatMap((d) => d.authors));
+const authors = [...[...people.keys()].filter((h) => used.has(h)), ...[...used].filter((h) => !people.has(h))].map((h) => person(people, h));
+const tags = countBy(decisions.flatMap((d) => d.tags));
+
+/** Filterable custom fields that at least one record sets. */
+const fields = allFields().filter((f) => f.filter !== false && f.type !== 'url' && decisions.some((d) => d.fields[f.name] !== undefined));
+const kindOf = (f: Field): FieldSpec['kind'] => (CHIP_TYPES.includes(f.type) ? 'chips' : 'range');
+const specs: FieldSpec[] = fields.map((f) => ({ name: f.name, kind: kindOf(f) }));
+const columns = allFields().filter((f) => f.column && decisions.some((d) => d.fields[f.name] !== undefined));
+const chipLabel = (f: Field, v: string) => (f.type === 'boolean' ? (v === 'true' ? yesNo.yes : yesNo.no) : v);
+/** Values of a chip field with counts: enum values in their defined order, booleans Yes then No, the rest by count. */
+const chipValues = (f: Field): [string, number][] => {
+  const counts = countBy(decisions.flatMap((d) => filterValues(d.fields[f.name])));
+  const order = f.type === 'enum' ? f.values : f.type === 'boolean' ? ['true', 'false'] : undefined;
+  if (!order) return counts;
+  const n = new Map(counts);
+  return order.map((v) => [v, n.get(v) ?? 0]);
+};
+/** Filter data of a record's fields, as the client script reads it (chip fields as strings). */
+const fieldData = (d: Decision) =>
+  Object.fromEntries(fields.filter((f) => d.fields[f.name] !== undefined).map((f) => [f.name, kindOf(f) === 'chips' ? filterValues(d.fields[f.name]) : d.fields[f.name]]));
+
+interface Chip { value: string; label: string; n: number }
+type Group = { label: string; attrs: Record<string, string | undefined> } & ({ chips: Chip[] } | { range: Field });
+/** The tag group and one group per field, rendered alike. */
+const groups: Group[] = [
+  { label: t('filters.tag'), attrs: { 'data-facet': 'tag' }, chips: tags.map(([t, n]) => ({ value: t, label: `#${t}`, n })) },
+  ...fields.map((f): Group => {
+    const attrs = { 'data-field': f.name, 'data-kind': kindOf(f), 'data-unit': f.unit };
+    return kindOf(f) === 'chips' ? { label: f.label, attrs, chips: chipValues(f).map(([v, n]) => ({ value: v, label: chipLabel(f, v), n })) } : { label: f.label, attrs, range: f };
+  }),
+];
+
+const eager = decisions.slice(0, EAGER_CARDS);
+const chunks: Decision[][] = [];
+for (let i = EAGER_CARDS; i < decisions.length; i += CHUNK) chunks.push(decisions.slice(i, i + CHUNK));
+
+const typeLabel = (type: string | null) => (type && Object.hasOwn(docTypes, type) ? docTypes[type].label : type ?? '');
+---
+
+<Page
+  title={t('filters.title')}
+  accent={t('filters.titleAccent')}
+  eyebrow={t('filters.eyebrow')}
+  lede={t(fields.length ? 'filters.ledeFields' : 'filters.lede')}
+>
+  <div class="filters" id="filters" data-fields={JSON.stringify(specs)}>
+    <div class="filters__bar">
+      <label class="qin"><span>{t('filters.filter')}</span><input id="qin" type="search" name="q" placeholder={t('filters.placeholder')} autocomplete="off" /></label>
+      <button class="ftoggle" type="button" id="ftoggle" aria-expanded="false" aria-controls="facets">
+        {t('filters.filters')}<em id="fcount" hidden></em><Icon name="chevron-right" size="14px" class="ftoggle__chev" />
+      </button>
+    </div>
+    <div class="filters__active" id="factive" role="group" aria-label={t('filters.active')} hidden></div>
+    <div class="facets" id="facets" hidden>
+      <div class="fgroup" data-facet="project" role="group" aria-label={t('filters.team')}>
+        <b aria-hidden="true">{t('filters.team')}</b>
+        {projects.map((p) => <button class="chip" type="button" data-value={p.id} aria-pressed="false"><i class={`dot ink-${p.ink}`}></i>{p.name}<em>{byProject(p.id)}</em></button>)}
+      </div>
+      <div class="fgroup" data-facet="type" role="group" aria-label={t('filters.type')}>
+        <b aria-hidden="true">{t('filters.type')}</b>
+        {Object.entries(docTypes).map(([id, type]) => <button class="chip" type="button" data-value={id} aria-pressed="false">{type.label}<em>{byType(id)}</em></button>)}
+      </div>
+      <div class="fgroup" data-facet="status" role="group" aria-label={t('filters.status')}>
+        <b aria-hidden="true">{t('filters.status')}</b>
+        {Object.entries(statuses).map(([id, s]) => (
+          <button class="chip" type="button" data-value={id} aria-pressed="false">
+            <span class="chip__stk"><StatusSticker status={id} /></span>{s.label}<em>{byStatus(id)}</em>
+          </button>
+        ))}
+      </div>
+      <div class="fgroup" data-facet="author" role="group" aria-label={t('filters.author')}>
+        <b aria-hidden="true">{t('filters.author')}</b>
+        {authors.map((a) => (
+          <button class="chip" type="button" data-value={a.handle} aria-pressed="false" title={a.name}>
+            <i class="av" aria-hidden="true">{a.initials}</i>{a.name.split(' ')[0]}<em>{byAuthor(a.handle)}</em>
+          </button>
+        ))}
+      </div>
+      {groups.map((g) => (
+        <div class:list={['fgroup', { 'fgroup--range': 'range' in g }]} {...g.attrs} role="group" aria-label={g.label}>
+          <b aria-hidden="true">{g.label}</b>
+          {'chips' in g ? (
+            <>
+              {g.chips.map((c, i) => <button class="chip" type="button" data-value={c.value} aria-pressed="false" data-extra={i >= CHIP_LIMIT || undefined} hidden={i >= CHIP_LIMIT || undefined}>{c.label}<em>{c.n}</em></button>)}
+              {g.chips.length > CHIP_LIMIT && (
+                <button class="chip chip--more" type="button" aria-expanded="false" aria-label={t('filters.moreLabel', { count: g.chips.length - CHIP_LIMIT, group: g.label })}>
+                  {t('filters.more', { count: g.chips.length - CHIP_LIMIT })}
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <label class="rin"><span class="sr-only">{t('filters.min', { field: g.label })}</span><input type={g.range.type === 'date' ? 'date' : 'number'} data-bound="min" step="any" placeholder={t('filters.minPlaceholder')} autocomplete="off" /></label>
+              <span class="rin__to" aria-hidden="true">–</span>
+              <label class="rin"><span class="sr-only">{t('filters.max', { field: g.label })}</span><input type={g.range.type === 'date' ? 'date' : 'number'} data-bound="max" step="any" placeholder={t('filters.maxPlaceholder')} autocomplete="off" /></label>
+              {g.range.unit && <span class="rin__unit">{g.range.unit}</span>}
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div class="listbar">
+    <span id="count" role="status" aria-live="polite">{t('filters.count', { count: decisions.length })}</span>
+    <button class="linkbtn" type="button" id="reset" hidden>{t('filters.clear')}</button>
+    <span class="seg2" role="group" aria-label={t('filters.layout')}>
+      <button type="button" data-view="cards" aria-pressed="true">{t('filters.cards')}</button>
+      <button type="button" data-view="table" aria-pressed="false">{t('filters.table')}</button>
+    </span>
+  </div>
+
+  <ul class:list={['cards', { 'cards--partial': chunks.length > 0 }]} id="cards" role="list">
+    {eager.map((d) => (
+      <li class="cell" data-id={d.id}><RecordCard decision={d} project={styleOf(d.project)} people={people} width={176} /></li>
+    ))}
+    {chunks.map((chunk) => (
+      <template class="cards__chunk" data-ids={chunk.map((d) => d.id).join('\n')}>
+        {chunk.map((d) => (
+          <li class="cell" data-id={d.id}><RecordCard decision={d} project={styleOf(d.project)} people={people} width={176} /></li>
+        ))}
+      </template>
+    ))}
+    {chunks.length > 0 && <li class="cards__sentinel" id="cards-sentinel" aria-hidden="true"></li>}
+  </ul>
+
+  <div class="table-scroll" data-scroll-label={t('filters.tableScroll')}>
+    <table class="table" id="tbl" hidden>
+      <caption class="sr-only">{t('filters.tableCaption')}</caption>
+      <thead>
+        <tr><th><span class="sr-only">{t('filters.status')}</span></th><th>{t('filters.colId')}</th><th>{t('filters.colTitle')}</th><th>{t('filters.team')}</th><th>{t('filters.colDate')}</th>{columns.map((f) => <th class="fv">{f.label}</th>)}<th class="tg">{t('filters.colTags')}</th></tr>
+      </thead>
+      <tbody>
+        {decisions.map((d) => {
+          const p = styleOf(d.project);
+          return (
+            <tr
+              data-id={d.id}
+              data-project={d.project}
+              data-type={d.type ?? ''}
+              data-status={d.status ?? ''}
+              data-authors={JSON.stringify(d.authors)}
+              data-tags={JSON.stringify(d.tags)}
+              data-fields={JSON.stringify(fieldData(d))}
+              data-text={recordText(d)}
+            >
+              <td>{d.status && <StatusSticker status={d.status} label />}</td>
+              <td class="id">{pad4(d.number)}</td>
+              <td class="t"><a href={d.href}>{d.title}</a></td>
+              <td><i class={`dot ink-${p.ink}`}></i>{p.name} {typeLabel(d.type)}</td>
+              <td class="d">{d.date && <time datetime={d.date.toISOString()}>{formatDate(d.date)}</time>}</td>
+              {columns.map((f) => {
+                const v = d.fields[f.name];
+                return <td class="fv">{f.type === 'url' && typeof v === 'string' ? <a href={v} rel="noopener">{v.replace(/^https?:\/\//, '')}</a> : formatValue(f, v, yesNo)}</td>;
+              })}
+              <td class="tg">{d.tags.map((t) => `#${t}`).join(' ')}</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+  <p class="empty" id="empty" hidden>{t('filters.empty')}</p>
+</Page>
+
+<style is:global>
+  ul.cards { margin: 0; list-style: none; }
+</style>
+
+<script>
+  import { setupFilters } from '../lib/filters-client';
+
+  setupFilters();
+</script>

@@ -1,0 +1,125 @@
+---
+/**
+ * Landing page. Hero text and buttons come from `landing` in inkan.config; `landing.sections`
+ * orders and filters the blocks below it ('stats' adds the numbers to the hero). An optional `_landing.md` in the
+ * content folder is the "content" section.
+ */
+import { getCollection, render } from 'astro:content';
+import mdxComponents from 'virtual:inkan/mdx-components';
+import LandingHero from 'virtual:inkan/components/LandingHero';
+import RecordCard from 'virtual:inkan/components/RecordCard';
+import Page from '../layouts/Page.astro';
+import Avatars from '../components/Avatars.astro';
+import Cover from '../components/Cover.astro';
+import { t } from '../lib/i18n';
+import Lock from '../components/Lock.astro';
+import { locked } from '../lib/auth';
+import { site } from '../lib/config';
+import { getAllProjects, getDecisions, getPeople, getProjectStyles, getReviews, projectHref, projectStyle } from '../lib/decisions';
+import { formatLongDate, overdueCount } from '../lib/dates';
+import { agentEndpoints, buildDate, isCurrent, reviewDueDates } from '../lib/home';
+import { landingFile } from '../lib/loaders';
+
+const landing = site.landing;
+const sections = landing.sections;
+const decisions = await getDecisions();
+const projects = await getAllProjects();
+const styles = await getProjectStyles();
+const people = await getPeople();
+// Astro warns about reading an empty collection, and most sites have no `_landing.md`.
+const extra = landingFile(process.env.INKAN_CONTENT_DIR!) ? (await getCollection('landing'))[0] : undefined;
+const Extra = extra ? (await render(extra)).Content : null;
+
+const built = buildDate();
+// The overdue count is relative to the build, as on /reviews/, not to the last commit; the browser recounts from its own clock.
+const today = new Date();
+const reviewDates = reviewDueDates(await getReviews());
+const stats = sections.includes('stats')
+  ? {
+      decisions: decisions.length,
+      teams: projects.length,
+      inForce: decisions.filter(isCurrent).length,
+      overdue: overdueCount(reviewDates, today),
+      reviewDates,
+    }
+  : undefined;
+const lede = `${t('landing.ledeCounts', { records: t('project.recordCount', { count: decisions.length }), teams: t('landing.teamCount', { count: projects.length }) })} ${landing.tagline ?? site.tagline}`;
+
+const teams = projects.map((p) => {
+  const records = decisions.filter((d) => d.project === p.id);
+  const style = styles.get(p.id) ?? projectStyle(p.id, p.name);
+  return { ...p, style, records, inForce: records.filter(isCurrent).length, coverId: records[0]?.id ?? p.id };
+});
+const latest = decisions.slice(0, 4);
+const endpoints = agentEndpoints();
+---
+
+<Page title={site.title} description={site.tagline} head={false}>
+  <LandingHero
+    title={landing.title ?? site.title}
+    eyebrow={t('landing.eyebrow', { date: formatLongDate(built) })}
+    lede={lede}
+    actions={landing.actions}
+    stats={stats}
+  />
+  {
+    sections.map((s) => (
+      <>
+        {s === 'projects' && (
+          <>
+            <div class="sec-h"><h2>{t('landing.teams')}</h2><span>{t('landing.teamsHint')}</span></div>
+            <div class="units">
+              {teams.map((team) => (
+                <a class:list={['unit', `ink-${team.style.ink}`]} href={projectHref(team.id)}>
+                  <div class="unit__bar"><Cover id={team.coverId} ink={team.style.ink} motif={team.style.motif} project={team.style.id} /></div>
+                  <h3>{locked(projectHref(team.id)) && <Lock class="unit__lock" />}{team.name}</h3>
+                  {team.data?.description && <p>{team.data.description}</p>}
+                  <div class="unit__meta">
+                    <span>{t('project.recordCount', { count: team.records.length })} · {t('project.inForce', { count: team.inForce })}</span>
+                    <Avatars handles={team.data?.owners ?? []} people={people} />
+                  </div>
+                </a>
+              ))}
+              <div class="unit unit--ghost">
+                <b>{t('landing.ghostTitle')}</b>
+                <p set:html={t('landing.ghostText', { file: '<code>_project.yml</code>' })} />
+              </div>
+            </div>
+          </>
+        )}
+        {s === 'latest' && latest.length > 0 && (
+          <>
+            <div class="sec-h"><h2>{t('landing.latest')}</h2><span>{t('landing.latestHint')}</span></div>
+            <ul class="latest" role="list">
+              {latest.map((d) => (
+                <li>
+                  <RecordCard decision={d} project={styles.get(d.project) ?? projectStyle(d.project)} people={people} width={196} />
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {s === 'content' && Extra && (
+          <>
+            <div class="sec-h"><h2>{t('landing.content')}</h2><span>{t('landing.contentHint')}</span></div>
+            <div class="prose prose--wide landing-prose"><Extra components={mdxComponents} /></div>
+          </>
+        )}
+        {s === 'agents' && (
+          <>
+            <div class="sec-h"><h2>{t('landing.agents')}</h2><span>{t('landing.agentsHint')}</span></div>
+            <ul class="endpoints">
+              {endpoints.map((e) => (
+                <li><a href={e.href}><code>{e.path}</code></a><span>{e.note}</span></li>
+              ))}
+            </ul>
+          </>
+        )}
+      </>
+    ))
+  }
+</Page>
+
+<style is:global>
+  ul.latest { margin: 0; padding: 0; list-style: none; }
+</style>

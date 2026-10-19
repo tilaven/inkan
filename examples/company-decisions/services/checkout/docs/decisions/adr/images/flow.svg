@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="120" viewBox="0 0 480 120" font-family="ui-monospace, monospace" font-size="13">
+  <rect x="10" y="40" width="110" height="40" fill="none" stroke="#1a1a1a" stroke-width="1.6"/>
+  <text x="65" y="65" text-anchor="middle" fill="#1a1a1a">Web / Mobile</text>
+  <path d="M120 60 H180" stroke="#1a1a1a" stroke-width="1.6"/>
+  <rect x="180" y="40" width="120" height="40" fill="none" stroke="#1a1a1a" stroke-width="1.6"/>
+  <text x="240" y="65" text-anchor="middle" fill="#1a1a1a">checkout</text>
+  <path d="M300 60 H360" stroke="#1a1a1a" stroke-width="1.6"/>
+  <rect x="360" y="40" width="110" height="40" fill="none" stroke="#1a1a1a" stroke-width="1.6"/>
+  <text x="415" y="65" text-anchor="middle" fill="#1a1a1a">payments</text>
+</svg>

@@ -1,0 +1,5 @@
+name: "CLI"
+description: "Install, scaffold, run and build a site from the command line."
+icon: settings
+owners: [tilaven]
+order: 10

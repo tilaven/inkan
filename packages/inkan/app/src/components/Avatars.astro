@@ -1,0 +1,47 @@
+---
+/** Stacked initials for a list of author handles, each ringed in the author's team ink. */
+import { getPeople, person, type Person } from '../lib/decisions';
+
+interface Props {
+  handles: string[];
+  /** Pre-resolved directory (from `getPeople()`), to avoid a lookup per card. */
+  people?: Map<string, Person>;
+  class?: string;
+}
+
+const { handles, class: className } = Astro.props;
+const people = Astro.props.people ?? (await getPeople());
+const list = handles.map((h) => person(people, h));
+const names = list.map((p) => p.name).join(', ');
+---
+
+{
+  list.length > 0 && (
+    <span class:list={['who', 'inkan-avatars', className]} role="img" aria-label={names}>
+      {list.map((p) => (
+        <i title={p.name} style={p.ink ? `--ink:var(--inkan-ink-${p.ink})` : undefined}>
+          {p.initials}
+        </i>
+      ))}
+    </span>
+  )
+}
+
+<style is:global>
+  /* `.who` is the shared author-row class; keep these rules low-specificity so page styles can override them. */
+  :where(.who) { display: inline-flex; }
+  :where(.who) i {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    margin-right: -3px;
+    font: 700 .625rem/1 var(--inkan-font-mono);
+    text-transform: uppercase;
+    font-style: normal;
+    background: var(--inkan-fg);
+    color: var(--inkan-bg);
+  }
+  .inkan-avatars i { box-shadow: 0 0 0 2px var(--inkan-surface), 0 0 0 3.5px var(--ink, transparent); }
+</style>

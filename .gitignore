@@ -1,0 +1,10 @@
+node_modules/
+dist/
+dist-protected/
+.astro/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+coverage/
+deploy/oauth2-proxy/.env

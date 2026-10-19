@@ -1,0 +1,30 @@
+{
+  "name": "inkan-monorepo",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "examples/*",
+    "docs"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w examples/company-decisions",
+    "build": "npm run build -w examples/company-decisions",
+    "test": "vitest run",
+    "typecheck": "tsc -p packages/inkan && INKAN_ROOT=examples/company-decisions astro check --root packages/inkan/app && astro check --root examples/company-decisions",
+    "test:e2e": "playwright test --project=\"e2e-*\"",
+    "test:visual": "playwright test --project=\"visual-*\"",
+    "test:visual:update": "playwright test --project=\"visual-*\" --update-snapshots",
+    "test:visual:docker": "sh scripts/visual-docker.sh test",
+    "test:visual:docker:update": "sh scripts/visual-docker.sh update",
+    "docs:dev": "npm run dev -w docs",
+    "docs:build": "npm run build -w docs"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.56.1",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}

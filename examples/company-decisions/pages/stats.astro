@@ -1,0 +1,14 @@
+---
+/** A custom page built with the package's wide layout and data helpers. */
+import Page from 'inkan/layouts/Page';
+import { countBy, getDecisions } from 'inkan/data';
+
+const decisions = await getDecisions();
+const byStatus = countBy(decisions.map((d) => d.status ?? 'none'));
+---
+<Page title="Records by status" accent="status" eyebrow="Custom page" lede="Live counts computed at build time.">
+  <table>
+    <thead><tr><th>Status</th><th>Records</th></tr></thead>
+    <tbody>{byStatus.map(([status, count]) => <tr><td>{status}</td><td>{count}</td></tr>)}</tbody>
+  </table>
+</Page>

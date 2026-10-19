@@ -1,0 +1,14 @@
+{
+  "name": "company-decisions",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "inkan dev",
+    "build": "inkan build",
+    "preview": "inkan preview",
+    "new": "inkan new"
+  },
+  "devDependencies": {
+    "inkan": "*"
+  }
+}

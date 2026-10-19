@@ -1,0 +1,140 @@
+---
+/** Archive navigation: brand, hub links, then every project with its records. */
+import StatusSticker from './StatusSticker.astro';
+import SidebarTop from 'virtual:inkan/components/SidebarTop';
+import SidebarBottom from 'virtual:inkan/components/SidebarBottom';
+import { logo } from 'virtual:inkan/assets';
+import defaultLogo from '../assets/mark.svg?url';
+import { site } from '../lib/config';
+import { url } from '../lib/decisions';
+import { resolveHref } from '../lib/links';
+import { t } from '../lib/i18n';
+import { getNav, isCurrent } from '../lib/nav';
+
+const nav = await getNav();
+const path = Astro.url.pathname;
+const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
+const hasCurrent = (p: (typeof nav.projects)[number]) =>
+  isCurrent(p.href, path) || p.pages.some((l) => isCurrent(l.href, path)) || p.groups.some((g) => g.items.some((l) => isCurrent(l.href, path)));
+const records = nav.projects.reduce((n, p) => n + p.count, 0);
+const files = records + nav.pages.length + nav.projects.reduce((n, p) => n + p.pages.length, 0);
+const extra = site.navigation.map((l) => ({ label: l.label, href: resolveHref(l.href) }));
+---
+
+<a class="side__brand" href={url('/')}>
+  <img src={logo ?? defaultLogo} alt="" width="32" height="32" />
+  <b>{site.title}</b>
+</a>
+<SidebarTop />
+<nav class="nav" aria-label={t('shell.archive')}>
+  {
+    nav.hub.map((l) => (
+      <a href={l.href} aria-current={current(l.href)}>
+        {l.label}
+        {l.count !== undefined && <span class="n">{l.count}</span>}
+      </a>
+    ))
+  }
+  {nav.pages.map((l) => <a href={l.href} aria-current={current(l.href)}>{l.title}</a>)}
+</nav>
+{
+  extra.length > 0 && (
+    <nav class="nav nav--links" aria-label={t('shell.links')}>
+      {extra.map((l) => <a href={l.href} aria-current={current(l.href)}>{l.label}</a>)}
+    </nav>
+  )
+}
+<nav class="tree" aria-label={t('shell.teamsNav')}>
+  {
+    nav.projects.map((p) => (
+      <section class={`ink-${p.ink}`} data-project={p.id} data-current={hasCurrent(p) ? '' : undefined} aria-labelledby={`tree-name-${p.id}`}>
+        <h2 class="tree__h">
+          <a href={p.href} id={`tree-name-${p.id}`} aria-current={current(p.href)}>{p.name}</a>
+          <button class="tree__tog" type="button" aria-expanded="true" aria-controls={`tree-${p.id}`} data-tree-toggle hidden>
+            <span aria-hidden="true">{p.count}</span>
+            <span class="sr-only">{t('shell.treeToggle', { count: p.count, name: p.name })}</span>
+          </button>
+          <span class="tree__n" data-tree-count>{p.count}</span>
+        </h2>
+        <div class="tree__body" id={`tree-${p.id}`}>
+          {p.pages.length > 0 && (
+            <ul>
+              {p.pages.map((l) => (
+                <li>
+                  <a class="rec rec--page" href={l.href} aria-current={current(l.href)}>
+                    <i></i><b></b><span>{l.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+          {p.groups.map((g) => (
+            <>
+              <h3 class="grp">{g.label}</h3>
+              <ul>
+                {g.items.map((r) => (
+                  <li>
+                    <a class="rec" href={r.href} aria-current={current(r.href)}>
+                      {r.status ? <StatusSticker status={r.status} label /> : <i></i>}
+                      <b>{r.number}</b>
+                      <span>{r.title}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ))}
+        </div>
+      </section>
+    ))
+  }
+</nav>
+<script is:inline>
+  // Collapsed projects are remembered under `inkan-side-closed` and applied before paint, so nothing jumps; the one
+  // holding the current page stays open. The module below only writes that key and takes the state from the DOM.
+  (() => {
+    let closed = [];
+    try { closed = JSON.parse(localStorage.getItem('inkan-side-closed') || '[]'); } catch {}
+    for (const sec of document.querySelectorAll('.tree [data-project]')) {
+      const open = 'current' in sec.dataset || !closed.includes(sec.dataset.project);
+      const button = sec.querySelector('[data-tree-toggle]');
+      button.hidden = false;
+      button.setAttribute('aria-expanded', String(open));
+      sec.querySelector('[data-tree-count]').hidden = true;
+      sec.querySelector('.tree__body').hidden = !open;
+    }
+  })();
+</script>
+<SidebarBottom />
+<div class="side__foot">{t('shell.sideRecords', { count: records })}<br />{t('shell.sideFiles', { count: files })}</div>
+
+<style is:global>
+  .tree ul { margin: 0; padding: 0; list-style: none; }
+</style>
+
+<script>
+  const KEY = 'inkan-side-closed';
+  const sections = [...document.querySelectorAll<HTMLElement>('.tree [data-project]')];
+  const remember = () => {
+    const closed = sections.filter((sec) => sec.querySelector<HTMLElement>('.tree__body')!.hidden).map((sec) => sec.dataset.project!);
+    try { localStorage.setItem(KEY, JSON.stringify(closed)); } catch {}
+  };
+  for (const sec of sections) {
+    const button = sec.querySelector<HTMLButtonElement>('[data-tree-toggle]')!;
+    const body = sec.querySelector<HTMLElement>('.tree__body')!;
+    button.addEventListener('click', () => {
+      const open = body.hidden;
+      body.hidden = !open;
+      button.setAttribute('aria-expanded', String(open));
+      remember();
+    });
+  }
+  // Bring the current item into view inside the sidebar only, without moving the page.
+  const side = document.getElementById('side');
+  const here = document.querySelector<HTMLElement>('.tree [aria-current="page"]');
+  if (side && here) {
+    const s = side.getBoundingClientRect();
+    const r = here.getBoundingClientRect();
+    if (r.top < s.top || r.bottom > s.bottom) side.scrollTop += r.top - s.top - s.height / 2;
+  }
+</script>

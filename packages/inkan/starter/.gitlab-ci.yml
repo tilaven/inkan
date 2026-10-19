@@ -1,0 +1,35 @@
+# Checks and builds merge requests and publishes the default branch to GitLab Pages.
+image: node:22
+
+variables:
+  GIT_DEPTH: 0 # full history for "Last updated"
+
+build:
+  script:
+    - npm install
+    - npx inkan check # broken links, duplicate numbers, unknown statuses …
+    - npm run build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+pages:
+  script:
+    - npm install
+    - npx inkan check
+    # Project pages live under /<project>/. Remove BASE_PATH for a custom domain.
+    - BASE_PATH="/$CI_PROJECT_NAME" npm run build
+    - mv dist public
+  artifacts:
+    paths: [public]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Posts newly accepted records to Slack or Teams once the site is live. Add INKAN_SLACK_WEBHOOK or
+# INKAN_TEAMS_WEBHOOK as a masked CI/CD variable; without one the job only lists the changes.
+notify:
+  needs: [pages]
+  script:
+    - npm install
+    - BASE_PATH="/$CI_PROJECT_NAME" npx inkan notify
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"

@@ -1,0 +1,7 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "include": ["inkan.config.ts", "plugins", "components", "pages"],
+  "compilerOptions": {
+    "types": ["astro/client"]
+  }
+}

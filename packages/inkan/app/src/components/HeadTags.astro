@@ -1,0 +1,5 @@
+---
+/** Extra <head> tags from `head` in the config and from plugins. */
+import { site } from '../lib/config';
+---
+{site.head.map(({ tag: Tag, attrs, content }) => <Tag {...attrs} set:html={content} />)}

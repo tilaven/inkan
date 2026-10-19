@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-label="Inkan mark: two overprinted cards and a ribbon">
+  <style>
+    .c { fill: #00AEEF; } .m, .y { mix-blend-mode: multiply; } .m { fill: #FF2D8F; } .y { fill: #FFE000; }
+    @media (prefers-color-scheme: dark) { .m, .y { mix-blend-mode: screen; } }
+  </style>
+  <rect class="c" x="3.5" y="4.5" width="14" height="31" rx="2.6" transform="rotate(-5 10.5 20)"/>
+  <rect class="m" x="22.5" y="4.5" width="14" height="31" rx="2.6" transform="rotate(5 29.5 20)"/>
+  <rect class="y" x="8" y="14" width="24" height="12.5" rx="2.4"/>
+</svg>

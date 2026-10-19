@@ -1,0 +1,177 @@
+---
+/** Head of an ADR/RFC: outlined number, status sticker, title, metadata and lineage. */
+import Lock from './Lock.astro';
+import StatusSticker from './StatusSticker.astro';
+import PageActions from 'virtual:inkan/components/PageActions';
+import { locked } from '../lib/auth';
+import { currentStatuses, docTypes, openStatuses } from '../lib/config';
+import { authorName, fieldsOf, filterHref, formatDate, getDecisions, projectHref, statusInfo, url, type Decision, type Field } from '../lib/decisions';
+import { initials } from '../lib/card';
+import { pad } from '../lib/nav';
+import { t, yesNo } from '../lib/i18n';
+import { REVIEW_MARK, REVIEW_TEXT, reviewText, reviewTitle } from '../lib/review-ui';
+import { normalizeRef } from '../lib/graph';
+import { CHIP_TYPES, formatValue } from '../../../lib/fields.mjs';
+
+interface Props {
+  d: Decision;
+  project: { id: string; name: string };
+}
+const { d, project } = Astro.props;
+const status = statusInfo(d.status);
+const all = await getDecisions();
+const people = (handles: string[]) => Promise.all(handles.map(async (h) => ({ handle: h, name: await authorName(h) })));
+const authors = await people(d.authors);
+const deciders = await people(d.deciders);
+const reviewers = await Promise.all(d.rfcReview.reviewers.map(async (r) => ({ ...r, name: await authorName(r.handle) })));
+const open = !!d.status && openStatuses.includes(d.status);
+const reviewBy = open ? (d.entry.data.reviewBy ?? undefined) : undefined;
+const foil = d.status && currentStatuses.includes(d.status);
+/** Marks a value that came from the repository's history rather than the front matter. */
+const inferred = (field: 'date' | 'authors') => (d.inferred.includes(field) ? { 'data-inferred': field, title: t('record.fromGit') } : {});
+const fromHistory = (field: 'date' | 'authors') => d.inferred.includes(field);
+
+/** Resolves `sre/adr/0001-x` (or a `.md` path) to a record. */
+const resolve = (id: string) => {
+  const clean = normalizeRef(id);
+  return all.find((x) => x.id === clean) ?? { href: url(`${clean}/`), title: clean, number: null, status: undefined };
+};
+const fields = fieldsOf(d.project).filter((f) => d.fields[f.name] !== undefined);
+/** Chip-filtered values link to the index filtered by them; booleans show Yes/No, numbers their unit. */
+const linked = (f: Field) => f.filter !== false && CHIP_TYPES.includes(f.type);
+const chipText = (f: Field, v: string) => (f.type === 'boolean' ? formatValue(f, v === 'true', yesNo) : v);
+const bare = (u: string) => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
+const relatedBack = all.filter((x) => x.related.includes(d.id) && !d.related.includes(x.id)).map((x) => x.id);
+const lineage = [
+  [t('record.supersedes'), d.supersedes],
+  [t('record.supersededBy'), d.supersededBy],
+  [t('record.related'), [...d.related, ...relatedBack]],
+].filter(([, ids]) => ids.length > 0) as [string, string[]][];
+const onGraph = lineage.some(([, ids]) => ids.some((id) => all.some((x) => x.id !== d.id && x.id === normalizeRef(id))));
+---
+
+<header class="rhead" data-sheen data-pagefind-ignore>
+  <p class="eyebrow">
+    <i></i>
+    <a href={projectHref(project.id)}>{project.name}</a>
+    {d.type && <> · <span>{docTypes[d.type].label}</span></>}
+    {locked(d.href) && <Lock />}
+  </p>
+  {d.number !== null && <div class:list={['rid', { 'is-foil': foil, 'is-gold': d.status === 'implemented' }]} aria-hidden="true">{pad(d.number)}</div>}
+  {d.status && <div class="rstk"><StatusSticker status={d.status} /></div>}
+  <h1 class="rtitle">
+    {d.number !== null && <span class="sr-only">{pad(d.number)}: </span>}{d.title}
+  </h1>
+  <dl class="rmeta">
+    {status && (
+      <div><dt>{t('record.status')}</dt><dd><a href={filterHref('status', d.status!)}>{status.label}</a></dd></div>
+    )}
+    {d.date && <div><dt>{t('record.date')}</dt><dd {...inferred('date')}><time datetime={formatDate(d.date)}>{formatDate(d.date)}</time>{fromHistory('date') && <small class="rmeta__src">{t('record.fromGitShort')}</small>}</dd></div>}
+    {reviewBy && (
+      <div><dt>{t('record.reviewBy')}</dt><dd><time datetime={formatDate(reviewBy)}>{formatDate(reviewBy)}</time> <span class="dtag" data-review-by={formatDate(reviewBy)} hidden></span></dd></div>
+    )}
+    {d.review && (
+      <div><dt>{t('record.nextReview')}</dt><dd><time datetime={d.review.due}>{d.review.due}</time> <span class="dtag" data-review-by={d.review.due} hidden></span></dd></div>
+    )}
+    {d.review?.reviewed && <div><dt>{t('record.reviewed')}</dt><dd><time datetime={d.review.reviewed}>{d.review.reviewed}</time></dd></div>}
+    {authors.length > 0 && (
+      <div><dt>{t('record.authors')}</dt><dd class="who2" {...inferred('authors')}>{authors.map((a) => <a class="who2" href={filterHref('author', a.handle)}><i aria-hidden="true">{initials(a.name)}</i>{a.name}</a>)}{fromHistory('authors') && <small class="rmeta__src">{t('record.fromGitShort')}</small>}</dd></div>
+    )}
+    {deciders.length > 0 && (
+      <div><dt>{t('record.deciders')}</dt><dd>{deciders.map((a, i) => <>{i > 0 && ', '}<a href={filterHref('author', a.handle)}>{a.name}</a></>)}</dd></div>
+    )}
+    {d.rfcReview.status !== 'none' && (
+      <div class="rmeta__wide rv" data-waiting-on={JSON.stringify(d.rfcReview.waitingOn)}>
+        <dt>{t('record.reviewers')}</dt>
+        <dd>
+          <p class={`rv__sum is-${d.rfcReview.status}`}>
+            <b>{reviewText(d.rfcReview)}</b>
+            <span class="rv__you" data-you hidden>{t('review.waitingOnYou')}</span>
+          </p>
+          <ul class="rv__list">
+            {reviewers.map((r) => (
+              <li class={`rv__item is-${r.state}`} title={reviewTitle(r)}>
+                <i aria-hidden="true">{REVIEW_MARK[r.state]}</i>
+                <a href={filterHref('author', r.handle)}>{r.name}</a>
+                <small>
+                  {REVIEW_TEXT[r.state]}
+                  {r.date && <> · <time datetime={r.date}>{r.date}</time></>}
+                  {r.note && <> · {r.note}</>}
+                </small>
+              </li>
+            ))}
+          </ul>
+        </dd>
+      </div>
+    )}
+    {fields.map((f) => {
+      const v = d.fields[f.name];
+      return (
+        <div>
+          <dt title={f.description}>{f.label}</dt>
+          <dd>
+            {f.type === 'url' ? <a href={String(v)} rel="noopener" target="_blank">{bare(String(v))}</a>
+              : f.type === 'date' ? <time datetime={String(v)}>{String(v)}</time>
+              : !linked(f) ? formatValue(f, v, yesNo)
+              : (Array.isArray(v) ? v : [String(v)]).map((x, i) => <>{i > 0 && ', '}<a href={filterHref(f.name, x)}>{chipText(f, x)}</a></>)}
+          </dd>
+        </div>
+      );
+    })}
+    {d.tags.length > 0 && (
+      <div class="rmeta__wide"><dt>{t('record.tags')}</dt><dd class="tags">{d.tags.map((tag) => <a class="tag" href={filterHref('tag', tag)}>#{tag}</a>)}</dd></div>
+    )}
+  </dl>
+  {lineage.length > 0 && (
+    <div class="lineage">
+      {lineage.map(([label, ids]) => (
+        <>
+          <em>{label}</em>
+          {ids.map(resolve).map((r) => (
+            <a href={r.href}>
+              {r.status && <StatusSticker status={r.status} label />}
+              {r.number !== null && pad(r.number)} {r.title}
+            </a>
+          ))}
+        </>
+      ))}
+      {onGraph && <a class="lineage__graph" href={url(`graph/?focus=${encodeURIComponent(d.id)}`)}>{t('record.onGraph')}</a>}
+    </div>
+  )}
+  <PageActions d={d} />
+</header>
+
+<script>
+  import { daysUntil } from '../lib/dates';
+  import { fillDueChip } from '../lib/due-chip';
+  import { watchWaiting } from '../lib/me';
+
+  watchWaiting();
+
+  // Review-by chip is computed from today's date so the static page never goes stale.
+  for (const el of document.querySelectorAll<HTMLElement>('[data-review-by]')) fillDueChip(el, daysUntil(el.dataset.reviewBy!));
+
+  // The foil number sweeps once when the page opens, then only follows the pointer.
+  const head = document.querySelector<HTMLElement>('[data-sheen]');
+  const rid = head?.querySelector<HTMLElement>('.rid.is-foil');
+  if (head && rid) {
+    const SWEEP_MS = 1600;
+    head.addEventListener('pointermove', (e) => {
+      const b = head.getBoundingClientRect();
+      rid.style.setProperty('--sheen', Math.min(1, Math.max(0, (e.clientX - b.left) / b.width)).toFixed(3));
+    });
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const t0 = performance.now();
+      const sweep = (now: number) => {
+        const p = Math.min(1, (now - t0) / SWEEP_MS);
+        rid.style.setProperty('--sheen', (0.5 - 0.5 * Math.cos(Math.PI * p)).toFixed(3));
+        if (p < 1) requestAnimationFrame(sweep);
+      };
+      requestAnimationFrame(sweep);
+    }
+  }
+</script>
+
+<style is:global>
+  .rmeta__src { margin-left: 6px; font: 600 .625rem/1 var(--inkan-font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--inkan-fg-3); }
+</style>

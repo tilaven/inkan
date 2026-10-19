@@ -1,0 +1,141 @@
+---
+/**
+ * GitLab has no embeddable comments widget: the server renders a link to the issue (or to a prefilled
+ * new one), and the browser enhances it with the comments read from the GitLab API where the project allows anonymous reads.
+ */
+import { t } from '../lib/i18n';
+import { newIssueUrl, parseDiscussionUrl, trimHost } from './gitlab';
+import type { CommentsProps } from './types';
+
+type Props = CommentsProps;
+const { d, options, discussion, title, pageUrl } = Astro.props;
+const host = trimHost(String(options.host ?? 'https://gitlab.com'));
+const project = String(options.project ?? '').replace(/^\/+|\/+$/g, '');
+const labels = Array.isArray(options.labels) ? options.labels.map(String) : [];
+const href = discussion ?? newIssueUrl({ host, project, title, pageUrl, labels });
+const label = discussion
+  ? parseDiscussionUrl(discussion, host)
+    ? t('comments.openOn', { provider: 'GitLab' })
+    : t('comments.open')
+  : t('comments.startOn', { provider: 'GitLab' });
+---
+
+<div class="gl" data-gitlab-comments data-host={host} data-project={project} data-ref={d.ref ?? ''} data-title={title} data-discussion={discussion ?? ''}>
+  <p class="gl__status" data-gitlab-status>
+    <a class="pill" href={href} rel="noopener">{label} <span aria-hidden="true">↗</span></a>
+  </p>
+</div>
+
+<style>
+  .gl { margin-top: 18px; max-width: 70ch; }
+  .gl :global(.gl__status) { margin: 0; font: 500 .8125rem/1.5 var(--inkan-font-text); color: var(--inkan-fg-2); }
+  .gl :global(.gl__status a:not(.pill)) { color: var(--inkan-fg); font-weight: 700; text-underline-offset: 3px; }
+  .gl :global(.gl__list) { margin: 16px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .gl :global(.gl__note) { display: grid; gap: 8px; padding: 14px 16px; border: 1.5px solid var(--inkan-rule-strong); border-radius: var(--inkan-radius-ui); }
+  .gl :global(.gl__meta) { display: flex; align-items: center; gap: 10px; font: 600 .6875rem/1 var(--inkan-font-mono); letter-spacing: .03em; color: var(--inkan-fg-3); }
+  .gl :global(.gl__meta a) { color: var(--inkan-fg); text-decoration: none; }
+  .gl :global(.gl__meta a:hover) { text-decoration: underline; }
+  .gl :global(.gl__meta time) { margin-left: auto; }
+  .gl :global(.gl__avatar) { width: 24px; height: 24px; border-radius: 50%; flex: none; background: var(--inkan-surface-2); }
+  .gl :global(.gl__body) { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 400 .9375rem/1.55 var(--inkan-font-text); color: var(--inkan-fg); }
+  .gl :global(.gl__reply) { margin: 18px 0 0; }
+</style>
+
+<script>
+  import { el } from '../lib/dom';
+  import { t } from '../lib/i18n';
+  import {
+    commentCount,
+    httpUrl,
+    isoDate,
+    notesUrl,
+    readNotes,
+    parseDiscussionUrl,
+    pickIssue,
+    searchUrl,
+    webUrl,
+    type GitLabIssue,
+    type GitLabNote,
+    type GitLabTarget,
+  } from './gitlab';
+
+  const root = document.querySelector<HTMLElement>('[data-gitlab-comments]');
+
+  const link = (href: string, text: string, className?: string) => {
+    const a = el('a', className, text);
+    a.href = href;
+    a.rel = 'noopener';
+    return a;
+  };
+
+  /** Matches the server-rendered pill: the arrow is decorative. */
+  const external = (href: string, text: string) => {
+    const a = link(href, `${text} `, 'pill');
+    const arrow = el('span', undefined, '↗');
+    arrow.setAttribute('aria-hidden', 'true');
+    a.append(arrow);
+    return a;
+  };
+
+  async function getJson<T>(url: string): Promise<T> {
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!res.ok) throw new Error(String(res.status));
+    return (await res.json()) as T;
+  }
+
+  async function findTarget(host: string, project: string, ref: string, title: string, discussion: string) {
+    const parsed = parseDiscussionUrl(discussion, host);
+    if (parsed) return { target: parsed, url: webUrl(host, parsed) };
+    const issues = await getJson<GitLabIssue[]>(searchUrl({ host, project, ref: ref || null, title }));
+    const issue = pickIssue(issues, { ref: ref || null, title });
+    if (!issue) return null;
+    const target: GitLabTarget = { kind: 'issues', project, iid: issue.iid };
+    return { target, url: httpUrl(issue.web_url) ?? webUrl(host, target) };
+  }
+
+  function renderNote(note: GitLabNote) {
+    const li = el('li', 'gl__note');
+    const meta = el('div', 'gl__meta');
+    const author = note.author ?? {};
+    const name = author.name || author.username || t('comments.unknownAuthor');
+    const avatar = httpUrl(author.avatarUrl);
+    if (avatar) {
+      const img = el('img', 'gl__avatar');
+      img.src = avatar;
+      img.alt = '';
+      img.width = 24;
+      img.height = 24;
+      img.loading = 'lazy';
+      meta.append(img);
+    }
+    const profile = httpUrl(author.webUrl);
+    meta.append(profile ? link(profile, name) : el('span', undefined, name));
+    const time = el('time', undefined, isoDate(note.createdAt));
+    time.dateTime = note.createdAt;
+    meta.append(time);
+    li.append(meta, el('p', 'gl__body', note.body));
+    return li;
+  }
+
+  async function enhance(root: HTMLElement) {
+    const { host = '', project = '', ref = '', title = '', discussion = '' } = root.dataset;
+    const found = await findTarget(host, project, ref, title, discussion);
+    if (!found) return;
+    const thread = readNotes(await getJson(notesUrl(host, found.target)), host);
+    if (!thread) return;
+    const { notes } = thread;
+    const url = httpUrl(thread.webUrl) ?? found.url;
+
+    const status = el('p', 'gl__status');
+    status.append(notes.length ? link(url, commentCount(notes.length, thread.more)) : commentCount(0));
+    const list = el('ol', 'gl__list');
+    list.setAttribute('role', 'list');
+    list.append(...notes.map(renderNote));
+    const reply = el('p', 'gl__reply');
+    reply.append(external(url, t('comments.replyOn', { provider: 'GitLab' })));
+
+    root.replaceChildren(status, ...(notes.length ? [list] : []), reply);
+  }
+
+  if (root) enhance(root).catch(() => undefined);
+</script>

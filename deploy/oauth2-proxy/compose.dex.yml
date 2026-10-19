@@ -1,0 +1,27 @@
+services:
+  oauth2-proxy:
+    environment:
+      OAUTH2_PROXY_PROVIDER: oidc
+      OAUTH2_PROXY_CLIENT_ID: inkan
+      OAUTH2_PROXY_CLIENT_SECRET: local-only-client-secret
+      OAUTH2_PROXY_COOKIE_SECRET: local-only-cookie-secret-32-byte
+      OAUTH2_PROXY_COOKIE_SECURE: "false"
+      OAUTH2_PROXY_EMAIL_DOMAINS: example.com
+      OAUTH2_PROXY_REDIRECT_URL: http://localhost:8080/oauth2/callback
+      OAUTH2_PROXY_OIDC_ISSUER_URL: http://localhost:5556/dex
+      OAUTH2_PROXY_SKIP_OIDC_DISCOVERY: "true"
+      OAUTH2_PROXY_LOGIN_URL: http://localhost:5556/dex/auth
+      OAUTH2_PROXY_REDEEM_URL: http://dex:5556/dex/token
+      OAUTH2_PROXY_OIDC_JWKS_URL: http://dex:5556/dex/keys
+      OAUTH2_PROXY_APPROVAL_PROMPT: auto
+    depends_on:
+      - dex
+
+  dex:
+    image: ghcr.io/dexidp/dex:v2.43.1
+    restart: unless-stopped
+    command: ["dex", "serve", "/etc/dex/config.yaml"]
+    ports:
+      - "127.0.0.1:5556:5556"
+    volumes:
+      - ./dex.yaml:/etc/dex/config.yaml:ro

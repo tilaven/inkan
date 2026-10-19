@@ -1,0 +1,5 @@
+name: "Deploying"
+description: "Static output, GitHub and GitLab Pages, Docker, sub-paths and access control."
+icon: cloud
+owners: [tilaven]
+order: 70

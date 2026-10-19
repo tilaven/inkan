@@ -1,0 +1,5 @@
+name: "Extending"
+description: "Plugins, component overrides, custom pages and the data API."
+icon: server
+owners: [tilaven]
+order: 50

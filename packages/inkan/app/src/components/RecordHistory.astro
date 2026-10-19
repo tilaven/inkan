@@ -1,0 +1,36 @@
+---
+/** Under a record: who changed its status and when, newest first, with a link to each commit's diff. */
+import StatusSticker from './StatusSticker.astro';
+import { filterHref, formatDate, getPeople, person, statusInfo, type Decision } from '../lib/decisions';
+import { t } from '../lib/i18n';
+
+interface Props {
+  d: Decision;
+}
+const { d } = Astro.props;
+const people = await getPeople();
+const rows = [...d.history].reverse().map((h) => {
+  const known = people.has(h.author);
+  return { ...h, label: h.status ? (statusInfo(h.status)?.label ?? h.status) : t('history.noStatus'), name: person(people, h.author).name, known };
+});
+---
+
+{rows.length > 0 && (
+  <section class="rhist" aria-labelledby="rhist-h" data-pagefind-ignore>
+    <h2 class="rhist__h" id="rhist-h">{t('history.title')} <span>{rows.length}</span></h2>
+    <ol class="rhist__list">
+      {rows.map((r) => (
+        <li>
+          <b class="rhist__status">{r.status && <StatusSticker status={r.status} size="22px" />}{r.label}</b>
+          <time datetime={formatDate(r.date)}>{formatDate(r.date)}</time>
+          <span class="rhist__who">{r.known ? <a href={filterHref('author', r.author)}>{r.name}</a> : r.name}</span>
+          {r.href ? (
+            <a class="rhist__commit" href={r.href}><code>{r.commit.slice(0, 7)}</code> <span aria-hidden="true">↗</span><span class="sr-only"> {t('history.commitDiff')}</span></a>
+          ) : (
+            <code class="rhist__commit">{r.commit.slice(0, 7)}</code>
+          )}
+        </li>
+      ))}
+    </ol>
+  </section>
+)}

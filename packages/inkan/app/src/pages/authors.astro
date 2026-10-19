@@ -1,0 +1,47 @@
+---
+import Page from '../layouts/Page.astro';
+import StatusSticker from '../components/StatusSticker.astro';
+import { filterHref, projectHref } from '../lib/decisions';
+import { t } from '../lib/i18n';
+import { getMembers } from '../lib/people';
+
+const members = await getMembers();
+---
+
+<Page title={t('people.title')} accent={t('people.accent')} eyebrow={t('people.eyebrow')} lede={t('people.lede')}>
+  <div class="members">
+    {
+      members.map((m) => (
+        <article class:list={['member', m.ink && `ink-${m.ink}`]}>
+          <div class="member__top">
+            <span class="avatar" aria-hidden="true">{m.avatar ? <img src={m.avatar} alt="" loading="lazy" /> : m.initials}</span>
+            <div>
+              <h2><a href={filterHref('author', m.handle)}>{m.name}</a></h2>
+              <p>
+                {m.teamProject ? <a href={projectHref(m.teamProject.id)}>{m.teamProject.name}</a> : m.team && <span>{m.team}</span>}
+                <span>
+                  {t('people.authored', { count: m.authored })} · {t('people.decided', { count: m.decided })}
+                </span>
+                {m.profile && (
+                  <a href={m.profile.href}>
+                    {m.profile.label}
+                  </a>
+                )}
+              </p>
+            </div>
+          </div>
+          <ul>
+            {m.records.map((d) => (
+              <li>
+                <a href={d.href}>
+                  {d.status && <StatusSticker status={d.status} size="20px" label />}
+                  <span>{d.title}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))
+    }
+  </div>
+</Page>

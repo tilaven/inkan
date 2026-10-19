@@ -1,0 +1,5 @@
+name: "Writing records"
+description: "Projects, record types, front matter, statuses and Markdown."
+icon: pencil
+owners: [tilaven]
+order: 20

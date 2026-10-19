@@ -1,0 +1,66 @@
+---
+/** One record under review: deadline, title, reviewers with their answers, and whose move it is. */
+import Avatars from './Avatars.astro';
+import StatusSticker from './StatusSticker.astro';
+import { docTypes } from '../lib/config';
+import { formatDate, person, statusInfo, type Decision, type Person, type ProjectStyle } from '../lib/decisions';
+import { pad4 } from '../lib/card';
+import { REVIEW_MARK, REVIEW_TEXT, reviewText, reviewTitle } from '../lib/review-ui';
+import { locale, t } from '../lib/i18n';
+
+interface Props {
+  d: Decision;
+  project: ProjectStyle;
+  people: Map<string, Person>;
+  /** A repeat of a row shown elsewhere on the page (hidden until the script reveals it). */
+  copy?: boolean;
+}
+const monthName = (m: number) => new Date(Date.UTC(2000, m - 1, 1)).toLocaleDateString(locale, { month: 'short', timeZone: 'UTC' });
+
+const { d, project, people, copy = false } = Astro.props;
+const reviewBy = d.entry.data.reviewBy ? formatDate(d.entry.data.reviewBy as Date) : undefined;
+const date = reviewBy ? { day: Number(reviewBy.slice(8)), month: `${monthName(Number(reviewBy.slice(5, 7)))} ${reviewBy.slice(0, 4)}` } : undefined;
+const label = `${project.name} ${(d.type ? docTypes[d.type].label : '').toUpperCase()} ${pad4(d.number)}`;
+const names = (handles: string[]) => handles.map((h) => person(people, h).name).join(', ');
+---
+
+<li
+  class={`bl__row rr__row ink-${project.ink}`}
+  data-review-by={reviewBy}
+  data-waiting-on={copy ? undefined : JSON.stringify(d.rfcReview.waitingOn)}
+  data-copy-of={copy ? d.id : undefined}
+  data-id={d.id}
+  hidden={copy || undefined}
+>
+  <div class="bl__date">
+    {date ? <><b>{date.day}</b><span>{date.month}</span></> : <b>–</b>}
+  </div>
+  <div class="bl__main rr__main">
+    {d.status && <StatusSticker status={d.status} />}
+    <span>
+      <em>{label} · {statusInfo(d.status)?.label ?? d.status}</em>
+      <b><a class="rr__title" href={d.href}>{d.title}</a></b>
+      <span class="rr__meta">
+        <span class="rr__avs">
+          {d.rfcReview.reviewers.map((r) => {
+            const p = person(people, r.handle);
+            return (
+              <span class={`rv__av is-${r.state}`} title={`${p.name} · ${reviewTitle(r)}`} style={p.ink ? `--ink:var(--inkan-ink-${p.ink})` : undefined}>
+                <span class="rv__ini" aria-hidden="true">{p.initials}</span>
+                <i aria-hidden="true">{REVIEW_MARK[r.state]}</i>
+                <span class="sr-only">{p.name}: {REVIEW_TEXT[r.state]}.</span>
+              </span>
+            );
+          })}
+        </span>
+        <span class={`rv__sum is-${d.rfcReview.status}`}>{reviewText(d.rfcReview)}</span>
+        {d.rfcReview.waitingOn.length > 0 && <span class="rr__wait">{t('review.waitingOn', { names: names(d.rfcReview.waitingOn) })}</span>}
+        <span class="rv__you" data-you hidden>{t('review.waitingOnYou')}</span>
+      </span>
+    </span>
+  </div>
+  <div class="bl__d">
+    {reviewBy && <><b aria-hidden="true">{reviewBy}</b><span data-due></span></>}
+  </div>
+  <Avatars handles={d.authors} people={people} />
+</li>

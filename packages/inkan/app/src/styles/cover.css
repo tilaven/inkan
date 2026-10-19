@@ -1,0 +1,38 @@
+/* ==========================================================================
+   Cover art (lib/covers.ts). The SVG carries ink roles, not colours:
+   Day prints inks on paper with `multiply`, Stage screens lights on black.
+   A cover sets --cv-ink / --cv-alt (its project's process inks); the stock
+   decides what the main (A), alt (B) and paper (P) layers are made of.
+   ========================================================================== */
+.cv {
+  display: block;
+  width: 100%;
+  height: 100%;
+  --cv-stock: var(--inkan-paper);
+  --cv-dark: var(--inkan-ink-k);
+  --cv-k: var(--inkan-ink-k);
+  --cv-bg: var(--cv-stock);
+  --cv-A: var(--cv-ink);
+  --cv-B: var(--cv-alt);
+  --cv-P: var(--cv-stock);
+  --cv-bl: var(--inkan-blend);
+}
+.cv--flood { --cv-bg: var(--cv-ink); --cv-A: var(--cv-stock); --cv-B: var(--cv-k); --cv-bl: normal; }
+.cv--black { --cv-bg: var(--cv-dark); --cv-bl: screen; }
+
+:root[data-theme="dark"] .cv { --cv-stock: var(--inkan-bg-2); --cv-dark: var(--inkan-bg-2); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .cv { --cv-stock: var(--inkan-bg-2); --cv-dark: var(--inkan-bg-2); }
+}
+
+.cv .bg { fill: var(--cv-bg); }
+.cv .a { fill: var(--cv-A); }
+.cv .b { fill: var(--cv-B); }
+.cv .k { fill: var(--cv-k); }
+.cv .p { fill: var(--cv-P); }
+.cv .n { fill: none; }
+.cv .sa { stroke: var(--cv-A); }
+.cv .sk { stroke: var(--cv-k); }
+.cv .x { mix-blend-mode: var(--cv-bl); }
+.cv .mul { mix-blend-mode: multiply; }
+.cv .gr { mix-blend-mode: overlay; }

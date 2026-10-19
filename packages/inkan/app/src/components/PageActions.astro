@@ -1,0 +1,126 @@
+---
+/** "Copy page" split button with a menu: copy the link, open the raw Markdown, hand the page to an AI assistant. */
+import Icon from './Icon.astro';
+import { markdownUrl } from '../lib/markdown';
+import { t } from '../lib/i18n';
+
+interface Props {
+  /** Anything with the entry id, e.g. a Decision. */
+  d: { id: string };
+}
+const { d } = Astro.props;
+const md = markdownUrl(d);
+const assistants = [
+  { id: 'claude', label: t('actions.useIn', { name: 'Claude' }), url: 'https://claude.ai/new?q=' },
+  { id: 'chatgpt', label: t('actions.useIn', { name: 'ChatGPT' }), url: 'https://chatgpt.com/?hints=search&q=' },
+];
+---
+
+<div class="pact" data-page-actions data-md={md} data-pagefind-ignore hidden>
+  <button class="pact__main" type="button" data-pact-copy>
+    <Icon name="copy" class="pact__ic" /><Icon name="check" class="pact__ok" /><span data-pact-label>{t('actions.copyPage')}</span>
+  </button>
+  <button class="pact__tog" type="button" aria-label={t('actions.moreActions')} aria-haspopup="menu" aria-expanded="false" data-pact-toggle>
+    <Icon name="chevron-down" />
+  </button>
+  <div class="pact__menu" role="menu" aria-label={t('actions.pageActions')} hidden>
+    <button type="button" role="menuitem" tabindex="-1" data-pact-link data-pact-action="copy-link"><Icon name="link" />{t('actions.copyLinkToPage')}</button>
+    <a role="menuitem" tabindex="-1" href={md} target="_blank" rel="noopener" data-pact-action="open-markdown"><Icon name="external" />{t('actions.openMarkdown')}</a>
+    {assistants.map((a) => (
+      <a role="menuitem" tabindex="-1" href={a.url} target="_blank" rel="noopener" data-pact-ai={a.url} data-pact-action={a.id} class={`pact__ai--${a.id}`}><Icon name={a.id} />{a.label}</a>
+    ))}
+  </div>
+  <span hidden data-pact-newtab>{t('actions.newTab')}</span>
+</div>
+
+<script>
+  import { copyPageLink, toast } from '../lib/share';
+  import { t } from '../lib/i18n';
+  import { track } from '../lib/track';
+
+  for (const [n, root] of document.querySelectorAll<HTMLElement>('[data-page-actions]').entries()) {
+    const mdUrl = new URL(root.dataset.md!, location.href).href;
+    const toggle = root.querySelector<HTMLButtonElement>('[data-pact-toggle]')!;
+    const menu = root.querySelector<HTMLElement>('[role="menu"]')!;
+    menu.id = `pact-menu-${n}`;
+    toggle.setAttribute('aria-controls', menu.id);
+    const newTab = root.querySelector<HTMLElement>('[data-pact-newtab]')!;
+    newTab.id = `pact-newtab-${n}`;
+    for (const a of menu.querySelectorAll('[target="_blank"]')) a.setAttribute('aria-describedby', newTab.id);
+    const items = [...menu.querySelectorAll<HTMLElement>('[role="menuitem"]')];
+    const copy = root.querySelector<HTMLButtonElement>('[data-pact-copy]')!;
+    const label = copy.querySelector<HTMLElement>('[data-pact-label]')!;
+    const prompt = t('actions.aiPrompt', { url: mdUrl });
+    for (const a of menu.querySelectorAll<HTMLAnchorElement>('[data-pact-ai]')) a.href = a.dataset.pactAi + encodeURIComponent(prompt);
+
+    const open = (focus?: 'first' | 'last') => {
+      menu.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+      if (focus) items.at(focus === 'first' ? 0 : -1)!.focus();
+    };
+    const close = (refocus = false) => {
+      if (menu.hidden) return;
+      menu.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+      if (refocus) toggle.focus();
+    };
+
+    toggle.addEventListener('click', () => (menu.hidden ? open('first') : close()));
+    toggle.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        open(e.key === 'ArrowDown' ? 'first' : 'last');
+      }
+    });
+    menu.addEventListener('keydown', (e) => {
+      const i = items.indexOf(document.activeElement as HTMLElement);
+      const move: Record<string, number> = { ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: items.length - 1 };
+      if (e.key in move) {
+        e.preventDefault();
+        items[(move[e.key] + items.length) % items.length].focus();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        close(true);
+      } else if (e.key === 'Tab') close();
+    });
+    menu.addEventListener('click', (e) => {
+      const item = (e.target as Element).closest<HTMLElement>('[role="menuitem"]');
+      if (!item) return;
+      track('Page action', { action: item.dataset.pactAction! });
+      close(true);
+    });
+    document.addEventListener('pointerdown', (e) => {
+      if (!root.contains(e.target as Node)) close();
+    });
+
+    root.querySelector('[data-pact-link]')!.addEventListener('click', copyPageLink);
+
+    let reset: ReturnType<typeof setTimeout>;
+    copy.addEventListener('click', async () => {
+      if (copy.ariaBusy === 'true') return;
+      copy.ariaBusy = 'true';
+      const text = () => fetch(mdUrl).then((r) => (r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`))));
+      try {
+        // Safari only allows the write inside the click, so hand it the pending fetch.
+        if (typeof ClipboardItem !== 'undefined' && ClipboardItem.supports?.('text/plain') !== false) {
+          await navigator.clipboard.write([new ClipboardItem({ 'text/plain': text().then((body) => new Blob([body], { type: 'text/plain' })) })]);
+        } else {
+          await navigator.clipboard.writeText(await text());
+        }
+        track('Page action', { action: 'copy-markdown' });
+        root.dataset.copied = '1';
+        label.textContent = t('actions.copied');
+        toast(t('actions.pageCopied'));
+        clearTimeout(reset);
+        reset = setTimeout(() => { delete root.dataset.copied; label.textContent = t('actions.copyPage'); }, 2000);
+      } catch (e) {
+        const blocked = !navigator.clipboard || (e instanceof DOMException && e.name === 'NotAllowedError');
+        toast(t('actions.copyFailed', { reason: t(blocked ? 'actions.copyBlocked' : 'actions.loadFailed') }));
+      } finally {
+        copy.ariaBusy = 'false';
+      }
+    });
+
+    root.hidden = false;
+  }
+</script>

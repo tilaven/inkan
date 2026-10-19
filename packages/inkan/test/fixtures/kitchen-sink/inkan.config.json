@@ -1,0 +1,5 @@
+{
+  "title": "Kitchen sink",
+  "url": "https://kitchen-sink.example",
+  "issueLinks": [{ "pattern": "\\b((?:PAY|OPS)-\\d+)\\b", "url": "https://tracker.example/browse/$1" }]
+}

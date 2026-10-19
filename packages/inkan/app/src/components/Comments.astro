@@ -1,0 +1,23 @@
+---
+/** Discussion under a record, from the provider set in `comments`. */
+import Provider, { options } from 'virtual:inkan/comments';
+import { site } from '../lib/config';
+import { hasComments } from '../lib/comments';
+import { t } from '../lib/i18n';
+import type { Decision } from '../lib/decisions';
+
+interface Props {
+  d: Decision;
+}
+const { d } = Astro.props;
+const Component = Provider && hasComments(d, site.comments) ? Provider : null;
+const title = d.ref ? `${d.ref} ${d.title}` : d.title;
+const pageUrl = new URL(d.href, Astro.site ?? Astro.url).href;
+---
+
+{Component && (
+  <section class="comments" aria-labelledby="comments-h" data-pagefind-ignore>
+    <h2 class="comments__h" id="comments-h">{t('comments.title')}</h2>
+    <Component d={d} options={options} discussion={d.entry.data.discussion} title={title} pageUrl={pageUrl} />
+  </section>
+)}

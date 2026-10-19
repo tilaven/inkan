@@ -1,0 +1,7 @@
+name: "DBRE"
+description: "Database reliability: schemas, upgrades, backups."
+ink: g
+motif: discs
+icon: disc
+owners: [kenji]
+order: 40

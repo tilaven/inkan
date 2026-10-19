@@ -1,0 +1,25 @@
+---
+/**
+ * The page head every page shares: eyebrow, big display title with the accent word
+ * underlined (`<span class="o">`), and a lede. `lede` is plain text; the `lede` slot takes
+ * markup instead. The default slot renders below the lede.
+ */
+interface Props {
+  title: string;
+  /** Trailing part of the title that gets the ink underline, e.g. "decisions" in "All decisions". */
+  accent?: string;
+  eyebrow?: string;
+  lede?: string;
+}
+const { title, accent, eyebrow, lede } = Astro.props;
+const split = accent && title.endsWith(accent) ? title.slice(0, -accent.length) : title;
+// A parent that forwards the slot conditionally still registers it, so the rendered markup decides.
+const slotLede = Astro.slots.has('lede') ? (await Astro.slots.render('lede')).trim() : '';
+---
+
+<header class="page-head">
+  {eyebrow && <p class="eyebrow"><i></i>{eyebrow}</p>}
+  <h1 class="h1">{split}{accent && title.endsWith(accent) && <span class="o">{accent}</span>}</h1>
+  {slotLede ? <p class="lede" set:html={slotLede} /> : lede && <p class="lede">{lede}</p>}
+  <slot />
+</header>

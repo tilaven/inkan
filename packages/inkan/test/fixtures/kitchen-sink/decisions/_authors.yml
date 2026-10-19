@@ -1,0 +1,21 @@
+# Optional author directory. Keys are the handles used in `authors:` front matter.
+# Authors that are not listed here still work; they are shown by their handle.
+- id: anna.kowalska
+  name: Anna Kowalska
+  team: SRE
+  github: anna-kowalska
+- id: piotr.nowak
+  name: Piotr Nowak
+  team: Payments
+- id: marta.wisniewska
+  name: Marta Wiśniewska
+  team: DBRE
+- id: jan.zielinski
+  name: Jan Zieliński
+  team: Infrastructure
+- id: kasia.lewandowska
+  name: Kasia Lewandowska
+  team: Search
+- id: tomasz.wojcik
+  name: Tomasz Wójcik
+  team: Architecture

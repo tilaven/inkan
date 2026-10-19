@@ -1,0 +1,12 @@
+name: "Payments"
+description: "Ledger, settlement and everything that moves money."
+ink: m
+motif: ticker
+icon: coin
+owners: [jules, noor]
+order: 20
+reviewEvery: 1 year
+fields:
+  pci:
+    type: boolean
+    label: PCI scope

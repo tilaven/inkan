@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Set the repository variable CI_RUNNER (e.g. `self-hosted`) to run on your own runner.
+# Pull requests from forks always use GitHub-hosted runners.
+jobs:
+  build:
+    runs-on: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && vars.CI_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      # Builds the example site with the local package (validates front matter, search index, all pages).
+      - run: npm run build
+      # The documentation site is built with the same package.
+      - run: npm run docs:build
+      - run: node packages/inkan/bin/cli.mjs check --root docs --strict
+      # The published package must work from a tarball in an empty project.
+      - name: Smoke test packed package
+        run: |
+          npm pack -w packages/inkan --pack-destination "$RUNNER_TEMP"
+          mkdir "$RUNNER_TEMP/site" && cd "$RUNNER_TEMP/site"
+          git init -q && npm init -y > /dev/null
+          npm install "$RUNNER_TEMP"/inkan-*.tgz
+          npx inkan init
+          npx inkan new rfc platform "Smoke test" --author ci
+          npx inkan build
+          test -f dist/index.html && test -d dist/pagefind
+
+  e2e:
+    runs-on: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && vars.CI_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm run test:e2e
+      # Every page and link of the documentation site.
+      - run: npm run docs:build
+      - run: INKAN_SITE=docs npx playwright test e2e/crawl.spec.ts --project=e2e-desktop-light --project=e2e-mobile-light
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

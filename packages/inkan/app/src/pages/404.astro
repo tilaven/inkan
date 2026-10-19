@@ -1,0 +1,10 @@
+---
+import Page from '../layouts/Page.astro';
+import { site } from '../lib/config';
+import { url } from '../lib/decisions';
+import { t } from '../lib/i18n';
+---
+
+<Page title={t('page.notFoundTitle')} accent={t('page.notFoundAccent')} eyebrow="404" crumbs={[{ label: site.title, href: url('/') }, { label: t('page.notFound') }]}>
+  <Fragment slot="lede" set:html={t('page.notFoundLede', { link: `<a href="${url('decisions/')}">${t('page.notFoundBrowse')}</a>` })} />
+</Page>

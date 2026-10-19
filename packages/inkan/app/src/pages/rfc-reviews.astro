@@ -1,0 +1,108 @@
+---
+import Page from '../layouts/Page.astro';
+import ReviewRow from '../components/ReviewRow.astro';
+import { openStatuses } from '../lib/config';
+import { formatDate, getDecisions, getPeople, getProjectStyles, person, projectStyle, type Decision } from '../lib/decisions';
+import { getMembers } from '../lib/people';
+import { REVIEW_TEXT } from '../lib/review-ui';
+import { t } from '../lib/i18n';
+
+const reviewed = (await getDecisions()).filter((d) => d.rfcReview.status !== 'none' && d.status && openStatuses.includes(d.status));
+const when = (d: Decision) => (d.entry.data.reviewBy ? formatDate(d.entry.data.reviewBy as Date) : '9999-99-99');
+const sorted = [...reviewed].sort((a, b) => when(a).localeCompare(when(b)) || a.id.localeCompare(b.id));
+const styles = await getProjectStyles();
+const people = await getPeople();
+
+const groups = [
+  { status: 'in-review', heading: t('rfcReviews.inReview') },
+  { status: 'changes-requested', heading: REVIEW_TEXT['changes-requested'] },
+  { status: 'approved', heading: REVIEW_TEXT.approved },
+]
+  .map((g) => ({ ...g, rows: sorted.filter((d) => d.rfcReview.status === g.status) }))
+  .filter((g) => g.rows.length > 0);
+
+const handles = new Map<string, string>();
+for (const m of await getMembers()) handles.set(m.handle.toLowerCase(), m.name);
+for (const d of reviewed) for (const h of [...d.rfcReview.reviewers.map((r) => r.handle), ...d.authors, ...d.deciders]) handles.set(h.toLowerCase(), person(people, h).name);
+const options = [...handles].sort((a, b) => a[1].localeCompare(b[1]));
+const waitingCount = reviewed.filter((d) => d.rfcReview.waitingOn.length > 0).length;
+const styleOf = (d: Decision) => styles.get(d.project) ?? projectStyle(d.project);
+---
+
+<Page
+  title={t('nav.rfcReviews')}
+  accent={t('rfcReviews.titleAccent')}
+  eyebrow={t('nav.rfcReviews')}
+  lede={reviewed.length
+    ? `${t('rfcReviews.withReviewers', { count: reviewed.length })} ${t('rfcReviews.waiting', { count: waitingCount })}`
+    : t('rfcReviews.ledeEmpty')}
+>
+  {
+    reviewed.length === 0 ? (
+      <p class="empty" set:html={t('rfcReviews.empty')} />
+    ) : (
+      <>
+        <div class="me" data-me>
+          <label for="me-pick">{t('rfcReviews.whoAreYou')}</label>
+          <select id="me-pick" data-me-pick>
+            <option value="">{t('rfcReviews.nobody')}</option>
+            {options.map(([handle, name]) => <option value={handle}>{name}</option>)}
+          </select>
+          <span class="me__note">{t('rfcReviews.remembered')}</span>
+        </div>
+
+        <p class="sr-only" role="status" data-waiting-status></p>
+        <h2 class="bl__group" id="waiting">{t('review.waitingOnYou')} <span data-waiting-count></span></h2>
+        <p class="rr__empty" data-waiting-empty data-pick={t('rfcReviews.pickYourself')} data-nothing={t('rfcReviews.nothingWaiting')}>{t('rfcReviews.pickYourself')}</p>
+        <ol class="bl rr" data-waiting-list>
+          {sorted.filter((d) => d.rfcReview.waitingOn.length > 0).map((d) => <ReviewRow d={d} project={styleOf(d)} people={people} copy />)}
+        </ol>
+
+        {groups.map(({ heading, rows }) => (
+          <>
+            <h2 class="bl__group">{heading} <span class="rr__n">{rows.length}</span></h2>
+            <ol class="bl rr">
+              {rows.map((d) => <ReviewRow d={d} project={styleOf(d)} people={people} />)}
+            </ol>
+          </>
+        ))}
+      </>
+    )
+  }
+</Page>
+
+<script>
+  import { DEADLINE_SOON, stampDueRows } from '../lib/dates';
+  import { t } from '../lib/i18n';
+  import { getMe, setMe, watchWaiting } from '../lib/me';
+
+  stampDueRows(document.querySelectorAll<HTMLElement>('.bl__row[data-review-by]'), DEADLINE_SOON);
+
+  const pick = document.querySelector<HTMLSelectElement>('[data-me-pick]');
+  const list = document.querySelector<HTMLElement>('[data-waiting-list]');
+  const empty = document.querySelector<HTMLElement>('[data-waiting-empty]');
+  const count = document.querySelector<HTMLElement>('[data-waiting-count]');
+  const status = document.querySelector<HTMLElement>('[data-waiting-status]');
+  if (pick && list && empty && count && status) {
+    const me = getMe();
+    if (me && ![...pick.options].some((o) => o.value === me)) pick.add(new Option(me, me));
+    pick.value = me;
+    pick.addEventListener('change', () => setMe(pick.value));
+    watchWaiting(document, (n) => {
+      const who = getMe();
+      pick.value = who;
+      let shown = 0;
+      for (const row of list.querySelectorAll<HTMLElement>('[data-copy-of]')) {
+        const original = document.querySelector<HTMLElement>(`[data-waiting-on][data-id="${CSS.escape(row.dataset.copyOf!)}"]`);
+        row.hidden = !original?.classList.contains('is-waiting');
+        if (!row.hidden) shown++;
+      }
+      list.hidden = shown === 0;
+      empty.hidden = shown > 0;
+      empty.textContent = who ? empty.dataset.nothing! : empty.dataset.pick!;
+      count.textContent = who ? String(n) : '';
+      // One sentence for screen readers after the pick; the list itself changes silently.
+      status.textContent = !who ? '' : n ? t('rfcReviews.waitingOnYouCount', { count: n }) : t('rfcReviews.nothingWaiting');
+    });
+  }
+</script>

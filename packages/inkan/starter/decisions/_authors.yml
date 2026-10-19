@@ -1,0 +1,5 @@
+# Optional: handle -> display name, team and avatar. Unknown handles still work.
+- id: jane.doe
+  name: Jane Doe
+  team: Platform
+  github: octocat

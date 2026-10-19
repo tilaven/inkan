@@ -1,0 +1,22 @@
+---
+/** `/_auth/denied/`: where `inkan serve` sends a visitor whose sign-in did not work out. Static, reads `?reason=` in the browser. */
+import Page from '../layouts/Page.astro';
+import { site } from '../lib/config';
+import { url } from '../lib/decisions';
+import { loginHref } from '../lib/auth';
+import { t } from '../lib/i18n';
+---
+
+<Page title={t('auth.deniedTitle')} accent={t('auth.deniedAccent')} eyebrow={t('auth.eyebrow')} noindex crumbs={[{ label: site.title, href: url('/') }, { label: t('auth.eyebrow') }]}>
+  <Fragment slot="lede"><span data-denied-reason data-forbidden={t('auth.forbidden')}>{t('auth.failed')}</span></Fragment>
+  <p class="actions" data-pagefind-ignore>
+    <a class="pill pill--solid" href={loginHref}>{t('auth.tryAgain')}</a>
+    <a class="pill pill--ghost" href={url('/')}>{t('auth.backToPublic')}</a>
+  </p>
+</Page>
+
+<script>
+  const reason = new URLSearchParams(location.search).get('reason');
+  const el = document.querySelector<HTMLElement>('[data-denied-reason]');
+  if (el && reason === 'forbidden') el.textContent = el.dataset.forbidden!;
+</script>

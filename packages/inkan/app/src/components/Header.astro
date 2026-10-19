@@ -1,0 +1,137 @@
+---
+/** Top bar: menu button (phones), brand, breadcrumbs, top navigation, search, theme toggle, repo link. */
+import Icon from './Icon.astro';
+import Search from './Search.astro';
+import HeaderEnd from 'virtual:inkan/components/HeaderEnd';
+import { logo } from 'virtual:inkan/assets';
+import defaultLogo from '../assets/mark.svg?url';
+import { loginHref, logoutHref, meHref, variant } from '../lib/auth';
+import { site } from '../lib/config';
+import { url } from '../lib/decisions';
+import { providerName, resolveHref } from '../lib/links';
+import { t } from '../lib/i18n';
+import { getNav, isCurrent, type Crumb } from '../lib/nav';
+
+interface Props {
+  crumbs?: Crumb[];
+  /** Whether the page has a sidebar drawer to open. */
+  sidebar?: boolean;
+}
+const { crumbs = [], sidebar = true } = Astro.props;
+const path = Astro.url.pathname;
+const { hub } = await getNav();
+const reviews = hub.find((l) => l.href === url('reviews/'));
+const rfcReviews = hub.find((l) => l.href === url('rfc-reviews/'));
+const topLinks = [
+  { label: t('nav.records'), href: url('decisions/') },
+  { label: t('nav.timeline'), href: url('timeline/') },
+  { label: t('nav.graph'), href: url('graph/') },
+  { label: t('nav.backlog'), href: url('backlog/') },
+  ...(reviews ? [{ label: t('nav.reviews'), href: reviews.href }] : []),
+  ...(rfcReviews ? [{ label: t('nav.rfcReviews'), href: rfcReviews.href }] : []),
+  ...site.navigation.map((l) => ({ label: l.label, href: resolveHref(l.href) })),
+];
+const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
+---
+
+<header class="top">
+  {
+    sidebar && (
+      <>
+        <button class="icon-btn menu-btn" type="button" aria-label={t('shell.openNavigation')} aria-controls="side" aria-expanded="false" data-menu hidden>
+          <Icon name="menu" />
+        </button>
+        <noscript><a class="icon-btn menu-btn" href="#side" aria-label={t('shell.openNavigation')}><Icon name="menu" /></a></noscript>
+      </>
+    )
+  }
+  <a class="top__brand" href={url('/')}>
+    <img src={logo ?? defaultLogo} alt="" width="26" height="26" />
+    <b>{site.title}</b>
+  </a>
+  {
+    crumbs.length > 0 && (
+      <nav class="crumbs" aria-label={t('shell.breadcrumb')}>
+        <ol>
+          {crumbs.map((c, i) => (
+            <li>
+              {i > 0 && <span aria-hidden="true"> / </span>}
+              {c.href && i < crumbs.length - 1 ? <a href={c.href}>{c.label}</a> : <b aria-current={i === crumbs.length - 1 ? 'page' : undefined}>{c.label}</b>}
+            </li>
+          ))}
+        </ol>
+      </nav>
+    )
+  }
+  <nav class="top__nav" aria-label={t('shell.siteNav')}>
+    {topLinks.map((l) => <a href={l.href} aria-current={current(l.href)}>{l.label}</a>)}
+  </nav>
+  <div class="top__tools">
+    {site.search.enabled && <Search />}
+    <button class="icon-btn theme-btn" type="button" aria-label={t('shell.themeDark')} aria-pressed="false" title={t('shell.themeTitle')} data-theme-toggle>
+      <Icon name="sun" class="ic-sun" />
+      <Icon name="moon" class="ic-moon" />
+    </button>
+    {site.repo.url && <a class="pill pill--repo" href={site.repo.url}>{providerName(site.repo.provider)}</a>}
+    {variant === 'public' && <a class="pill pill--auth" href={loginHref} data-auth-login>{t('auth.signIn')}</a>}
+    {
+      variant === 'protected' && (
+        <div class="account" data-account={meHref}>
+          <span class="account__who"><i class="account__avatar" aria-hidden="true"></i><b class="account__name">{t('auth.account')}</b></span>
+          <form class="account__logout" method="post" action={logoutHref}>
+            <button class="pill pill--auth" type="submit" aria-label={t('auth.signOut')}><Icon name="log-out" /><span>{t('auth.signOut')}</span></button>
+          </form>
+        </div>
+      )
+    }
+    <HeaderEnd />
+  </div>
+</header>
+
+<script>
+  import { initials } from '../lib/card';
+
+  // `scroll-padding-top` (site.css) follows the bar's real height, which grows when the breadcrumb wraps.
+  const bar = document.querySelector<HTMLElement>('.top');
+  if (bar) new ResizeObserver(() => document.documentElement.style.setProperty('--top-h', `${bar.offsetHeight}px`)).observe(bar);
+
+  // Sign-in comes back to the page it started from; the account shows whoever the server says is signed in.
+  const login = document.querySelector<HTMLAnchorElement>('.top [data-auth-login]');
+  if (login) login.href = `${login.getAttribute('href')}?redirect=${encodeURIComponent(location.pathname + location.search)}`;
+  const account = document.querySelector<HTMLElement>('.top [data-account]');
+  if (account) {
+    fetch(account.dataset.account!, { credentials: 'same-origin', headers: { accept: 'application/json' } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((me: { name?: string; email?: string; picture?: string } | null) => {
+        const name = me?.name || me?.email;
+        if (!name) return;
+        const avatar = account.querySelector<HTMLElement>('.account__avatar')!;
+        account.querySelector<HTMLElement>('.account__name')!.textContent = name;
+        account.querySelector<HTMLElement>('.account__who')!.title = me?.email && me.email !== name ? `${name} · ${me.email}` : name;
+        if (me?.picture) {
+          const img = new Image();
+          img.alt = '';
+          img.referrerPolicy = 'no-referrer';
+          img.onload = () => avatar.replaceChildren(img);
+          img.src = me.picture;
+        }
+        avatar.textContent = initials(name);
+      })
+      .catch(() => {});
+  }
+  // The theme button is a toggle: pressed while the dark (Stage) theme is on.
+  const themeButton = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+  const showTheme = () => themeButton?.setAttribute('aria-pressed', String(document.documentElement.dataset.theme === 'dark'));
+  showTheme();
+  themeButton?.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    showTheme();
+    try { localStorage.setItem('inkan-theme', next); } catch {}
+  });
+</script>
+
+<style is:global>
+  .crumbs ol { display: inline; margin: 0; padding: 0; list-style: none; }
+  .crumbs li { display: inline; }
+</style>

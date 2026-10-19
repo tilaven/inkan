@@ -1,0 +1,7 @@
+node_modules
+dist
+dist-protected
+.astro
+.git
+Dockerfile
+.dockerignore

@@ -1,0 +1,7 @@
+name: "SRE"
+description: "Reliability, on-call and the numbers we promise."
+ink: c
+motif: rings
+icon: pulse
+owners: [marek, ania]
+order: 10

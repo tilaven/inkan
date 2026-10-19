@@ -1,0 +1,190 @@
+---
+/** HTML shell every page uses: <head>, theme, banner, sidebar drawer, top bar, footer. */
+import '../styles/tokens.css';
+import '../styles/fonts/fonts.css';
+import '../styles/card.css';
+import '../styles/site.css';
+import 'katex/dist/katex.min.css';
+import '../styles/markdown.css';
+import 'virtual:inkan/user-css';
+import { favicon } from 'virtual:inkan/assets';
+import defaultFavicon from '../assets/mark.svg?url';
+import Banner from 'virtual:inkan/components/Banner';
+import Header from 'virtual:inkan/components/Header';
+import Footer from 'virtual:inkan/components/Footer';
+import Sidebar from 'virtual:inkan/components/Sidebar';
+import HeadEnd from 'virtual:inkan/components/HeadEnd';
+import HeadTags from '../components/HeadTags.astro';
+import Icon from '../components/Icon.astro';
+import { site } from '../lib/config';
+import { locale, t } from '../lib/i18n';
+import { url } from '../lib/decisions';
+import { iconType } from '../lib/links';
+import { ogUrl } from '../lib/og-data';
+import { stickerMaskCss } from '../lib/stickers';
+import type { Crumb } from '../lib/nav';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Open Graph image URL; defaults to the site's generated card. */
+  image?: string;
+  crumbs?: Crumb[];
+  /** Pages without the archive sidebar (landing). */
+  sidebar?: boolean;
+  /** Keep search engines away (sign-in pages). */
+  noindex?: boolean;
+}
+const { title, description = site.description, image = ogUrl(), crumbs, sidebar = true, noindex = false } = Astro.props;
+const fullTitle = title === site.title ? title : `${title} · ${site.title}`;
+const canonical = new URL(Astro.url.pathname, site.url);
+const theme = site.theme.default;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={favicon ?? defaultFavicon} type={favicon ? iconType(favicon) : 'image/svg+xml'} />
+    <link rel="alternate" type="application/rss+xml" title={t('shell.rssTitle', { title: site.title })} href={url('rss.xml')} />
+    <link rel="sitemap" href={url('sitemap-index.xml')} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={site.title} />
+    {
+      image && (
+        <>
+          <meta property="og:image" content={new URL(image, site.url)} />
+          <meta property="og:image:alt" content={fullTitle} />
+          {image.startsWith(url('og/')) && (
+            <>
+              <meta property="og:image:type" content="image/png" />
+              <meta property="og:image:width" content="1200" />
+              <meta property="og:image:height" content="630" />
+            </>
+          )}
+          <meta name="twitter:image" content={new URL(image, site.url)} />
+        </>
+      )
+    }
+    <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="generator" content="Inkan" />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="color-scheme" content="light dark" />
+    <style set:html={stickerMaskCss()} />
+    <script is:inline define:vars={{ theme }}>
+      // Theme before paint: saved choice, ?theme=, the config default, then the system.
+      (() => {
+        let t = null;
+        try { t = localStorage.getItem('inkan-theme'); } catch {}
+        const q = new URLSearchParams(location.search).get('theme');
+        if (q === 'light' || q === 'dark') t = q;
+        if (t !== 'light' && t !== 'dark') t = theme !== 'system' ? theme : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+        document.documentElement.classList.add('js');
+      })();
+    </script>
+    <HeadTags />
+    <HeadEnd />
+  </head>
+  <body>
+    <a class="skip" href="#content">{t('shell.skip')}</a>
+    {site.search.enabled && <a class="skip" href="#search">{t('shell.skipToSearch')}</a>}
+    <Banner />
+    <div class:list={['shell', { 'shell--plain': !sidebar }]}>
+      {
+        sidebar && (
+          <>
+            <aside class="side" id="side" aria-label={t('shell.archiveNav')}>
+              <button class="icon-btn side__close" type="button" aria-label={t('shell.closeNavigation')} data-side-close hidden>
+                <Icon name="x" />
+              </button>
+              <Sidebar />
+            </aside>
+            <div class="scrim" data-scrim aria-hidden="true" hidden></div>
+          </>
+        )
+      }
+      <div class="main">
+        <Header crumbs={crumbs} sidebar={sidebar} />
+        <main class="view" id="content" tabindex="-1">
+          <slot />
+        </main>
+        <Footer />
+      </div>
+    </div>
+    <p class="toast" role="status" aria-live="polite" data-toast hidden></p>
+    <script>
+      const side = document.getElementById('side');
+      const main = document.querySelector<HTMLElement>('.main');
+      const menu = document.querySelector<HTMLButtonElement>('[data-menu]');
+      const closeButton = document.querySelector<HTMLButtonElement>('[data-side-close]');
+      const scrim = document.querySelector<HTMLElement>('[data-scrim]');
+      if (side && main && menu && closeButton && scrim) {
+        menu.hidden = false;
+        const phone = matchMedia('(max-width: 880px)');
+        const isOpen = () => side.classList.contains('is-open');
+        const outside = [...document.body.children].filter((el): el is HTMLElement => el instanceof HTMLElement && !el.contains(side) && !el.matches('script, [data-toast]'));
+        // On phones the drawer is a modal dialog: a closed one is unreachable, an open one owns the page.
+        const sync = () => {
+          const modal = phone.matches && isOpen();
+          side.inert = phone.matches && !isOpen();
+          main.inert = modal;
+          for (const el of outside) el.inert = modal;
+          closeButton.hidden = !phone.matches;
+          if (modal) { side.setAttribute('role', 'dialog'); side.setAttribute('aria-modal', 'true'); }
+          else { side.removeAttribute('role'); side.removeAttribute('aria-modal'); }
+        };
+        const open = () => {
+          side.classList.add('is-open');
+          scrim.hidden = false;
+          menu.setAttribute('aria-expanded', 'true');
+          sync();
+          closeButton.focus();
+        };
+        const close = () => {
+          const hadFocus = side.contains(document.activeElement);
+          side.classList.remove('is-open');
+          scrim.hidden = true;
+          menu.setAttribute('aria-expanded', 'false');
+          sync();
+          if (hadFocus) menu.focus({ preventScroll: true });
+        };
+        menu.addEventListener('click', () => (isOpen() ? close() : open()));
+        closeButton.addEventListener('click', close);
+        scrim.addEventListener('click', close);
+        addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) close(); });
+        phone.addEventListener('change', sync);
+        sync();
+      }
+    </script>
+    <script>
+      // A table or formula that overflows sideways is a focusable, named region while it does, like a code block.
+      const sync = (el: HTMLElement) => {
+        if (el.scrollWidth > el.clientWidth) {
+          el.tabIndex = 0;
+          el.setAttribute('role', 'region');
+          el.setAttribute('aria-label', el.dataset.scrollLabel!);
+        } else {
+          el.removeAttribute('tabindex');
+          el.removeAttribute('role');
+          el.removeAttribute('aria-label');
+        }
+      };
+      const scrollers = new ResizeObserver((entries) => entries.forEach((e) => sync(e.target as HTMLElement)));
+      document.querySelectorAll<HTMLElement>('[data-scroll-label]').forEach((el) => scrollers.observe(el));
+    </script>
+    <style is:global>
+      .side__close { align-self: flex-end; margin-bottom: -6px; }
+      .side__close[hidden] { display: none; }
+    </style>
+  </body>
+</html>

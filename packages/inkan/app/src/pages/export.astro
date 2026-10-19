@@ -1,0 +1,237 @@
+---
+/**
+ * One print-ready document with every current decision (statuses from `export.statuses`, else the `current` ones),
+ * grouped by project: cover, table of contents, then each record in full. `inkan export` turns this page
+ * into a single HTML file or a PDF. Not indexed by search and not in the sitemap.
+ */
+import { render } from 'astro:content';
+import mdxComponents from 'virtual:inkan/mdx-components';
+import Base from '../layouts/Base.astro';
+import ExportBody from '../components/ExportBody.astro';
+import StatusSticker from '../components/StatusSticker.astro';
+import { docTypes, site } from '../lib/config';
+import { normalizeRef } from '../lib/graph';
+import { authorName, fieldsOf, formatDate, getAllProjects, getDecisions, getProjectStyles, projectStyle, statusInfo, url, type Decision } from '../lib/decisions';
+import { pad } from '../lib/nav';
+import { t, yesNo } from '../lib/i18n';
+import { REVIEW_TEXT } from '../lib/review-ui';
+import { formatValue } from '../../../lib/fields.mjs';
+import { MARK_END, MARK_START, exportStatuses, exportTitle } from '../../../lib/export.mjs';
+
+const title: string = exportTitle(site, t('export.title', { title: site.title }));
+const statuses: string[] = exportStatuses(site);
+const all = await getDecisions();
+const selected = all.filter((d) => d.status && statuses.includes(d.status));
+const styles = await getProjectStyles();
+const types = Object.keys(docTypes);
+const byProject = (await getAllProjects())
+  .map((p) => ({
+    ...styles.get(p.id) ?? projectStyle(p.id, p.name),
+    records: selected
+      .filter((d) => d.project === p.id)
+      .sort((a, b) => types.indexOf(a.type!) - types.indexOf(b.type!) || (a.number ?? 0) - (b.number ?? 0) || a.id.localeCompare(b.id)),
+  }))
+  .filter((p) => p.records.length > 0);
+
+const generated = new Date();
+const anchor = (id: string) => `r-${id.replace(/[^a-z0-9]+/gi, '-')}`;
+const inExport = new Set(selected.map((d) => d.id));
+const label = (d: Decision) => statusInfo(d.status)?.label ?? d.status ?? '';
+const typeLabel = (d: Decision) => (d.type ? docTypes[d.type].label : '');
+const counts = Object.entries(
+  selected.reduce<Record<string, number>>((acc, d) => ((acc[label(d)] = (acc[label(d)] ?? 0) + 1), acc), {}),
+);
+const names = (handles: string[]) => Promise.all(handles.map(authorName));
+
+/** `sre/adr/0001-x` (or a `.md` path) as a link: in-page when the record is in the export, to the site otherwise. */
+const resolve = (id: string) => {
+  const clean = normalizeRef(id);
+  const rec = all.find((x) => x.id === clean);
+  return {
+    href: rec && inExport.has(rec.id) ? `#${anchor(rec.id)}` : rec?.href ?? url(`${clean}/`),
+    text: rec ? `${rec.ref ?? pad(rec.number)} ${rec.title}` : clean,
+    status: rec?.status,
+  };
+};
+const records = await Promise.all(
+  byProject.flatMap((p) =>
+    p.records.map(async (d) => {
+      const { Content } = await render(d.entry);
+      const lineage = [
+        [t('record.supersedes'), d.supersedes],
+        [t('record.supersededBy'), d.supersededBy],
+      ].filter(([, ids]) => ids.length > 0) as [string, string[]][];
+      const fields = fieldsOf(d.project).filter((f) => f.name in d.fields).map((f) => ({ label: f.label, wide: f.type === 'list', text: formatValue(f, d.fields[f.name], yesNo) }));
+      return { d, project: p, Content, fields, authors: await names(d.authors), deciders: await names(d.deciders), lineage };
+    }),
+  ),
+);
+---
+
+<Base title={title} description={t('export.description', { title: site.title })} crumbs={[{ label: site.title, href: url('/') }, { label: t('export.crumb') }]} sidebar={false}>
+  <Fragment set:html={MARK_START} />
+  <div class="xp" data-pagefind-ignore>
+    <section class="xp-cover">
+      <p class="eyebrow"><i></i>{site.title}</p>
+      <h1 class="h1">{title}</h1>
+      <dl class="xp-facts">
+        <div><dt>{t('export.generated')}</dt><dd><time datetime={generated.toISOString()}>{formatDate(generated)}</time></dd></div>
+        <div><dt>{t('nav.records')}</dt><dd>{selected.length}</dd></div>
+        <div><dt>{t('export.projects')}</dt><dd>{byProject.length}</dd></div>
+        <div><dt>{t('record.status')}</dt><dd>{counts.length ? counts.map(([s, n]) => t('export.statusCount', { count: n, status: s })).join(' · ') : t('export.none')}</dd></div>
+      </dl>
+      <p class="xp-note">
+        {t('export.note', { statuses: statuses.map((s) => statusInfo(s)?.label ?? s).join(', ') })} {t('export.generatedFrom')} {site.url ? <a href={site.url}>{site.url}</a> : site.title}.
+      </p>
+      <div class="actions">
+        <button class="btn btn--s" type="button" data-print>{t('export.print')}</button>
+        <span class="xp-cli">{t('export.singleFile')} <code>inkan export [--pdf]</code></span>
+      </div>
+    </section>
+
+    {
+      selected.length > 0 ? (
+        <nav class="xp-toc" aria-label={t('export.contents')}>
+          <h2 class="xp-h">{t('export.contents')}</h2>
+          {byProject.map((p) => (
+            <section class={`ink-${p.ink}`}>
+              <h3>{p.name} <span>{p.records.length}</span></h3>
+              <ol>
+                {p.records.map((d) => (
+                  <li>
+                    <a href={`#${anchor(d.id)}`}>
+                      <b>{d.ref ?? pad(d.number)}</b>
+                      <span>{d.title}</span>
+                      <em>{label(d)}</em>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ))}
+        </nav>
+      ) : (
+        <p class="empty">{t('export.empty', { statuses: statuses.join(', ') || t('export.noneConfigured') })}</p>
+      )
+    }
+
+    {
+      records.map(({ d, project, Content, fields, authors, deciders, lineage }) => (
+        <article class={`xp-rec ink-${project.ink}`} id={anchor(d.id)} data-status={d.status}>
+          <header class="xp-rhead">
+            <p class="eyebrow"><i></i>{project.name} · {typeLabel(d)}{d.ref && <> · <span>{d.ref}</span></>}</p>
+            {d.status && <div class="xp-stk"><StatusSticker status={d.status} size="64px" /></div>}
+            <h2 class="xp-title">{d.number !== null && <span class="sr-only">{pad(d.number)}: </span>}{d.title}</h2>
+            <dl class="rmeta">
+              {d.status && <div><dt>{t('record.status')}</dt><dd>{label(d)}</dd></div>}
+              {d.date && <div><dt>{t('record.date')}</dt><dd><time datetime={formatDate(d.date)}>{formatDate(d.date)}</time></dd></div>}
+              {authors.length > 0 && <div><dt>{t('record.authors')}</dt><dd>{authors.join(', ')}</dd></div>}
+              {deciders.length > 0 && <div><dt>{t('record.deciders')}</dt><dd>{deciders.join(', ')}</dd></div>}
+              {d.rfcReview.reviewers.length > 0 && <div><dt>{t('record.reviewers')}</dt><dd>{d.rfcReview.reviewers.map((r) => `${r.handle} (${REVIEW_TEXT[r.state]})`).join(', ')}</dd></div>}
+              {fields.map((f) => <div class={f.wide ? 'rmeta__wide' : undefined}><dt>{f.label}</dt><dd>{f.text}</dd></div>)}
+              {d.tags.length > 0 && <div class="rmeta__wide"><dt>{t('record.tags')}</dt><dd class="tags">{d.tags.map((tag) => <span class="tag">#{tag}</span>)}</dd></div>}
+            </dl>
+            {lineage.length > 0 && (
+              <div class="lineage">
+                {lineage.map(([what, ids]) => (
+                  <>
+                    <em>{what}</em>
+                    {ids.map(resolve).map((r) => (
+                      <a href={r.href}>{r.status && <StatusSticker status={r.status} label />}{r.text}</a>
+                    ))}
+                  </>
+                ))}
+              </div>
+            )}
+          </header>
+          <ExportBody prefix={anchor(d.id)}>
+            <Content components={mdxComponents} />
+          </ExportBody>
+          <footer class="xp-rfoot"><a href={d.href}>{site.url ? new URL(d.href, site.url).href : d.href}</a></footer>
+        </article>
+      ))
+    }
+  </div>
+  <Fragment set:html={MARK_END} />
+</Base>
+
+<style is:global>
+  .xp { max-width: 860px; }
+  .xp-cover { padding-bottom: 36px; border-bottom: 1.5px solid var(--inkan-rule-strong); }
+  .xp-facts { margin: 30px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px 28px; }
+  .xp-facts dt { font: 600 .625rem/1 var(--inkan-font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--inkan-fg-3); margin-bottom: 7px; }
+  .xp-facts dd { margin: 0; font: 600 .9375rem/1.4 var(--inkan-font-text); color: var(--inkan-fg); }
+  .xp-note { margin: 22px 0 0; max-width: 64ch; font: 400 .9375rem/1.55 var(--inkan-font-text); color: var(--inkan-fg-2); }
+  .xp-cli { font: 500 .75rem/1.4 var(--inkan-font-mono); color: var(--inkan-fg-3); }
+  .xp-cli code { color: var(--inkan-fg); }
+  .xp-h { margin: 44px 0 10px; font: 900 1.625rem/1 var(--inkan-font-display); font-variation-settings: "wdth" 92; text-transform: uppercase; }
+  .xp-toc section { margin-top: 22px; }
+  .xp-toc h3 { margin: 0 0 6px; display: flex; align-items: baseline; gap: 10px; font: 800 .875rem/1 var(--inkan-font-display); font-variation-settings: "wdth" 88; text-transform: uppercase; text-decoration: underline; text-decoration-color: var(--ink); text-decoration-thickness: .22em; text-underline-offset: .12em; }
+  .xp-toc h3 span { font: 600 .625rem/1 var(--inkan-font-mono); color: var(--inkan-fg-3); text-decoration: none; }
+  .xp-toc ol { margin: 0; padding: 0; list-style: none; }
+  .xp-toc a { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 7px 0; border-bottom: 1px dashed var(--inkan-rule); text-decoration: none; font: 500 .875rem/1.35 var(--inkan-font-text); color: var(--inkan-fg-2); }
+  .xp-toc a:hover { color: var(--inkan-fg); } .xp-toc a:hover span { text-decoration: underline; }
+  .xp-toc a b { font: 700 .6875rem/1.35 var(--inkan-font-mono); color: var(--inkan-fg); white-space: nowrap; }
+  .xp-toc a em { font: 600 .625rem/1.35 var(--inkan-font-mono); font-style: normal; letter-spacing: .08em; text-transform: uppercase; color: var(--inkan-fg-3); }
+  .xp-rec { margin-top: 64px; padding-top: 36px; border-top: 1.5px solid var(--inkan-rule-strong); }
+  .xp-rhead { position: relative; padding-bottom: 22px; margin-bottom: 26px; border-bottom: 1.5px dashed var(--inkan-rule); }
+  .xp-rhead .eyebrow { padding-right: 84px; }
+  .xp-stk { position: absolute; right: 0; top: -6px; transform: rotate(8deg); }
+  .xp-title { margin: 10px 0 0; max-width: 24ch; padding-right: 84px; font: 900 clamp(1.75rem, 3.4vw, 2.75rem)/.95 var(--inkan-font-display); font-variation-settings: "wdth" 70; text-transform: uppercase; text-wrap: balance; }
+  .xp-rec .rmeta { margin-top: 20px; }
+  .xp-rec .tag { cursor: default; }
+  .xp-rfoot { margin-top: 28px; font: 500 .6875rem/1.5 var(--inkan-font-mono); color: var(--inkan-fg-3); overflow-wrap: anywhere; }
+  .xp-rfoot a { text-decoration: none; } .xp-rfoot a:hover { text-decoration: underline; }
+  .xp .prose { max-width: none; }
+  .xp .prose pre.mermaid:not([data-processed]) { font: 400 .75rem/1.5 var(--inkan-font-mono); white-space: pre-wrap; }
+  @media (max-width: 700px) {
+    .xp-toc a { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    .xp-stk .stk { --s: 48px; }
+    .xp-rhead .eyebrow, .xp-title { padding-right: 60px; }
+  }
+  @page { size: A4; margin: 16mm 14mm 18mm; }
+  @media print {
+    :root { color-scheme: light; }
+    .xp { max-width: none; }
+    .xp-cover { border-bottom: 0; padding-top: 30vh; break-after: page; }
+    .xp-cover .h1 { font-size: 3.75rem; }
+    .xp-toc { break-after: page; }
+    .xp-toc a { break-inside: avoid; }
+    .xp-rec { margin-top: 0; padding-top: 0; border-top: 0; break-before: page; }
+    .xp-rhead, .xp-rfoot { break-inside: avoid; }
+    .xp-rhead { border-bottom-color: #000; }
+    .xp-title, .xp-facts dd, .xp-toc a b, .xp-toc h3 { color: #000 !important; }
+    .xp .prose :is(h2, h3, h4, h5, h6) { break-after: avoid; }
+    .xp .prose :is(p, li) { orphans: 3; widows: 3; }
+    .xp .prose img, .xp .prose pre.mermaid, .xp .prose svg { max-width: 100%; break-inside: avoid; }
+    .xp .prose .expressive-code pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+    .xp .prose .expressive-code { font-size: .75rem; }
+    /* Code prints as ink on paper: the site's dark frame and the `.code` rule of the print styles do not apply here. */
+    .xp .expressive-code :is(.frame, pre, .header, .code, .gutter) { background: #fff !important; color: #000 !important; border-color: #000 !important; box-shadow: none !important; }
+    .xp .expressive-code .frame { border: 1.5px solid #000; border-radius: 3px; }
+    .xp .expressive-code .header { border-bottom: 1.5px solid #000; }
+    .xp .expressive-code .ec-line span { color: #000 !important; }
+    .xp .expressive-code .ec-line .ln { color: #555 !important; }
+    .xp .expressive-code .ec-line.mark :is(.code, .gutter) { background: #eee !important; }
+    .xp .expressive-code .ec-line.ins :is(.code, .gutter) { background: #e4f5ea !important; }
+    .xp .expressive-code .ec-line.del :is(.code, .gutter) { background: #fbe4e4 !important; }
+    .xp .expressive-code .copy { display: none !important; }
+    .xp-rfoot a::after { content: none; }
+  }
+</style>
+
+<script>
+  document.querySelector<HTMLButtonElement>('[data-print]')?.addEventListener('click', () => print());
+  // Paper is printed in the Day theme: Stage colours are switched off for the print and restored afterwards.
+  const root = document.documentElement;
+  let before: string | undefined;
+  addEventListener('beforeprint', () => {
+    if (root.dataset.theme === 'light') return;
+    before = root.dataset.theme;
+    root.dataset.theme = 'light';
+  });
+  addEventListener('afterprint', () => {
+    if (before) root.dataset.theme = before;
+    before = undefined;
+  });
+</script>

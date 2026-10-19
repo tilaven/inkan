@@ -1,0 +1,48 @@
+---
+/**
+ * Reading layout: sidebar, content column and a sticky right rail.
+ * The rail shows the `rail` slot, then "On this page" from `headings`, then the `rail-end` slot.
+ */
+import type { MarkdownHeading } from 'astro';
+import Base from './Base.astro';
+import { t } from '../lib/i18n';
+import PageHead from '../components/PageHead.astro';
+import Toc from '../components/Toc.astro';
+import type { Crumb } from '../lib/nav';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  crumbs?: Crumb[];
+  headings?: MarkdownHeading[];
+  /** Render the shared page head (eyebrow, title, lede). Records bring their own header. */
+  head?: boolean;
+  eyebrow?: string;
+  accent?: string;
+  lede?: string;
+  /** Status id of the record shown, for the status-specific looks of the page. */
+  status?: string;
+  /** Ink class of the project, e.g. `ink-c`. */
+  ink?: string;
+}
+const { title, description, image, crumbs, headings = [], head = false, eyebrow, accent, lede, status, ink } = Astro.props;
+---
+
+<Base title={title} description={description} image={image} crumbs={crumbs}>
+  <article class:list={['rec-page', ink]} data-status={status}>
+    <div class="rec-main">
+      {head && (
+        <PageHead title={title} accent={accent} eyebrow={eyebrow} lede={lede}>
+          {Astro.slots.has('lede') && <Fragment slot="lede"><slot name="lede" /></Fragment>}
+        </PageHead>
+      )}
+      <slot />
+    </div>
+    <aside class="rail" aria-label={t('shell.aboutPage')} data-pagefind-ignore>
+      <slot name="rail" />
+      <Toc headings={headings} />
+      <slot name="rail-end" />
+    </aside>
+  </article>
+</Base>

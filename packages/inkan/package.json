@@ -1,0 +1,91 @@
+{
+  "name": "inkan",
+  "version": "0.1.0",
+  "description": "Docs site for Architecture Decision Records and RFCs, built from Markdown in your repo.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "inkan": "bin/cli.mjs"
+  },
+  "main": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.mjs"
+    },
+    "./covers": {
+      "types": "./lib/covers.d.ts",
+      "default": "./lib/covers.mjs"
+    },
+    "./analytics": {
+      "types": "./lib/analytics.d.ts",
+      "default": "./lib/analytics.mjs"
+    },
+    "./data": "./app/src/data.ts",
+    "./i18n": "./app/src/lib/i18n.ts",
+    "./search": "./app/src/search/types.ts",
+    "./layouts/Docs": "./app/src/layouts/Docs.astro",
+    "./layouts/Page": "./app/src/layouts/Page.astro",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "app",
+    "!app/node_modules",
+    "!app/.astro",
+    "!**/*.test.*",
+    "templates",
+    "starter"
+  ],
+  "keywords": [
+    "adr",
+    "rfc",
+    "architecture-decision-records",
+    "documentation",
+    "markdown",
+    "static-site"
+  ],
+  "engines": {
+    "node": ">=22.22"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.3",
+    "@astrojs/mdx": "^8.1.0",
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.4",
+    "@expressive-code/plugin-line-numbers": "^0.44.2",
+    "@resvg/resvg-js": "^2.6.2",
+    "astro": "^7.4.0",
+    "astro-expressive-code": "^0.44.2",
+    "astro-mermaid": "^2.1.0",
+    "katex": "^0.19.0",
+    "mdast-util-directive": "^3.1.1",
+    "mermaid": "^11.17.2",
+    "micromark-extension-directive": "^4.0.0",
+    "openid-client": "^6.8.8",
+    "pagefind": "^1.5.2",
+    "rehype-katex": "^7.0.1",
+    "rehype-slug": "^6.0.0",
+    "remark-math": "^6.0.0",
+    "satori": "^0.62.0",
+    "unist-util-visit": "^5.1.0",
+    "yaml": "^2.9.1"
+  },
+  "peerDependencies": {
+    "playwright-core": "^1.56.1"
+  },
+  "peerDependenciesMeta": {
+    "playwright-core": {
+      "optional": true
+    }
+  },
+  "homepage": "https://github.com/tilaven/inkan#readme",
+  "bugs": "https://github.com/tilaven/inkan/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tilaven/inkan.git",
+    "directory": "packages/inkan"
+  }
+}

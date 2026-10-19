@@ -1,0 +1,45 @@
+---
+/** Under a record: the code that references it, then actions (edit in the repo, copy the link, open the raw Markdown). */
+import { codeRefUrl, editProvider, editUrl, type Decision } from '../lib/decisions';
+import { providerName } from '../lib/links';
+import { markdownUrl } from '../lib/markdown';
+import { t } from '../lib/i18n';
+
+interface Props {
+  d: Decision;
+}
+const { d } = Astro.props;
+const edit = editUrl(d.entry);
+const refs = d.codeRefs.map((r) => ({ ...r, href: codeRefUrl(r) }));
+/** Lets long paths wrap after a slash on narrow screens. */
+const segments = (file: string) => file.split('/').flatMap((s, i) => (i ? ['/', s] : [s]));
+---
+
+{refs.length > 0 && (
+  <section class="coderefs" aria-labelledby="coderefs-h" data-pagefind-ignore>
+    <h2 class="coderefs__h" id="coderefs-h">{t('record.referencedInCode')} <span>{refs.length}</span></h2>
+    <ul class="coderefs__list">
+      {refs.map((r) => (
+        <li>
+          {r.href ? (
+            <a href={r.href}><code>{segments(r.file).map((s) => (s === '/' ? <>/<wbr /></> : s))}</code><b><span class="sr-only">{t('record.line', { line: r.line })}</span><data value={r.line} aria-hidden="true">L{r.line}</data> <span aria-hidden="true">↗</span></b></a>
+          ) : (
+            <span class="coderefs__ref"><code>{segments(r.file).map((s) => (s === '/' ? <>/<wbr /></> : s))}</code><b><span class="sr-only">{t('record.line', { line: r.line })}</span><data value={r.line} aria-hidden="true">L{r.line}</data></b></span>
+          )}
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
+
+<div class="recfoot" data-pagefind-ignore>
+  {edit && <a class="pill" href={edit}>{t('record.editOn', { provider: providerName(editProvider(d.entry)) })}</a>}
+  <button class="pill" type="button" data-copy-link>{t('record.copyLink')}</button>
+  <a class="pill" href={markdownUrl(d)}>{t('record.rawMarkdown')}</a>
+</div>
+
+<script>
+  import { copyPageLink } from '../lib/share';
+
+  document.querySelector('[data-copy-link]')?.addEventListener('click', copyPageLink);
+</script>

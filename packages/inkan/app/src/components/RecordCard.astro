@@ -1,0 +1,201 @@
+---
+/**
+ * The photocard (55×85): cover art and title plate on the front, the record
+ * as JSON on the back. Sized in container units, so one markup works from a
+ * thumbnail to a hero. Links to the record, or flips in place when `flippable`.
+ */
+import '../styles/tokens.css';
+import '../styles/card.css';
+import Avatars from './Avatars.astro';
+import Cover from './Cover.astro';
+import Lock from './Lock.astro';
+import StatusSticker from './StatusSticker.astro';
+import { locked } from '../lib/auth';
+import { jsonHtml, matrixSvg, pad4 } from '../lib/card';
+import { docTypes, statuses } from '../lib/config';
+import { isLive, reviewChip, reviewText } from '../lib/review-ui';
+import { formatDate, type Decision, type Person, type ProjectStyle } from '../lib/decisions';
+import { t } from '../lib/i18n';
+
+interface Props {
+  decision: Decision;
+  project: ProjectStyle;
+  /** Card width in CSS pixels. */
+  width?: number;
+  /** Level of detail: 0 full, 1 title only, 2 number and sticker, 3 sticker only. */
+  lod?: 0 | 1 | 2 | 3;
+  /** Flip between the front and the JSON back instead of linking to the record. */
+  flippable?: boolean;
+  /** Pre-resolved author directory (`getPeople()`), to avoid a lookup per card. */
+  people?: Map<string, Person>;
+  class?: string;
+}
+
+const { decision: d, project, width = 220, lod = 0, flippable = false, people, class: className } = Astro.props;
+const status = d.status ?? '';
+const info = Object.hasOwn(statuses, status) ? (statuses[status] as { label?: string; current?: boolean }) : undefined;
+const current = Boolean(info?.current);
+const foil = status === 'implemented' ? 'gold' : 'holo';
+const typeLabel = d.type ? (Object.hasOwn(docTypes, d.type) ? docTypes[d.type].label : d.type) : '';
+const review = isLive(d.rfcReview) ? d.rfcReview : undefined;
+const waitingOn = review && !flippable && review.waitingOn.length ? JSON.stringify(review.waitingOn) : undefined;
+const members = locked(d.href);
+const label = t('card.label', { project: project.name, type: typeLabel, number: pad4(d.number), title: d.title }) + (info?.label ? ` ${t('card.statusSuffix', { status: info.label })}` : '') + (review ? ` ${t('card.reviewSuffix', { review: reviewText(review) })}` : '') + (members ? ` ${t('card.membersOnly')}` : '');
+// The JSON back is only reachable on a flippable card; index pages render hundreds of cards, so they skip it.
+const json = flippable
+  ? jsonHtml({
+      id: d.id,
+      type: d.type ?? '',
+      status,
+      date: formatDate(d.date),
+      tags: d.tags,
+      supersedes: d.supersedes,
+      supersededBy: d.supersededBy,
+      url: d.href,
+    })
+  : '';
+const Wrap = flippable ? 'div' : 'a';
+---
+
+<Wrap
+  class:list={[flippable ? 'dhc-slot' : 'dhc-link', className]}
+  href={flippable ? undefined : d.href}
+  data-flippable={flippable || undefined}
+  data-waiting-on={waitingOn}
+>
+  {!flippable && <span class="sr-only">{label}<span data-you hidden> {t('review.waitingOnYou')}.</span></span>}
+  <article
+    class="dhc"
+    data-id={d.id}
+    data-status={status || undefined}
+    data-project={d.project}
+    data-type={d.type ?? undefined}
+    data-lod={lod}
+    data-current={current || undefined}
+    style={`--w:${width}px;--pi:var(--inkan-ink-${project.ink})`}
+    aria-label={flippable ? label : undefined}
+    aria-hidden={flippable ? undefined : 'true'}
+  >
+    <div class="dhc__flip">
+      <div class="dhc__face dhc__front">
+        <Cover class="dhc__art" id={d.id} ink={project.ink} motif={project.motif} project={project.id} status={status} />
+        <div class="dhc__top">
+          <span class="dhc__chip">{members && <Lock class="dhc__lock" />}<b class="dhc__team">{project.name}</b> · {typeLabel}</span>
+          <span class="dhc__num" data-foil={current ? foil : undefined}>{pad4(d.number)}</span>
+        </div>
+        <div class="dhc__plate">
+          {status && <StatusSticker status={status} />}
+          <p class="dhc__title">{d.title}</p>
+          <p class="dhc__tags">{d.tags.map((t) => `#${t}`).join(' ')}</p>
+          {
+            review && (
+              <p class="dhc__rev">
+                <span class={`dhc__revchip is-${review.status}`} aria-hidden="true">{reviewChip(review)}</span>
+                {waitingOn && <span class="dhc__you" data-you hidden>{t('review.waitingOnYou')}</span>}
+              </p>
+            )
+          }
+          <div class="dhc__foot">
+            <Avatars handles={d.authors} people={people} class="dhc__who" />
+            <span class="dhc__date">{formatDate(d.date).replaceAll('-', '.')}</span>
+          </div>
+        </div>
+        <div class="dhc__sticker-dot">{status && <StatusSticker status={status} />}</div>
+        <i class:list={['dhc__ring', 'foil', { 'foil--gold': foil === 'gold' }]}></i>
+      </div>
+      {
+        flippable && (
+          <div class="dhc__face dhc__back" inert aria-hidden="true">
+            <div class="dhc__bk-head"><span>{t('card.agentReadable')}</span><span>decisions.json</span></div>
+            <pre class="dhc__json" set:html={json} />
+            <div class="dhc__bk-foot">
+              <div class="dhc__matrix" set:html={matrixSvg(d.id)} />
+              <div class="dhc__bk-cap">{t('card.builtFromGit')}<br />{t('card.validatedInCi')}</div>
+              <div class="dhc__seal foil">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+              </div>
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </article>
+  {
+    flippable && (
+      <div class="dhc-modes" role="group" aria-label={t('card.side')}>
+        <button type="button" data-side="0" aria-pressed="true">{t('card.front')}</button>
+        <button type="button" data-side="1" aria-pressed="false">JSON</button>
+      </div>
+    )
+  }
+</Wrap>
+
+<style is:global>
+  .dhc-link { display: block; width: max-content; max-width: 100%; color: inherit; text-decoration: none; border-radius: 4px; }
+  .dhc-link .dhc { pointer-events: none; }
+  .dhc-link:focus-visible { outline: 3px solid var(--inkan-focus); outline-offset: 6px; }
+  .dhc-slot { display: grid; gap: 14px; justify-items: center; width: max-content; max-width: 100%; }
+  .dhc-slot .dhc { cursor: pointer; }
+  .dhc-slot .dhc__back { pointer-events: none; }
+  .dhc__flip { transition: --flip 0.9s var(--inkan-ease-travel), --rx 0.25s, --ry 0.25s; }
+  .dhc__art.cover { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
+  .dhc__lock { font-size: 4.2cqw; margin-right: 1.6cqw; }
+  .dhc__team { font-weight: inherit; text-decoration: underline; text-decoration-color: var(--pi); text-decoration-thickness: 0.6cqw; text-underline-offset: 0.5cqw; }
+  .dhc__who i { box-shadow: 0 0 0 0.4cqw var(--paper), 0 0 0 1.1cqw var(--ink, transparent); }
+  .dhc__matrix { color: var(--k); }
+  .dhc-modes { display: inline-flex; padding: 4px; gap: 2px; border: 1.5px solid var(--inkan-rule-strong); border-radius: var(--inkan-radius-pill); }
+  .dhc-modes button {
+    appearance: none; border: 0; background: transparent; color: var(--inkan-fg-2); cursor: pointer;
+    font: 600 .6875rem/1 var(--inkan-font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 9px 14px; border-radius: var(--inkan-radius-pill); min-height: 40px;
+  }
+  .dhc-modes button[aria-pressed="true"] { background: var(--inkan-fg); color: var(--inkan-bg); }
+  .dhc-modes button:focus-visible { outline: 3px solid var(--inkan-focus); outline-offset: 2px; }
+  @media (forced-colors: active) {
+    .dhc-modes button[aria-pressed="true"] { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+    .dhc-modes button[aria-pressed="true"]:focus-visible { outline-color: CanvasText; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dhc__flip { transition: none; }
+  }
+</style>
+
+<script>
+  import { watchWaiting } from '../lib/me';
+
+  watchWaiting();
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  for (const host of document.querySelectorAll<HTMLElement>('.dhc-link, .dhc-slot')) {
+    const card = host.querySelector<HTMLElement>('.dhc');
+    if (!card) continue;
+    if (!reduced) {
+      host.addEventListener('pointermove', (e) => {
+        const b = card.getBoundingClientRect();
+        const px = (e.clientX - b.left) / b.width - 0.5;
+        const py = (e.clientY - b.top) / b.height - 0.5;
+        card.style.setProperty('--ry', `${(px * 18).toFixed(2)}deg`);
+        card.style.setProperty('--rx', `${(-py * 14).toFixed(2)}deg`);
+      });
+      host.addEventListener('pointerleave', () => {
+        card.style.setProperty('--ry', '0deg');
+        card.style.setProperty('--rx', '0deg');
+      });
+    }
+    if (!host.hasAttribute('data-flippable')) continue;
+    const buttons = host.querySelectorAll<HTMLButtonElement>('[data-side]');
+    const faces = [card.querySelector<HTMLElement>('.dhc__front'), card.querySelector<HTMLElement>('.dhc__back')];
+    const setSide = (side: number) => {
+      card.style.setProperty('--flip', side ? '180deg' : '0deg');
+      card.dataset.side = String(side);
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.side) === side)));
+      faces.forEach((face, i) => {
+        if (!face) return;
+        face.toggleAttribute('inert', i !== side);
+        if (i === side) face.removeAttribute('aria-hidden');
+        else face.setAttribute('aria-hidden', 'true');
+      });
+    };
+    buttons.forEach((b) => b.addEventListener('click', () => setSide(Number(b.dataset.side))));
+    card.addEventListener('click', () => setSide(card.dataset.side === '1' ? 0 : 1));
+  }
+</script>

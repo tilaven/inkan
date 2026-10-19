@@ -1,0 +1,40 @@
+---
+/**
+ * Wide layout: sidebar and a full-width content column, no rail.
+ * Page head pattern: `eyebrow`, `.h1` with the `accent` word underlined, `lede` (plain text; the `lede`
+ * slot takes markup). The `head` slot renders inside the page head after the lede (actions, filters).
+ */
+import Base from './Base.astro';
+import PageHead from '../components/PageHead.astro';
+import type { Crumb } from '../lib/nav';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  crumbs?: Crumb[];
+  head?: boolean;
+  eyebrow?: string;
+  accent?: string;
+  lede?: string;
+  sidebar?: boolean;
+  /** Ink class of the project, e.g. `ink-c`. */
+  ink?: string;
+  noindex?: boolean;
+}
+const { title, description, image, crumbs, head = true, eyebrow, accent, lede, sidebar = true, ink, noindex } = Astro.props;
+---
+
+<Base title={title} description={description} image={image} crumbs={crumbs} sidebar={sidebar} noindex={noindex}>
+  <section class={ink}>
+    {
+      head && (
+        <PageHead title={title} accent={accent} eyebrow={eyebrow} lede={lede}>
+          {Astro.slots.has('lede') && <Fragment slot="lede"><slot name="lede" /></Fragment>}
+          <slot name="head" />
+        </PageHead>
+      )
+    }
+    <slot />
+  </section>
+</Base>

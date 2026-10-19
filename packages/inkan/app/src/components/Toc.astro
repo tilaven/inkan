@@ -1,0 +1,43 @@
+---
+/** "On this page" for the right rail, with scroll-spy. */
+import type { MarkdownHeading } from 'astro';
+import { t } from '../lib/i18n';
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+// Headings are collected after the "#" anchor link is appended to them; the rail shows the title only.
+const headings = Astro.props.headings.filter((h) => h.depth === 2 || h.depth === 3).map((h) => ({ ...h, text: h.text.replace(/\s*#$/, '') }));
+---
+
+{
+  headings.length > 0 && (
+    <div class="rail__sec">
+      <h2 class="rail__h">{t('shell.onThisPage')}</h2>
+      <nav class="toc" aria-label={t('shell.onThisPage')}>
+        {headings.map((h) => (
+          <a href={`#${h.slug}`} class:list={{ 'toc--d3': h.depth === 3 }} data-toc={h.slug}>
+            {h.text}
+          </a>
+        ))}
+      </nav>
+    </div>
+  )
+}
+
+<script>
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('.toc a[data-toc]')];
+  const targets = links.map((a) => document.getElementById(a.dataset.toc!)).filter((el): el is HTMLElement => el !== null);
+  if (targets.length) {
+    const spy = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          for (const a of links) a.setAttribute('aria-current', String(a.dataset.toc === e.target.id));
+        }
+      },
+      { rootMargin: '-80px 0px -65% 0px' },
+    );
+    for (const t of targets) spy.observe(t);
+  }
+</script>

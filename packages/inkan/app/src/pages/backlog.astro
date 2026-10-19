@@ -1,0 +1,88 @@
+---
+import Page from '../layouts/Page.astro';
+import Avatars from '../components/Avatars.astro';
+import StatusSticker from '../components/StatusSticker.astro';
+import { docTypes, openStatuses } from '../lib/config';
+import { formatDate, getDecisions, getPeople, getProjectStyles, projectStyle, statusInfo, type Decision } from '../lib/decisions';
+import { pad4 } from '../lib/card';
+import { locale, t } from '../lib/i18n';
+import { isLive, reviewText } from '../lib/review-ui';
+
+const monthName = (m: number) => new Date(Date.UTC(2000, m - 1, 1)).toLocaleDateString(locale, { month: 'short', timeZone: 'UTC' });
+
+const open = (await getDecisions())
+  .filter((d) => d.status && openStatuses.includes(d.status))
+  .map((d) => ({ d, reviewBy: d.entry.data.reviewBy ? formatDate(d.entry.data.reviewBy as Date) : undefined }));
+const scheduled = open.filter((r) => r.reviewBy).sort((a, b) => a.reviewBy!.localeCompare(b.reviewBy!) || a.d.id.localeCompare(b.d.id));
+const unscheduled = open.filter((r) => !r.reviewBy);
+const styles = await getProjectStyles();
+const people = await getPeople();
+
+const label = (d: Decision) => `${styles.get(d.project)?.name ?? d.project} ${(d.type ? docTypes[d.type].label : '').toUpperCase()} ${pad4(d.number)}`;
+const dateBlock = (iso: string) => {
+  const [y, m, day] = iso.split('-');
+  return { day: Number(day), month: `${monthName(Number(m))} ${y}` };
+};
+const groups = [
+  { rows: scheduled, heading: undefined },
+  { rows: unscheduled, heading: t('backlog.noDate') },
+].filter((g) => g.rows.length > 0);
+---
+
+<Page
+  title={t('backlog.title')}
+  accent={t('backlog.titleAccent')}
+  eyebrow={t('nav.backlog')}
+>
+  <Fragment slot="lede" set:html={`${t('backlog.lede', { count: open.length })}${scheduled.length ? ' <span data-overdue></span>' : ''}`} />
+  {open.length === 0 && <p>{t('backlog.empty')}</p>}
+  {
+    groups.map(({ rows, heading }) => (
+      <>
+        {heading && <h2 class="bl__group">{heading}</h2>}
+        <ol class="bl" data-backlog>
+          {rows.map(({ d, reviewBy }) => {
+            const project = styles.get(d.project) ?? projectStyle(d.project);
+            const date = reviewBy ? dateBlock(reviewBy) : undefined;
+            return (
+              <li class={`bl__row ink-${project.ink}`} data-review-by={reviewBy}>
+                <div class="bl__date">
+                  {date ? <><b>{date.day}</b><span>{date.month}</span></> : <b>–</b>}
+                </div>
+                <a class="bl__main" href={d.href}>
+                  {d.status && <StatusSticker status={d.status} />}
+                  <span>
+                    <em>{label(d)} · {statusInfo(d.status)?.label ?? d.status}</em>
+                    <b>{d.title}</b>
+                    {isLive(d.rfcReview) && <span class={`rv__sum rv__sum--chip is-${d.rfcReview.status}`}>{t('review.chip', { review: reviewText(d.rfcReview) })}</span>}
+                    {d.description && <small>{d.description}</small>}
+                  </span>
+                </a>
+                {reviewBy && (
+                  <div class="bl__d">
+                    <b aria-hidden="true">{reviewBy}</b>
+                    <span data-due></span>
+                  </div>
+                )}
+                <Avatars handles={d.authors} people={people} />
+              </li>
+            );
+          })}
+        </ol>
+      </>
+    ))
+  }
+</Page>
+
+<script>
+  import { t } from '../lib/i18n';
+  import { DEADLINE_SOON, formatLongDate, stampDueRows } from '../lib/dates';
+
+  const today = new Date();
+  const rows = document.querySelectorAll<HTMLElement>('.bl__row[data-review-by]');
+  const overdue = stampDueRows(rows, DEADLINE_SOON, today).filter((r) => r.level === 'overdue').length;
+  const eyebrow = document.querySelector('.page-head .eyebrow');
+  if (eyebrow) eyebrow.append(t('backlog.today', { date: formatLongDate(today) }));
+  const lede = document.querySelector<HTMLElement>('[data-overdue]');
+  if (lede && rows.length) lede.innerHTML = overdue ? `<b>${t('backlog.overdue', { count: overdue })}</b>` : t('backlog.noneOverdue');
+</script>

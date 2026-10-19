@@ -1,0 +1,137 @@
+/* ==========================================================================
+   Inkan — OVERPRINT design tokens
+   Two physics, one system:
+     Day   = ink on paper   (subtractive, inks overprint with `multiply`)
+     Stage = light on black (additive, lights bloom with `screen`)
+   Foil is where they meet. Only records that describe the CURRENT state
+   (accepted, implemented) are allowed to carry foil.
+   Public theme API: every --inkan-* variable can be overridden via customCss.
+   ========================================================================== */
+:root {
+  /* surfaces */
+  --inkan-bg: #F2F5FA;            /* cool flash-white, not cream */
+  --inkan-bg-2: #E6EBF3;
+  --inkan-surface: #FFFFFF;
+  --inkan-surface-2: #ECF0F6;
+  --inkan-fg: #0A0D17;            /* blue-biased black */
+  --inkan-fg-2: #394156;
+  --inkan-fg-3: #586279;
+  --inkan-rule: rgba(10, 13, 23, .14);
+  --inkan-rule-strong: rgba(10, 13, 23, .88);
+
+  /* process inks (project colours). Overprint mixes them. */
+  --inkan-ink-c: #00AEEF;         /* cyan     */
+  --inkan-ink-m: #FF2D8F;         /* magenta  */
+  --inkan-ink-y: #FFE000;         /* yellow   */
+  --inkan-ink-g: #00B35A;         /* green    */
+  --inkan-ink-v: #7B4DFF;         /* violet   */
+  --inkan-ink-o: #FF6B1A;         /* orange   */
+  --inkan-ink-k: #0A0D17;         /* key black */
+  --inkan-ink-m-text: #B0005F;    /* magenta that passes AA for small text on light surfaces */
+  --inkan-ink-g-text: #007A42;    /* green for the same use: review marks and other small glyphs */
+  --inkan-paper: #F4F6FA;         /* card stock */
+  --inkan-blend: multiply;        /* how inks combine */
+  --inkan-foil-key: #0A0D17;      /* key-ink outline + hard shadow on big foil type: gold on pale paper has ~1.5:1 contrast without it */
+  --inkan-foil-shadow: #0A0D17;
+  --inkan-on-ink: #0A0D17;        /* text printed on a process ink: the inks stay bright in both themes */
+  --inkan-on-ink-v: #FFFFFF;      /* violet is the one Day ink too dark for key text at small sizes */
+  --inkan-scrim: rgba(5, 6, 10, .55);
+
+  /* status hues (never the only signal: every status also has shape + glyph) */
+  --inkan-st-draft: #C9D0DD;
+  --inkan-st-proposed: var(--inkan-ink-c);
+  --inkan-st-in-review: var(--inkan-ink-y);
+  --inkan-st-rejected: #FF3B1F;
+  --inkan-st-withdrawn: #8D97AD;
+  --inkan-st-deprecated: #E7A93B;
+  --inkan-st-superseded: #4F46FF;
+
+  /* foil spectrum (hot-stamp holographic) */
+  --inkan-foil-1: #5AE8FF; --inkan-foil-2: #B58CFF; --inkan-foil-3: #FF7ED3;
+  --inkan-foil-4: #FFD66B; --inkan-foil-5: #9BFFB4;
+
+  /* code colours */
+  --inkan-code-key: #006FA8; --inkan-code-str: #C2185B; --inkan-code-num: #A34400; --inkan-code-com: #586279; --inkan-code-bg: #0A0D17;
+
+  /* focus + links */
+  --inkan-focus: #2D3BFF;
+  --inkan-link: #1F36F5;
+
+  /* geometry */
+  --inkan-card-ratio: 55 / 85;    /* 55×85 mm photocard */
+  --inkan-radius-ui: 4px;
+  --inkan-radius-pill: 999px;
+
+  /* type */
+  --inkan-font-display: "Anybody", "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --inkan-font-text: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --inkan-font-mono: "Martian Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --inkan-font-ko: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+
+  /* motion (120 BPM: one beat = 500ms) */
+  --inkan-beat: 500ms;
+  --inkan-ease-travel: cubic-bezier(.16, .9, .12, 1);
+  --inkan-ease-pop: cubic-bezier(.34, 1.56, .64, 1);
+  --inkan-ease-snap: cubic-bezier(.7, 0, .2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --inkan-bg: #05060A;
+    --inkan-bg-2: #0B0D14;
+    --inkan-surface: #10131B;
+    --inkan-surface-2: #171B26;
+    --inkan-fg: #F1F4FA;
+    --inkan-fg-2: #BCC3D4;
+    --inkan-fg-3: #7F89A0;
+    --inkan-rule: rgba(241, 244, 250, .16);
+    --inkan-rule-strong: rgba(241, 244, 250, .9);
+    --inkan-ink-c: #2BD4FF; --inkan-ink-m: #FF4FA6; --inkan-ink-y: #FFEA4A;
+    --inkan-ink-g: #2BEA8A; --inkan-ink-v: #9A78FF; --inkan-ink-o: #FF8A3D;
+    --inkan-ink-k: #F1F4FA;
+    --inkan-ink-m-text: #FF4FA6;
+    --inkan-ink-g-text: #2BEA8A;
+    --inkan-on-ink-v: #0A0D17;
+    --inkan-blend: screen;
+    --inkan-foil-key: transparent;  /* on black the foil carries itself (12:1) */
+    --inkan-foil-shadow: rgba(241, 244, 250, .28);
+    --inkan-st-draft: #4B5368;
+    --inkan-st-withdrawn: #6B7690;
+    --inkan-focus: #7C8BFF;
+    --inkan-link: #8C99FF;
+    --inkan-code-key: #2BD4FF; --inkan-code-str: #FF8AC4; --inkan-code-num: #FFB067; --inkan-code-com: #7F89A0; --inkan-code-bg: #0B0D14;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --inkan-bg: #05060A;
+  --inkan-bg-2: #0B0D14;
+  --inkan-surface: #10131B;
+  --inkan-surface-2: #171B26;
+  --inkan-fg: #F1F4FA;
+  --inkan-fg-2: #BCC3D4;
+  --inkan-fg-3: #7F89A0;
+  --inkan-rule: rgba(241, 244, 250, .16);
+  --inkan-rule-strong: rgba(241, 244, 250, .9);
+  --inkan-ink-c: #2BD4FF; --inkan-ink-m: #FF4FA6; --inkan-ink-y: #FFEA4A;
+  --inkan-ink-g: #2BEA8A; --inkan-ink-v: #9A78FF; --inkan-ink-o: #FF8A3D;
+  --inkan-ink-k: #F1F4FA;
+  --inkan-ink-m-text: #FF4FA6;
+  --inkan-ink-g-text: #2BEA8A;
+  --inkan-on-ink-v: #0A0D17;
+  --inkan-blend: screen;
+  --inkan-foil-key: transparent;
+  --inkan-foil-shadow: rgba(241, 244, 250, .28);
+  --inkan-st-draft: #4B5368;
+  --inkan-st-withdrawn: #6B7690;
+  --inkan-focus: #7C8BFF;
+  --inkan-link: #8C99FF;
+  --inkan-code-key: #2BD4FF; --inkan-code-str: #FF8AC4; --inkan-code-num: #FFB067; --inkan-code-com: #7F89A0; --inkan-code-bg: #0B0D14;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] { color-scheme: light; }
+
+@property --flip { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+@property --rx { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+@property --ry { syntax: '<angle>'; inherits: true; initial-value: 0deg; }

@@ -1,0 +1,151 @@
+---
+/**
+ * Review comments on the record's file in the pull or merge request named by `discussion`, pinned next to the
+ * paragraphs they refer to. Everything happens in the browser; without a readable review only the links remain.
+ */
+import { repoFile, type Decision } from '../lib/decisions';
+import { parseReviewUrl } from './review';
+
+interface Props {
+  d: Decision;
+}
+const { d } = Astro.props;
+const discussion = d.entry.data.discussion;
+const file = repoFile(d.entry);
+const target = file ? parseReviewUrl(discussion) : null;
+---
+
+{target && <div hidden data-review-pins data-discussion={discussion} data-file={file} />}
+
+<style is:global>
+  .prose > .has-pins { position: relative; }
+  .prose a.pin-add {
+    position: absolute; top: 0; right: -38px; width: 26px; height: 26px; display: grid; place-items: center;
+    border: 1.5px solid var(--inkan-rule-strong); border-radius: 50%; background: var(--inkan-bg); color: var(--inkan-fg-2);
+    font: 700 .9375rem/1 var(--inkan-font-mono); text-decoration: none; opacity: 0; transition: opacity .12s;
+  }
+  .prose > .has-pins > a.pin-add::after { content: none; }
+  .prose > .has-pins:hover > a.pin-add, .prose a.pin-add:focus-visible { opacity: 1; }
+  .prose a.pin-add:hover { color: var(--inkan-fg); border-color: var(--inkan-fg); }
+  .prose .pins { margin: -6px 0 22px; padding-left: 14px; border-left: 3px solid var(--inkan-ink-y); }
+  .prose .pins__toggle {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border: 1.5px solid var(--inkan-rule-strong);
+    border-radius: var(--inkan-radius-pill); background: var(--inkan-surface); color: var(--inkan-fg); cursor: pointer;
+    font: 700 .625rem/1.2 var(--inkan-font-mono); letter-spacing: .06em; text-transform: uppercase;
+  }
+  .prose .pins__toggle[aria-expanded="true"] { background: var(--inkan-fg); color: var(--inkan-bg); border-color: var(--inkan-fg); }
+  .prose .pins__list { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+  .prose .pins__item { margin: 0; padding: 10px 12px; border: 1.5px solid var(--inkan-rule-strong); border-radius: var(--inkan-radius-ui); background: var(--inkan-surface); }
+  .prose .pins__meta { display: flex; align-items: center; gap: 8px; font: 600 .6875rem/1.2 var(--inkan-font-mono); color: var(--inkan-fg-3); }
+  .prose .pins__meta a { color: var(--inkan-fg); text-decoration: none; }
+  .prose .pins .pins__meta a::after { content: none; }
+  .prose .pins__meta a:hover { text-decoration: underline; }
+  .prose .pins__meta .pins__line { margin-left: auto; color: var(--inkan-fg-3); }
+  .prose img.pins__avatar { width: 20px; height: 20px; margin: 0; border: 0; border-radius: 50%; flex: none; }
+  .prose .pins__body { margin: 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 400 .875rem/1.55 var(--inkan-font-text); color: var(--inkan-fg); }
+  .prose .pins__outdated { padding: 2px 6px; border: 1px solid var(--inkan-rule-strong); border-radius: var(--inkan-radius-pill); font-size: .625rem; letter-spacing: .06em; text-transform: uppercase; }
+  @media (forced-colors: active) {
+    .prose .pins__toggle[aria-expanded="true"] { forced-color-adjust: none; background: Highlight; color: HighlightText; border-color: Highlight; }
+    .prose .pins__toggle[aria-expanded="true"]:focus-visible { outline-color: CanvasText; }
+  }
+  @media (max-width: 1100px) { .prose a.pin-add { display: none; } }
+  @media print { .prose a.pin-add, .prose .pins { display: none; } }
+</style>
+
+<script>
+  import { httpUrl, isoDate } from './gitlab';
+  import { REVIEW_PAGES, lineUrl, nextPage, parseReviewUrl, pinComments, readReviewComments, reviewRequestUrl, type ReviewComment, type ReviewTarget } from './review';
+  import { el } from '../lib/dom';
+  import { t } from '../lib/i18n';
+
+  function renderComment(c: ReviewComment) {
+    const li = el('li', 'pins__item');
+    const meta = el('div', 'pins__meta');
+    const avatar = httpUrl(c.author.avatar);
+    if (avatar) {
+      const img = el('img', 'pins__avatar');
+      Object.assign(img, { src: avatar, alt: '', width: 20, height: 20, loading: 'lazy' });
+      meta.append(img);
+    }
+    const profile = httpUrl(c.author.url);
+    if (profile) {
+      const a = el('a', undefined, c.author.name);
+      a.href = profile;
+      meta.append(a);
+    } else meta.append(el('span', undefined, c.author.name));
+    if (c.outdated) meta.append(el('span', 'pins__outdated', t('comments.outdated')));
+    const where = httpUrl(c.url);
+    const line = where ? el('a', 'pins__line') : el('span', 'pins__line');
+    if (where) (line as HTMLAnchorElement).href = where;
+    const short = el('span', undefined, `L${c.line}`);
+    short.setAttribute('aria-hidden', 'true');
+    line.append(el('span', 'sr-only', t('record.line', { line: c.line })), short, ` · ${isoDate(c.createdAt)}`);
+    meta.append(line);
+    li.append(meta, el('p', 'pins__body', c.body));
+    return li;
+  }
+
+  function renderPins(block: HTMLElement, comments: ReviewComment[], index: number) {
+    const aside = el('div', 'pins');
+    const button = el('button', 'pins__toggle', t('comments.pinCount', { count: comments.length }));
+    const list = el('ol', 'pins__list');
+    list.id = `pins-${index}`;
+    list.setAttribute('role', 'list');
+    list.hidden = true;
+    list.append(...comments.map(renderComment));
+    Object.assign(button, { type: 'button' });
+    button.setAttribute('aria-expanded', 'false');
+    button.setAttribute('aria-controls', list.id);
+    button.addEventListener('click', () => {
+      list.hidden = !list.hidden;
+      button.setAttribute('aria-expanded', String(!list.hidden));
+    });
+    aside.append(button, list);
+    block.after(aside);
+  }
+
+  /** Elements that may not hold an <a> child, and headings, whose names must stay their own text. */
+  const NO_LINK = new Set(['UL', 'OL', 'DL', 'TABLE', 'HR', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
+
+  async function addLinks(blocks: HTMLElement[], target: ReviewTarget, file: string) {
+    for (const block of blocks.filter((b) => !NO_LINK.has(b.tagName))) {
+      const line = Number(block.dataset.line);
+      const a = el('a', 'pin-add', '+');
+      a.href = await lineUrl(target, file, line);
+      a.title = t(target.provider === 'github' ? 'comments.pinLine' : 'comments.pinFile', { line });
+      a.setAttribute('aria-label', a.title);
+      block.classList.add('has-pins');
+      block.append(a);
+    }
+  }
+
+  async function fetchReview(target: ReviewTarget) {
+    let url: string | null = reviewRequestUrl(target);
+    const pages: unknown[] = [];
+    for (let i = 0; url && i < REVIEW_PAGES; i++) {
+      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      if (!res.ok) break;
+      const json = await res.json();
+      if (target.provider === 'gitlab') return json;
+      if (!Array.isArray(json)) break;
+      pages.push(...json);
+      url = nextPage(res.headers.get('Link'));
+    }
+    return pages;
+  }
+
+  async function load(root: HTMLElement) {
+    const { discussion = '', file = '' } = root.dataset;
+    const target = parseReviewUrl(discussion);
+    const prose = root.closest('[data-pagefind-body]')?.querySelector<HTMLElement>('.prose');
+    if (!target || !prose) return;
+    const blocks = [...prose.children].filter((n): n is HTMLElement => n instanceof HTMLElement && !!n.dataset.line && !!n.dataset.lineEnd);
+    await addLinks(blocks, target, file);
+    const comments = readReviewComments(target, await fetchReview(target), file);
+    const pinned = pinComments(blocks.map((b) => ({ start: Number(b.dataset.line), end: Number(b.dataset.lineEnd) })), comments);
+    for (const [i, list] of pinned) renderPins(blocks[i], list, i);
+  }
+
+  const root = document.querySelector<HTMLElement>('[data-review-pins]');
+  if (root) load(root).catch(() => undefined);
+</script>

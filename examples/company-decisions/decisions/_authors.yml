@@ -1,0 +1,28 @@
+# Optional author directory. Keys are the handles used in `authors:` front matter.
+# Authors that are not listed here still work; they are shown by their handle.
+# `email` (or `github` / `gitlab`) maps git commits to the handle when `authors` is missing from a record.
+- id: ania
+  name: "Ania Kowal"
+  email: ania@acme.example
+  team: sre
+- id: marek
+  name: "Marek Zielin"
+  team: sre
+- id: jules
+  name: "Jules Marchand"
+  team: payments
+- id: noor
+  name: "Noor Haddad"
+  team: payments
+- id: sam
+  name: "Sam Okafor"
+  team: platform
+- id: ines
+  name: "Ines Duarte"
+  team: platform
+- id: kenji
+  name: "Kenji Mori"
+  team: dbre
+- id: lena
+  name: "Lena Fischer"
+  team: mobile

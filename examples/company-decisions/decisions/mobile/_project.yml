@@ -1,0 +1,7 @@
+name: "Mobile"
+description: "The iOS and Android apps."
+ink: v
+motif: arcs
+icon: phone
+owners: [lena]
+order: 50

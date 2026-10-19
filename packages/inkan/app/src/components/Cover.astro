@@ -1,0 +1,25 @@
+---
+/** A record's cover print, generated at build time from its id (see lib/covers.ts). */
+import '../styles/tokens.css';
+import '../styles/cover.css';
+import { coverSvg, nextCoverInstance } from '../lib/covers';
+import type { Ink } from '../lib/inks';
+
+interface Props {
+  id: string;
+  ink: Ink;
+  motif: string;
+  project?: string;
+  status?: string;
+  class?: string;
+}
+
+const { id, ink, motif, project, status, class: className } = Astro.props;
+const svg = coverSvg({ id, ink, motif, project, status }, { instance: nextCoverInstance() });
+---
+
+<div class:list={['cover', className]} set:html={svg} />
+
+<style>
+  .cover { display: block; aspect-ratio: var(--inkan-card-ratio); overflow: hidden; }
+</style>

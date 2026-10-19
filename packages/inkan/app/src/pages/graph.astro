@@ -1,0 +1,205 @@
+---
+import Page from '../layouts/Page.astro';
+import { buildGraph, layoutGraph } from '../lib/graph';
+import { getAllProjects, getDecisions, getProjectStyles, projectHref, statusInfo, url } from '../lib/decisions';
+import { pad } from '../lib/nav';
+import { t } from '../lib/i18n';
+
+const decisions = await getDecisions();
+const projects = await getAllProjects();
+const styles = await getProjectStyles();
+const graph = buildGraph(decisions);
+const layout = layoutGraph(graph, styles, projects.map((p) => p.id));
+
+const byId = new Map(layout.nodes.map((n) => [n.id, n]));
+const fit = Math.max(8, Math.floor((layout.nodeWidth - 24) / 6.3));
+const clip = (s: string) => (s.length > fit ? `${s.slice(0, fit - 1).trimEnd()}…` : s);
+const label = (n: { ref: string | null; number: number | null; project: string }) =>
+  n.ref ?? `${styles.get(n.project)?.name ?? n.project} ${pad(n.number)}`.trim();
+const muted = new Set(['superseded', 'deprecated', 'rejected', 'withdrawn']);
+const laneCount = new Set(layout.nodes.map((n) => n.project)).size;
+const hasEdges = layout.edges.length > 0;
+const supersedes = layout.edges.filter((e) => e.kind === 'supersedes').length;
+---
+
+<Page
+  title={t('graph.title')}
+  accent={t('graph.titleAccent')}
+  eyebrow={t('nav.graph')}
+  lede={hasEdges
+    ? t('graph.lede', {
+        records: t('graph.linkedRecords', { count: layout.nodes.length }),
+        projects: t('graph.projects', { count: laneCount }),
+        unlinked: graph.unlinked ? t('graph.unlinked', { count: graph.unlinked }) : '',
+      })
+    : t('graph.none')}
+>
+  {
+    !hasEdges ? (
+      <p class="graph-empty" set:html={t('graph.empty')} />
+    ) : (
+      <>
+        <div class="graph-bar">
+          <ul class="graph-legend" aria-label={t('graph.legend')}>
+            <li>
+              <svg width="38" height="10" viewBox="0 0 38 10" aria-hidden="true"><line x1="1" y1="5" x2="30" y2="5" class="e-s" /><path d="M29 1l8 4-8 4z" class="e-arrow" /></svg>
+              {t('graph.supersedesHint')}
+            </li>
+            <li>
+              <svg width="38" height="10" viewBox="0 0 38 10" aria-hidden="true"><line x1="1" y1="5" x2="37" y2="5" class="e-r" /></svg>
+              {t('graph.related')}
+            </li>
+          </ul>
+          <div class="graph-toggles" role="group" aria-label={t('graph.showLinks')}>
+            <label><input type="checkbox" data-kind="supersedes" checked /> {t('graph.supersedes')} <span>{supersedes}</span></label>
+            <label><input type="checkbox" data-kind="related" checked /> {t('graph.related')} <span>{layout.edges.length - supersedes}</span></label>
+          </div>
+        </div>
+
+        <figure class="graph" data-graph>
+          <p class="sr-only" id="graph-caption">{t('graph.caption')}</p>
+          <div class="graph__scroll" tabindex="0" role="region" aria-labelledby="graph-caption">
+            <svg viewBox={`0 0 ${layout.width} ${layout.height}`} width={layout.width} height={layout.height} role="group" aria-label={t('graph.diagram')}>
+              <defs>
+                <marker id="graph-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+                  <path d="M0 1L10 5L0 9z" fill="context-stroke" />
+                </marker>
+              </defs>
+              <g class="g-lanes">
+                {layout.lanes.map((l, i) => (
+                  <g>
+                    <rect class={`g-band${i % 2 ? ' is-alt' : ''}`} x="0" y={l.y} width={layout.width} height={l.height} />
+                    <rect class="g-strip" x="0" y={l.y} width="5" height={l.height} style={`fill: var(--inkan-ink-${l.ink})`} />
+                    <a href={projectHref(l.project)}>
+                      <text class="g-lane" x="16" y={l.y + 22}>{l.name}</text>
+                    </a>
+                  </g>
+                ))}
+              </g>
+              <g class="g-cols" aria-hidden="true">
+                {layout.columns.map((c) => (
+                  <g>
+                    <line class="g-grid" x1={c.x} x2={c.x} y1="30" y2={layout.height} />
+                    {c.year && <text class="g-year" x={c.x + 8} y="14">{c.year}</text>}
+                    <text class="g-month" x={c.x + 8} y="30">{c.label}</text>
+                  </g>
+                ))}
+              </g>
+              <g class="g-edges">
+                {layout.edges.map((e) => (
+                  <path class={`g-edge e-${e.kind}`} d={e.d} data-from={e.from} data-to={e.to} data-kind={e.kind} marker-end={e.kind === 'supersedes' ? 'url(#graph-arrow)' : undefined} />
+                ))}
+              </g>
+              <g class="g-nodes">
+                {layout.nodes.map((n) => {
+                  const text = label(n);
+                  return (
+                    <a href={n.href} class={`g-node${muted.has(n.status ?? '') ? ' is-muted' : ''}`} data-id={n.id}>
+                      <title>{`${n.title} (${text}${n.status ? `, ${statusInfo(n.status)?.label ?? n.status}` : ''})`}</title>
+                      <rect class="g-card" x={n.x} y={n.y} width={layout.nodeWidth} height={layout.nodeHeight} rx="3" />
+                      <rect class="g-ink" x={n.x} y={n.y} width="5" height={layout.nodeHeight} style={`fill: var(--inkan-ink-${n.ink})`} />
+                      <text class="g-ref" x={n.x + 14} y={n.y + layout.nodeHeight * 0.4}>{text}</text>
+                      <text class="g-title" x={n.x + 14} y={n.y + layout.nodeHeight * 0.74}>{clip(n.title)}</text>
+                    </a>
+                  );
+                })}
+              </g>
+            </svg>
+          </div>
+        </figure>
+        <p class="graph-missing" role="status" data-graph-missing data-text={t('graph.missing')}></p>
+
+        <details class="graph-list">
+          <summary>{t('graph.list', { count: layout.edges.length })}</summary>
+          <ul>
+            {layout.edges.map((e) => {
+              const a = byId.get(e.from)!;
+              const b = byId.get(e.to)!;
+              return (
+                <li data-kind={e.kind}>
+                  <a href={a.href}>{label(a)} {a.title}</a>
+                  <em>{t(e.kind === 'supersedes' ? 'graph.supersedesVerb' : 'graph.relatedVerb')}</em>
+                  <a href={b.href}>{label(b)} {b.title}</a>
+                </li>
+              );
+            })}
+          </ul>
+        </details>
+      </>
+    )
+  }
+</Page>
+
+<script>
+  const fig = document.querySelector<HTMLElement>('[data-graph]');
+  if (fig) {
+    const nodes = new Map([...fig.querySelectorAll<SVGElement>('.g-node')].map((n) => [n.dataset.id!, n]));
+    const links = new Map<string, SVGElement[]>();
+    for (const e of fig.querySelectorAll<SVGElement>('.g-edge')) {
+      for (const id of [e.dataset.from!, e.dataset.to!]) links.set(id, [...(links.get(id) ?? []), e]);
+    }
+    let lit: Element[] = [];
+    let current: string | null = null;
+    let pinned: string | null = null;
+
+    const light = (id: string | null) => {
+      if (id === current) return;
+      current = id;
+      for (const el of lit) el.classList.remove('is-on');
+      lit = [];
+      if (id) {
+        const add = (el?: Element) => el && (el.classList.add('is-on'), lit.push(el));
+        add(nodes.get(id));
+        for (const e of links.get(id) ?? []) {
+          if (fig.classList.contains(`hide-${e.dataset.kind}`)) continue;
+          add(e);
+          add(nodes.get(e.dataset.from === id ? e.dataset.to! : e.dataset.from!));
+        }
+      }
+      fig.classList.toggle('is-focus', Boolean(id));
+    };
+    const idOf = (t: EventTarget | null) => (t as Element | null)?.closest<SVGElement>('.g-node')?.dataset.id ?? null;
+    const clear = () => {
+      if (pinned) nodes.get(pinned)?.removeAttribute('aria-current');
+      pinned = null;
+      light(null);
+    };
+
+    fig.addEventListener('pointerover', (e) => { const id = idOf(e.target); if (id) light(id); });
+    fig.addEventListener('pointerout', (e) => { if (idOf(e.target) && !idOf(e.relatedTarget)) light(pinned); });
+    fig.addEventListener('focusin', (e) => { const id = idOf(e.target); if (id) light(id); });
+    fig.addEventListener('focusout', () => light(pinned));
+    fig.addEventListener('click', (e) => { if (!idOf(e.target)) clear(); });
+    addEventListener('keydown', (e) => { if (e.key === 'Escape') clear(); });
+
+    // The list below the graph shows the same links as the drawing.
+    const listed = document.querySelectorAll<HTMLElement>('.graph-list li[data-kind]');
+    for (const box of document.querySelectorAll<HTMLInputElement>('input[data-kind]')) {
+      box.addEventListener('change', () => {
+        fig.classList.toggle(`hide-${box.dataset.kind}`, !box.checked);
+        for (const li of listed) if (li.dataset.kind === box.dataset.kind) li.hidden = !box.checked;
+        const id = current;
+        current = null;
+        light(id);
+      });
+    }
+
+    const focus = new URLSearchParams(location.search).get('focus');
+    const target = focus ? nodes.get(focus) : undefined;
+    if (target) {
+      pinned = focus;
+      light(focus);
+      target.setAttribute('aria-current', 'true');
+      target.scrollIntoView({ block: 'nearest', inline: 'center' });
+      target.focus({ preventScroll: true });
+    } else if (focus) {
+      const missing = document.querySelector<HTMLElement>('[data-graph-missing]');
+      // The status region is already in the page; filling it later is what gets announced.
+      if (missing) requestAnimationFrame(() => { missing.textContent = missing.dataset.text!; });
+    }
+  }
+</script>
+
+<style is:global>
+  .graph-list li[hidden] { display: none; }
+</style>

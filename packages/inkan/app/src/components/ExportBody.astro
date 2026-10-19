@@ -1,0 +1,18 @@
+---
+/**
+ * A record body inside the export document. Every record has a "Context" and a "Decision", so heading
+ * and footnote ids (and the links and labels pointing at them) get the record's prefix to stay unique on the page.
+ * The record's title is an h2, so the body's headings move down one level.
+ */
+interface Props {
+  prefix: string;
+}
+const { prefix } = Astro.props;
+const html = (await Astro.slots.render('default'))
+  .replace(/(<[a-z][^>]*\sid=")([^"]+)"/gi, (_, before, id) => `${before}${prefix}-${id}"`)
+  .replace(/(<[a-z][^>]*\saria-labelledby=")([^"]+)"/gi, (_, before, ids) => `${before}${ids.split(' ').map((id: string) => `${prefix}-${id}`).join(' ')}"`)
+  .replace(/(<a\b[^>]*\shref=")#([^"]+)"/gi, (_, before, id) => `${before}#${prefix}-${id}"`)
+  .replace(/(<\/?h)([2-5])\b/gi, (_, tag, level) => `${tag}${Number(level) + 1}`);
+---
+
+<div class="prose" set:html={html} />

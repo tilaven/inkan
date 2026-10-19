@@ -1,0 +1,5 @@
+name: "AI and data"
+description: "llms.txt, decisions.json, Markdown copies and AGENTS.md."
+icon: database
+owners: [tilaven]
+order: 60

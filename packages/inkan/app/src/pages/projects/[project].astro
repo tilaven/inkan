@@ -1,0 +1,10 @@
+---
+/** Old address of the team page; the page itself lives at `/<project>/`. */
+import { getAllProjects, projectHref } from '../../lib/decisions';
+
+export async function getStaticPaths() {
+  return (await getAllProjects()).map((p) => ({ params: { project: p.id } }));
+}
+
+return Astro.redirect(projectHref(Astro.params.project!), 301);
+---

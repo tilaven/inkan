@@ -1,0 +1,105 @@
+---
+import { render } from 'astro:content';
+import mdxComponents from 'virtual:inkan/mdx-components';
+import RecordCard from 'virtual:inkan/components/RecordCard';
+import Page from '../../layouts/Page.astro';
+import Avatars from '../../components/Avatars.astro';
+import Icon from '../../components/Icon.astro';
+import Lock from '../../components/Lock.astro';
+import { locked } from '../../lib/auth';
+import { docTypes, site } from '../../lib/config';
+import { filterHref, getAllProjects, getDecisions, getDocs, getPeople, getProjectStyles, newRecordUrl, person, projectRepo, projectStyle, url } from '../../lib/decisions';
+import { findIntro } from '../../lib/team';
+import { t as translate } from '../../lib/i18n';
+import { pad } from '../../lib/nav';
+import { isoDay } from '../../../../lib/calendar.mjs';
+import { ogUrl } from '../../lib/og-data';
+
+export async function getStaticPaths() {
+  return (await getAllProjects()).map((p) => ({ params: { project: p.id } }));
+}
+
+const { project: id } = Astro.params as { project: string };
+const project = (await getAllProjects()).find((p) => p.id === id)!;
+const decisions = (await getDecisions()).filter((d) => d.project === id);
+const people = await getPeople();
+const style = (await getProjectStyles()).get(id) ?? projectStyle(id);
+const owners = (project.data?.owners ?? []).map((h) => person(people, h));
+const links = project.data?.links ?? [];
+const intro = findIntro(await getDocs(), id);
+const Intro = intro ? (await render(intro)).Content : undefined;
+const today = isoDay();
+const members = locked(url(`${id}/`));
+
+const groups = Object.keys(docTypes)
+  .map((type) => ({ type, items: decisions.filter((d) => d.type === type) }))
+  .filter((g) => g.items.length > 0);
+
+/** "New ADR/RFC" buttons open the repo's web editor (the source repo for sourced projects) with the next number and the template filled in. */
+const repo = projectRepo(id);
+const source = site.sources.find((s) => s.project === id);
+/** Short folder shown next to each group: `decisions/sre`, or the source's `docs/decisions`. */
+const folder = source ? source.recordsPath : `${site.contentPath.split('/').pop()}/${project.folder}`;
+const newLinks = repo
+  ? Object.keys(docTypes).map((t) => {
+      const next = Math.max(0, ...decisions.filter((d) => d.type === t).map((d) => d.number ?? 0)) + 1;
+      const tpl = site.templates[t] ?? '---\ntitle: {{title}}\n---\n';
+      const content = tpl.replaceAll('{{title}}', translate('project.newRecordTitle', { type: docTypes[t].label })).replaceAll('{{date}}', today).replaceAll('{{author}}', '');
+      const file = `${String(next).padStart(4, '0')}-new-${t}.md`;
+      return { type: t, number: next, href: newRecordUrl(repo, `${repo.dir}/${t}`, file, content) };
+    })
+  : [];
+---
+
+<Page
+  title={project.name}
+  lede={project.data?.description}
+  image={ogUrl(id)}
+  eyebrow={translate('project.eyebrow', { records: translate('project.recordCount', { count: decisions.length }) }) + (members ? ` · ${translate('project.membersOnly')}` : '')}
+  ink={`ink-${style.ink}`}
+  crumbs={[{ label: site.title, href: url('/') }, { label: project.name }]}
+>
+  {members && <Fragment slot="lede"><Lock /> {project.data?.description ?? translate('project.membersOnlyLede')}</Fragment>}
+  <Fragment slot="head">
+    {(newLinks.length > 0 || links.length > 0) && (
+      <p class="actions">
+        {newLinks.map((l, i) => (
+          <a class:list={['pill', { 'pill--solid': i === 0 }]} href={l.href}>{translate('project.newDoc', { type: docTypes[l.type].label, number: pad(l.number) })}</a>
+        ))}
+        {links.map((l) => <a class="pill pill--ghost" href={l.url}>{l.label} <Icon name="external" size="0.9em" /></a>)}
+      </p>
+    )}
+  </Fragment>
+
+  <div class="stats stats--team">
+    {Object.keys(docTypes).map((t) => (
+      <a class="stat" href={`${filterHref('project', id)}&type=${t}`}>
+        <b>{decisions.filter((d) => d.type === t).length}</b>
+        <span>{docTypes[t].plural}</span>
+      </a>
+    ))}
+    {owners.length > 0 && (
+      <div class="stat team-owners">
+        <Avatars handles={owners.map((o) => o.handle)} people={people} />
+        <span>{translate('project.owners')} {owners.map((o, i) => <>{i > 0 && ', '}<a href={filterHref('author', o.handle)}>{o.name}</a></>)}</span>
+      </div>
+    )}
+  </div>
+
+  {Intro && <div class="prose prose--page team-intro"><Intro components={mdxComponents} /></div>}
+
+  {groups.map((g) => (
+    <>
+      <div class="sec-h"><h2>{docTypes[g.type].plural}</h2><span>{`${folder}/${g.type}`.split('/').map((part) => <>{part}/<wbr /></>)}</span></div>
+      <ul class="cards cards--left" role="list">
+        {g.items.map((d) => <li><RecordCard decision={d} project={style} people={people} width={176} /></li>)}
+      </ul>
+    </>
+  ))}
+  {decisions.length === 0 && <p set:html={translate('project.empty', { command: `<code>npx inkan new adr ${id.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`)} "Title"</code>` })} />}
+  <p class="more"><a href={`${filterHref('project', id)}`}>{translate('project.filterAll')}</a></p>
+</Page>
+
+<style is:global>
+  ul.cards { margin: 0; list-style: none; }
+</style>

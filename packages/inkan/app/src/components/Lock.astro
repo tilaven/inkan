@@ -1,0 +1,15 @@
+---
+/** Small lock next to a protected project or record, for the site members see. */
+import Icon from './Icon.astro';
+import { t } from '../lib/i18n';
+
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+---
+
+<span class:list={['lock', cls]} title={t('project.membersOnly')}><Icon name="lock" /><span class="sr-only">{t('project.membersOnly')}</span></span>
+
+<style is:global>
+  .lock { display: inline-grid; place-items: center; width: 1.1em; height: 1.1em; border-radius: 3px; background: var(--inkan-fg); color: var(--inkan-bg); vertical-align: -0.15em; flex: none; }
+  .lock svg { width: 0.7em; height: 0.7em; stroke-width: 2.4; }
+</style>

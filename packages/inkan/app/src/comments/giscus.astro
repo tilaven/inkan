@@ -1,0 +1,60 @@
+---
+/** GitHub Discussions through giscus (https://giscus.app). The script is added in the browser, with the current theme. */
+import { t } from '../lib/i18n';
+import { escapeRegExp } from '../../../lib/regex.mjs';
+import type { CommentsProps } from './types';
+
+type Props = CommentsProps;
+const { d, options: o, discussion } = Astro.props;
+const opt = o as {
+  repo: string;
+  repoId: string;
+  category: string;
+  categoryId: string;
+  mapping: string;
+  strict: boolean;
+  reactions: boolean;
+  inputPosition: string;
+  lang: string;
+  theme: { light: string; dark: string };
+};
+const own = discussion && new RegExp(`^https://github\\.com/${escapeRegExp(opt.repo)}/discussions/(\\d+)/?(?:[?#].*)?$`, 'i').exec(discussion);
+const attrs: Record<string, string> = {
+  'data-repo': opt.repo,
+  'data-repo-id': opt.repoId,
+  'data-category': opt.category,
+  'data-category-id': opt.categoryId,
+  'data-mapping': own ? 'number' : opt.mapping,
+  'data-strict': opt.strict ? '1' : '0',
+  'data-reactions-enabled': opt.reactions ? '1' : '0',
+  'data-emit-metadata': '0',
+  'data-input-position': opt.inputPosition,
+  'data-lang': opt.lang,
+  'data-loading': 'lazy',
+};
+if (own) attrs['data-term'] = own[1];
+else if (opt.mapping === 'specific') attrs['data-term'] = d.id;
+const fallback = own ? discussion : `https://github.com/${opt.repo}/discussions`;
+---
+
+<div class="giscus" data-giscus={JSON.stringify(attrs)} data-giscus-themes={JSON.stringify(opt.theme)}>
+  <noscript><a class="pill" href={fallback}>{t('comments.openOn', { provider: 'GitHub' })} <span aria-hidden="true">↗</span></a></noscript>
+</div>
+
+<script>
+  const host = document.querySelector<HTMLElement>('[data-giscus]');
+  if (host) {
+    const themes = JSON.parse(host.dataset.giscusThemes!) as { light: string; dark: string };
+    const theme = () => (document.documentElement.dataset.theme === 'dark' ? themes.dark : themes.light);
+    const script = document.createElement('script');
+    for (const [k, v] of Object.entries(JSON.parse(host.dataset.giscus!) as Record<string, string>)) script.setAttribute(k, v);
+    script.setAttribute('data-theme', theme());
+    script.src = 'https://giscus.app/client.js';
+    script.crossOrigin = 'anonymous';
+    script.async = true;
+    host.append(script);
+    new MutationObserver(() => {
+      host.querySelector<HTMLIFrameElement>('iframe.giscus-frame')?.contentWindow?.postMessage({ giscus: { setConfig: { theme: theme() } } }, 'https://giscus.app');
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  }
+</script>
