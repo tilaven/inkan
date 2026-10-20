@@ -17,7 +17,7 @@ import HeadEnd from 'virtual:inkan/components/HeadEnd';
 import HeadTags from '../components/HeadTags.astro';
 import Icon from '../components/Icon.astro';
 import { site } from '../lib/config';
-import { locale, t } from '../lib/i18n';
+import { t } from '../lib/i18n';
 import { url } from '../lib/decisions';
 import { iconType } from '../lib/links';
 import { ogUrl } from '../lib/og-data';
@@ -42,7 +42,7 @@ const theme = site.theme.default;
 ---
 
 <!doctype html>
-<html lang={locale}>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />

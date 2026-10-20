@@ -1,5 +1,5 @@
 import { dTag, dueText } from './dates';
-import { locale, t } from './i18n';
+import { t } from './i18n';
 
 /**
  * Fills a review-due chip: the short `D-n` tag for the eye, `dueText` ("in 19 days", "9 days late") for screen
@@ -9,7 +9,7 @@ export function fillDueChip(chip: HTMLElement, days: number): void {
   const late = days < 0;
   const tag = document.createElement('span');
   tag.setAttribute('aria-hidden', 'true');
-  tag.textContent = late ? `${dTag(days)} · ${t('reviews.overdue').toLocaleLowerCase(locale)}` : dTag(days);
+  tag.textContent = late ? `${dTag(days)} · ${t('reviews.overdue').toLowerCase()}` : dTag(days);
   const text = document.createElement('span');
   text.className = 'sr-only';
   text.textContent = dueText(days);

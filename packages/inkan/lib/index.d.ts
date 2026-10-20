@@ -184,14 +184,7 @@ export interface InkanPlugin {
   head?: HeadTag[];
   /** Links appended to the top navigation. */
   navigation?: NavLink[];
-  /** Interface text by language; the config's own `translations` win over a plugin's. */
-  translations?: Translations;
 }
-
-/** A plural message picks its form with `Intl.PluralRules` from the `count` parameter. */
-export type Message = string | Partial<Record<Intl.LDMLPluralRule, string>>;
-/** Language (`pl`, `pt-BR`) → interface text key (`nav.timeline`) → text. Keys are listed in `inkan/lib/i18n/en.mjs`. */
-export type Translations = Record<string, Record<string, Message>>;
 
 /** A record that moved into a notified status, as `inkan notify` sends it. */
 export interface NotifyEvent {
@@ -279,13 +272,6 @@ export interface InkanConfig {
   url?: string;
   /** Sub-path when not served from the domain root, e.g. '/decisions'. BASE_PATH env var overrides it. */
   base?: string;
-  /**
-   * Interface language as a BCP 47 tag. Built in: 'en' (default) and 'pl'. Any other language works once
-   * `translations` (or a plugin) supplies its text; untranslated keys fall back to English.
-   */
-  locale?: string;
-  /** Override or add interface text, by language: `{ pl: { 'nav.backlog': 'Kolejka' } }`. */
-  translations?: Translations;
   /** Repository holding the content. Enables "Edit page" and "New ADR" links. */
   repo?: { url: string; branch?: string; provider?: 'github' | 'gitlab' };
   /** Folder with the records, relative to the config file. Default: 'decisions'. */
@@ -430,10 +416,6 @@ export interface ResolvedConfig extends Required<Omit<InkanConfig, 'plugins' | '
   repoRoot: string;
   contentPath: string;
   templates: Record<string, string>;
-  /** Canonical `locale`. */
-  locale: string;
-  /** Interface text resolved for `locale`. */
-  messages: Record<string, Message>;
 }
 
 export declare function defineConfig(config: InkanConfig): InkanConfig;

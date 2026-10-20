@@ -76,7 +76,6 @@ export default defineConfig({
 | `motifs` | `Record<string, string \| URL>` | Cover motifs: a name (`/^[a-z][a-z0-9-]*$/`) to a module whose default export is a `MotifFn`. Projects pick it with `motif:` in `_project.yml`, or get it through the motif's `keywords` when their id or name contains one. A later plugin wins over an earlier one and over a built-in of the same name. |
 | `head` | `HeadTag[]` | Tags added to every page's `<head>`, after the ones from `head` in the config. |
 | `navigation` | `NavLink[]` | Links appended to the top navigation and the sidebar's links block, after the ones from the config. |
-| `translations` | `Record<string, Record<string, Message>>` | Interface text by language: new languages, or the text of the plugin's own pages. The config's `translations` win. See [Interface in your language](../../site/adr/0015-interface-in-your-language.md). |
 
 ### The config hook
 
@@ -90,7 +89,7 @@ argument and return nothing.
 > inside the hook must not grow it twice. The example above is safe because Inkan starts from a fresh
 > copy of the defaults on each load; a hook that reads state from outside the config is not.
 
-After all hooks ran, `head`, `navigation`, `locale` and `translations` are validated once more. A hook that puts a malformed entry
+After all hooks ran, `head` and `navigation` are validated once more. A hook that puts a malformed entry
 there fails the build with `Invalid inkan config after plugin hooks:` and one line per problem.
 
 ### Pages

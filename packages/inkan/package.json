@@ -23,7 +23,6 @@
       "default": "./lib/analytics.mjs"
     },
     "./data": "./app/src/data.ts",
-    "./i18n": "./app/src/lib/i18n.ts",
     "./search": "./app/src/search/types.ts",
     "./layouts/Docs": "./app/src/layouts/Docs.astro",
     "./layouts/Page": "./app/src/layouts/Page.astro",
