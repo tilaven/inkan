@@ -23,7 +23,7 @@ export default defineConfig({
   snapshotPathTemplate: '{testDir}/__screenshots__/{testFilePath}/{arg}-{projectName}{ext}',
   use: { baseURL: `http://localhost:${port}`, trace: 'retain-on-failure' },
   expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.002 } },
-  projects: [...matrix('e2e', /(crawl|a11y|filters|search|page-actions|rfc-reviews|graph|reviews)\.spec\.ts/), ...matrix('visual', /visual\.spec\.ts/)],
+  projects: [...matrix('e2e', /(crawl|a11y|filters|search|page-actions|rfc-reviews|graph|reviews|timeline)\.spec\.ts/), ...matrix('visual', /visual\.spec\.ts/)],
   webServer: {
     command: `node packages/inkan/bin/cli.mjs preview --root ${site} --port ${port}`,
     url: `http://localhost:${port}/`,

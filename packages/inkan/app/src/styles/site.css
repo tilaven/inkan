@@ -1388,12 +1388,17 @@ a.rhist__commit span { opacity: .55; }
 .toc a.toc--d3 { padding-left: 28px; font-size: .78125rem; }
 
 /* ---- timeline ---------------------------------------------------------------------------- */
-.tl { display: grid; margin-top: 30px; border-top: 1.5px solid var(--inkan-rule-strong); }
+.tl {
+  --tl-month: clamp(2.5rem, 4vw, 3.875rem);
+  display: grid;
+  margin-top: 30px;
+  border-top: 1.5px solid var(--inkan-rule-strong);
+}
 .tl .month {
   content-visibility: auto;
   contain-intrinsic-block-size: auto 400px;
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
+  grid-template-columns: minmax(calc(var(--tl-month) * 3), max-content) minmax(0, 1fr);
   gap: 22px;
   padding: 22px 0;
   border-bottom: 1.5px dashed var(--inkan-rule);
@@ -1402,8 +1407,9 @@ a.rhist__commit span { opacity: .55; }
 .tl .month__l h3 {
   margin: 0;
   display: block;
-  font: 900 clamp(2.5rem, 4vw, 3.875rem)/.85 var(--inkan-font-display);
+  font: 900 var(--tl-month)/.85 var(--inkan-font-display);
   font-variation-settings: "wdth" 120;
+  white-space: nowrap;
 }
 .tl .month__l span { font: 600 .6875rem/1 var(--inkan-font-mono); letter-spacing: .1em; color: var(--inkan-fg-3); }
 .tl .month__cards { display: flex; gap: 16px; flex-wrap: wrap; }
