@@ -19,6 +19,7 @@ import rehypeSlug from 'rehype-slug';
 import remarkAdmonitions, { ADMONITION_TYPES, remarkContainerDirectives, remarkRestoreDirectives } from './src/lib/remark-admonitions.mjs';
 import remarkMdLinks from './src/lib/remark-md-links.mjs';
 import remarkIssueLinks from './src/lib/remark-issue-links.mjs';
+import remarkLiteralTags from './src/lib/remark-literal-tags.mjs';
 import rehypeTaskLabels from './src/lib/rehype-task-labels.mjs';
 import rehypeHeadingAnchors from './src/lib/rehype-heading-anchors.mjs';
 import rehypePagefindIgnore from './src/lib/rehype-pagefind-ignore.mjs';
@@ -210,6 +211,7 @@ export default defineConfig({
         remarkMath,
         [remarkMdLinks, { contentDir: config.contentDir, base, sources: config.sources }],
         [remarkIssueLinks, { rules: config.issueLinks }],
+        remarkLiteralTags,
         ...plugins.flatMap((p) => p.remarkPlugins ?? []),
         remarkRestoreDirectives,
       ],

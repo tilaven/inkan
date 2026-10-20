@@ -35,7 +35,7 @@ Records are GitHub-flavoured Markdown (tables, task lists, strikethrough, autoli
 | Kafka | Yes | High | **Accepted** |
 | NATS JetStream | Yes | Medium | ~~Shortlisted~~ Dropped |
 
-Column alignment with `:---:` and `---:` works. Inline formatting inside cells works too. A table wider than the page scrolls sideways and, while it does, is a focusable region named "Table 1 in &lt;record title&gt;", "Table 2 in &lt;record title&gt;" and so on, so it can be reached and moved with the keyboard; a table that fits is left alone. Display math gets the same treatment as "Equation 1 in &lt;record title&gt;".
+Column alignment with `:---:` and `---:` works. Inline formatting inside cells works too. A table wider than the page scrolls sideways and, while it does, is a focusable region named "Table 1 in <record title>", "Table 2 in <record title>" and so on, so it can be reached and moved with the keyboard; a table that fits is left alone. Display math gets the same treatment as "Equation 1 in <record title>".
 
 ### Task lists
 
@@ -227,7 +227,7 @@ Relative image paths are resolved from the Markdown file, optimised at build tim
 - Strikethrough with `~~text~~`, autolinked bare URLs such as https://example.com, and HTML comments `<!-- like this -->`, which are dropped.
 - Relative links to other `.md` files, see [Link records by path](0006-link-records-by-path.md).
 - Issue keys that become links, see [Turn issue keys into links](0008-turn-issue-keys-into-links.md).
-- Raw HTML in Markdown is passed through as on GitHub.
+- Raw HTML in Markdown is passed through as on GitHub. A placeholder that only looks like a tag, such as <project> or <record title>, is shown as written instead of disappearing.
 
 ## Consequences
 
