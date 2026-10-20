@@ -39,10 +39,11 @@ const count = (pick: (d: Decision) => string[]) => {
 const byProject = count((d) => [d.project]);
 const byType = count((d) => (d.type ? [d.type] : []));
 const byStatus = count((d) => (d.status ? [d.status] : []));
-const byAuthor = count((d) => d.authors);
+const involved = (d: Decision) => [...new Set([...d.authors, ...d.deciders])];
+const byAuthor = count(involved);
 
 const projects = (await getAllProjects()).map((p) => styleOf(p.id));
-const used = new Set(decisions.flatMap((d) => d.authors));
+const used = new Set(decisions.flatMap(involved));
 const authors = [...[...people.keys()].filter((h) => used.has(h)), ...[...used].filter((h) => !people.has(h))].map((h) => person(people, h));
 const tags = countBy(decisions.flatMap((d) => d.tags));
 
@@ -184,7 +185,7 @@ const typeLabel = (type: string | null) => (type && Object.hasOwn(docTypes, type
               data-project={d.project}
               data-type={d.type ?? ''}
               data-status={d.status ?? ''}
-              data-authors={JSON.stringify(d.authors)}
+              data-people={JSON.stringify(involved(d))}
               data-tags={JSON.stringify(d.tags)}
               data-fields={JSON.stringify(fieldData(d))}
               data-text={recordText(d)}

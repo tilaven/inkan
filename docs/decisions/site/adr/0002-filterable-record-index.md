@@ -30,7 +30,7 @@ The filter field and a **Filters** button sit at the top of the page. The button
 | `project` | `?project=sre,payments` | Project folder ids. |
 | `type` | `?type=rfc` | Record type ids (the folder name: `adr`, `rfc` or your own). |
 | `status` | `?status=accepted,implemented` | Status ids as spelled in the front matter. |
-| `author` | `?author=anna.kowalska` | Author handles from `authors`. |
+| `author` | `?author=anna.kowalska` | Handles from `authors` or `deciders`: records the person wrote or signed off. |
 | `tag` | `?tag=kafka` | Tags from `tags`. |
 | `q` | `?q=rate+limit` | Words that must all occur in the title, tags or description. |
 | `view` | `?view=table` | `table` for the table view; absent means cards. |
@@ -56,7 +56,7 @@ Only the ten most used tags are visible at first; a `+N more` chip reveals the r
 - **Team**: every project, from `_project.yml` files and bare folders alike, with its ink dot.
 - **Type**: the keys of `docTypes`, labelled with their `label`.
 - **Status**: the keys of `statuses`, each with its sticker.
-- **Author**: handles that appear in at least one `authors` list; the display name comes from `_authors.yml` when there is one.
+- **People**: handles that appear in at least one `authors` or `deciders` list, counted once per record; the display name comes from `_authors.yml` when there is one.
 - **Tag**: every tag used, most frequent first.
 - **Custom fields**: one group per filterable field in `fields`: chips for text, enum, list and boolean fields, a min and max range for number and date fields. A field with `column: true` also gets a column in the table.
 
