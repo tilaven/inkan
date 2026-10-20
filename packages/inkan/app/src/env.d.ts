@@ -79,6 +79,11 @@ declare module 'virtual:inkan/config' {
     landing: {
       title: string | null;
       tagline: string | null;
+      eyebrow: string | null;
+      /** Absolute paths; the URLs come from `virtual:inkan/assets`. */
+      image: { src: string; dark: string | null; alt: string } | null;
+      command: string | null;
+      features: { title: string; text: string; link?: string }[];
       actions: { text: string; link: string; variant?: 'primary' | 'secondary' | 'ghost' }[];
       sections: string[];
     };
@@ -96,6 +101,9 @@ declare module 'virtual:inkan/assets' {
   /** URLs of the user's logo / favicon, or null to use the built-in ones. */
   export const logo: string | null;
   export const favicon: string | null;
+  /** URLs of `landing.image` and its dark variant. */
+  export const landingImage: string | null;
+  export const landingImageDark: string | null;
 }
 
 declare module 'virtual:inkan/user-css' {}

@@ -5,6 +5,9 @@ import { filterHref, projectHref } from '../lib/decisions';
 import { t } from '../lib/i18n';
 import { getMembers } from '../lib/people';
 
+/** Newest records listed per person; the rest are one link away in the filtered index. */
+const RECORD_LIMIT = 5;
+
 const members = await getMembers();
 ---
 
@@ -31,7 +34,7 @@ const members = await getMembers();
             </div>
           </div>
           <ul>
-            {m.records.map((d) => (
+            {m.records.slice(0, RECORD_LIMIT).map((d) => (
               <li>
                 <a href={d.href}>
                   {d.status && <StatusSticker status={d.status} size="20px" label />}
@@ -40,6 +43,11 @@ const members = await getMembers();
               </li>
             ))}
           </ul>
+          {m.records.length > RECORD_LIMIT && (
+            <a class="member__more" href={filterHref('author', m.handle)} aria-label={t('people.moreLabel', { count: m.records.length - RECORD_LIMIT, name: m.name })}>
+              {t('people.more', { count: m.records.length - RECORD_LIMIT })} <span aria-hidden="true">→</span>
+            </a>
+          )}
         </article>
       ))
     }

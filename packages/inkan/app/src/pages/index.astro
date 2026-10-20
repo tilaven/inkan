@@ -1,8 +1,8 @@
 ---
 /**
- * Landing page. Hero text and buttons come from `landing` in inkan.config; `landing.sections`
- * orders and filters the blocks below it ('stats' adds the numbers to the hero). An optional `_landing.md` in the
- * content folder is the "content" section.
+ * Landing page. Hero text, picture, buttons and command come from `landing` in inkan.config; `landing.sections`
+ * orders and filters the blocks below it ('stats' adds the numbers to the hero and the lede). An optional
+ * `_landing.md` in the content folder is the "content" section; its `title` and `description` name the section.
  */
 import { getCollection, render } from 'astro:content';
 import mdxComponents from 'virtual:inkan/mdx-components';
@@ -17,8 +17,9 @@ import { locked } from '../lib/auth';
 import { site } from '../lib/config';
 import { getAllProjects, getDecisions, getPeople, getProjectStyles, getReviews, projectHref, projectStyle } from '../lib/decisions';
 import { formatLongDate, overdueCount } from '../lib/dates';
-import { agentEndpoints, buildDate, isCurrent, reviewDueDates } from '../lib/home';
+import { agentEndpoints, buildDate, isCurrent, landingHref, reviewDueDates } from '../lib/home';
 import { landingFile } from '../lib/loaders';
+import { landingImage, landingImageDark } from 'virtual:inkan/assets';
 
 const landing = site.landing;
 const sections = landing.sections;
@@ -43,7 +44,12 @@ const stats = sections.includes('stats')
       reviewDates,
     }
   : undefined;
-const lede = `${t('landing.ledeCounts', { records: t('project.recordCount', { count: decisions.length }), teams: t('landing.teamCount', { count: projects.length }) })} ${landing.tagline ?? site.tagline}`;
+const tagline = landing.tagline ?? site.tagline;
+const lede = stats
+  ? `${t('landing.ledeCounts', { records: t('project.recordCount', { count: decisions.length }), teams: t('landing.teamCount', { count: projects.length }) })} ${tagline}`
+  : tagline;
+const image = landing.image && landingImage ? { src: landingImage, dark: landingImageDark, alt: landing.image.alt } : null;
+const inks = ['c', 'm', 'y', 'g', 'v', 'o'];
 
 const teams = projects.map((p) => {
   const records = decisions.filter((d) => d.project === p.id);
@@ -57,14 +63,34 @@ const endpoints = agentEndpoints();
 <Page title={site.title} description={site.tagline} head={false}>
   <LandingHero
     title={landing.title ?? site.title}
-    eyebrow={t('landing.eyebrow', { date: formatLongDate(built) })}
+    eyebrow={landing.eyebrow ?? t('landing.eyebrow', { date: formatLongDate(built) })}
     lede={lede}
     actions={landing.actions}
+    command={landing.command}
+    image={image}
     stats={stats}
   />
   {
     sections.map((s) => (
       <>
+        {s === 'features' && landing.features.length > 0 && (
+          <>
+            <div class="sec-h"><h2>{t('landing.features')}</h2></div>
+            <ul class="units features" role="list">
+              {landing.features.map((f, i) => {
+                const Tag = f.link ? 'a' : 'div';
+                return (
+                  <li>
+                    <Tag class:list={['unit', 'feature', `ink-${inks[i % inks.length]}`, !f.link && 'feature--static']} href={f.link && landingHref(f.link)}>
+                      <h3>{f.title}</h3>
+                      <p>{f.text}</p>
+                    </Tag>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
         {s === 'projects' && (
           <>
             <div class="sec-h"><h2>{t('landing.teams')}</h2><span>{t('landing.teamsHint')}</span></div>
@@ -101,7 +127,10 @@ const endpoints = agentEndpoints();
         )}
         {s === 'content' && Extra && (
           <>
-            <div class="sec-h"><h2>{t('landing.content')}</h2><span>{t('landing.contentHint')}</span></div>
+            <div class="sec-h">
+              <h2>{typeof extra?.data.title === 'string' ? extra.data.title : t('landing.content')}</h2>
+              <span>{typeof extra?.data.description === 'string' ? extra.data.description : t('landing.contentHint')}</span>
+            </div>
             <div class="prose prose--wide landing-prose"><Extra components={mdxComponents} /></div>
           </>
         )}
