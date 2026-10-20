@@ -81,7 +81,7 @@ const EXTERNAL_SEARCH = new Set(['algolia', 'meilisearch', 'typesense', 'custom'
 /** Virtual modules that hand the user's config, assets and CSS to the app. */
 const modules = {
   // `notify` holds webhook URLs (secrets) and functions: it stays out of the site.
-  'virtual:inkan/config': () => `export default ${JSON.stringify({ ...config, plugins: undefined, notify: undefined})};`,
+  'virtual:inkan/config': () => `export default ${JSON.stringify({ ...config, plugins: undefined, notify: undefined })};`,
   'virtual:inkan/assets': () =>
     [
       config.logo ? `export { default as logo } from ${JSON.stringify(config.logo + '?url')};` : 'export const logo = null;',
