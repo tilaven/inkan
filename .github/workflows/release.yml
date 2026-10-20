@@ -1,7 +1,9 @@
 name: Release
 
-# Publishes `@tilaven/inkan` and `@tilaven/create-inkan` to npm when a `v*` tag is pushed.
+# Stages `@tilaven/inkan` and `@tilaven/create-inkan` on npm when a `v*` tag is pushed.
 # Both package versions (and create-inkan's dependency on inkan) must match the tag.
+# A maintainer then approves each staged version on npmjs.com (or with `npm stage approve`),
+# inkan first, which needs their 2FA.
 # Authentication uses npm trusted publishing; until it is set up on npmjs.com,
 # an `NPM_TOKEN` repository secret is used instead.
 on:
@@ -27,7 +29,7 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
           cache: npm
-      - run: npm install -g npm@^11.5.1
+      - run: npm install -g npm@^11.21.0
       - name: Check versions match the tag
         run: |
           version="${GITHUB_REF_NAME#v}"
@@ -51,6 +53,6 @@ jobs:
             if npm view "$name@$version" version > /dev/null 2>&1; then
               echo "$name@$version is already published"
             else
-              npm publish -w "packages/$dir" --access public --provenance --tag "$tag"
+              npm stage publish -w "packages/$dir" --access public --provenance --tag "$tag"
             fi
           done

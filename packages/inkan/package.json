@@ -1,6 +1,6 @@
 {
   "name": "@tilaven/inkan",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Docs site for Architecture Decision Records and RFCs, built from Markdown in your repo.",
   "license": "MIT",
   "type": "module",
