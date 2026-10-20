@@ -168,8 +168,9 @@ const records = await Promise.all(
   .xp-toc section { margin-top: 22px; }
   .xp-toc h3 { margin: 0 0 6px; display: flex; align-items: baseline; gap: 10px; font: 800 .875rem/1 var(--inkan-font-display); font-variation-settings: "wdth" 88; text-transform: uppercase; text-decoration: underline; text-decoration-color: var(--ink); text-decoration-thickness: .22em; text-underline-offset: .12em; }
   .xp-toc h3 span { font: 600 .625rem/1 var(--inkan-font-mono); color: var(--inkan-fg-3); text-decoration: none; }
-  .xp-toc ol { margin: 0; padding: 0; list-style: none; }
-  .xp-toc a { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 7px 0; border-bottom: 1px dashed var(--inkan-rule); text-decoration: none; font: 500 .875rem/1.35 var(--inkan-font-text); color: var(--inkan-fg-2); }
+  .xp-toc ol { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: max-content minmax(0, 1fr) auto; column-gap: 12px; }
+  .xp-toc li, .xp-toc a { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; }
+  .xp-toc a { align-items: baseline; padding: 7px 0; border-bottom: 1px dashed var(--inkan-rule); text-decoration: none; font: 500 .875rem/1.35 var(--inkan-font-text); color: var(--inkan-fg-2); }
   .xp-toc a:hover { color: var(--inkan-fg); } .xp-toc a:hover span { text-decoration: underline; }
   .xp-toc a b { font: 700 .6875rem/1.35 var(--inkan-font-mono); color: var(--inkan-fg); white-space: nowrap; }
   .xp-toc a em { font: 600 .625rem/1.35 var(--inkan-font-mono); font-style: normal; letter-spacing: .08em; text-transform: uppercase; color: var(--inkan-fg-3); }
@@ -185,7 +186,8 @@ const records = await Promise.all(
   .xp .prose { max-width: none; }
   .xp .prose pre.mermaid:not([data-processed]) { font: 400 .75rem/1.5 var(--inkan-font-mono); white-space: pre-wrap; }
   @media (max-width: 700px) {
-    .xp-toc a { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    .xp-toc ol { grid-template-columns: minmax(0, 1fr); }
+    .xp-toc a { gap: 2px; }
     .xp-stk .stk { --s: 48px; }
     .xp-rhead .eyebrow, .xp-title { padding-right: 60px; }
   }

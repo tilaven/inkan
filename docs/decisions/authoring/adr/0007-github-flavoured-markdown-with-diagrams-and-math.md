@@ -227,7 +227,7 @@ Relative image paths are resolved from the Markdown file, optimised at build tim
 - Strikethrough with `~~text~~`, autolinked bare URLs such as https://example.com, and HTML comments `<!-- like this -->`, which are dropped.
 - Relative links to other `.md` files, see [Link records by path](0006-link-records-by-path.md).
 - Issue keys that become links, see [Turn issue keys into links](0008-turn-issue-keys-into-links.md).
-- Raw HTML in Markdown is passed through as on GitHub.
+- Raw HTML in Markdown is passed through as on GitHub. A placeholder that only looks like a tag, such as <project> or <record title>, is shown as written instead of disappearing.
 
 ## Consequences
 
