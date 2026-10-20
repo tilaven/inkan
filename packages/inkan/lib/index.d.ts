@@ -327,6 +327,11 @@ export interface InkanConfig {
   codeRefs?: false | { include?: string[]; exclude?: string[]; marker?: string };
   /** Open Graph cards (1200×630 PNG) drawn from the record covers, for link previews. `false` turns them off. */
   og?: false | { theme?: 'light' | 'dark' };
+  /**
+   * Order of the records under each project in the sidebar. `newest` (default) and `oldest` go by `date`, then by
+   * number; records without a date come last. `number` lists them by record number.
+   */
+  sidebar?: { sort?: 'newest' | 'oldest' | 'number' };
   /** Single-page export (`/export/`, `inkan export`). */
   export?: { statuses?: string[]; title?: string };
   /** RFC review (`reviewers` in front matter). `approvals`: how many are needed; unset means every reviewer. */

@@ -18,7 +18,7 @@ export default defineConfig({
 
 `defineConfig` only returns what you pass in; it exists so your editor can type-check the object against `InkanConfig` from `lib/index.d.ts`. In a `.mjs` or `.js` file you can use it the same way, or export a plain object. A `.json` file holds the same keys as the object and may carry a `$schema` key, which is accepted and dropped; the package does not ship a JSON schema file yet.
 
-Every key is optional. Unknown keys are an error with a "did you mean" hint, so a typo cannot silently do nothing. Nested objects (`repo`, `theme`, `footer`, `landing`, `git`, `codeRefs`, `og`, `export`, `reviews`, `reviewers`) are merged with the defaults key by key; `docTypes` and `statuses` replace the default maps as a whole. See [Validate config and content at build time](cli/adr/0004-validate-config-and-content-at-build-time.md).
+Every key is optional. Unknown keys are an error with a "did you mean" hint, so a typo cannot silently do nothing. Nested objects (`repo`, `theme`, `footer`, `landing`, `git`, `codeRefs`, `og`, `sidebar`, `export`, `reviews`, `reviewers`) are merged with the defaults key by key; `docTypes` and `statuses` replace the default maps as a whole. See [Validate config and content at build time](cli/adr/0004-validate-config-and-content-at-build-time.md).
 
 All paths are relative to the config file.
 
@@ -65,6 +65,7 @@ See [Open Graph cards](site/adr/0011-open-graph-cards.md), [Brand with logo and 
 | Option | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `navigation` | `{ label, href }[]` | `[]` | Links in the header, after the built-in ones. Plugins may append more. |
+| `sidebar.sort` | `'newest' \| 'oldest' \| 'number'` | `'newest'` | Order of the records under each project in the sidebar. `newest` and `oldest` go by `date`, then by number; undated records come last. `number` lists them by record number, unnumbered records first. See [Sidebar order](site/adr/0017-sidebar-order.md). |
 | `banner` | `{ message, dismissible? } \| null` | `null` | A strip above the header. `message` may contain inline HTML; `dismissible` defaults to `false`. |
 | `footer.copyright` | `string` | `''` | Text in the footer. Inline HTML allowed. |
 | `footer.links` | `{ label, href }[]` | `[]` | Links in the footer. |

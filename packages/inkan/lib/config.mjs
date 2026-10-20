@@ -175,6 +175,7 @@ export const configSchema = z
       z.object({ include: z.array(z.string()).optional(), exclude: z.array(z.string()).optional(), marker: z.string().optional() }).strict(),
     ]),
     og: z.union([z.literal(false), z.object({ theme: z.enum(['light', 'dark']).optional() }).strict()]),
+    sidebar: z.object({ sort: z.enum(['newest', 'oldest', 'number']).optional() }).strict(),
     export: z.object({ statuses: z.array(z.string()).optional(), title: z.string().optional() }).strict(),
     reviewers: z.object({ approvals: z.number().int().positive().nullable().optional() }).strict(),
     reviews: z

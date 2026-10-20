@@ -193,6 +193,12 @@ describe('validateConfig', () => {
     expect(errorOf({ og: true })).toContain('og:');
   });
 
+  it('accepts newest, oldest or number as the sidebar order', () => {
+    for (const sort of ['newest', 'oldest', 'number']) expect(() => validateConfig({ sidebar: { sort } })).not.toThrow();
+    expect(errorOf({ sidebar: { sort: 'date' } })).toContain('sidebar.sort');
+    expect(errorOf({ sidebar: { order: 'newest' } })).toContain('sidebar');
+  });
+
   it('requires an object', () => {
     expect(errorOf([])).toContain('default export must be an object');
     expect(errorOf(null)).toContain('default export must be an object');

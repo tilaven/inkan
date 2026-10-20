@@ -1,7 +1,8 @@
 /** Builds the sidebar from the content itself: no config needed for new files or projects. */
 import { pad4 } from './card';
-import { docTypes, openStatuses } from './config';
+import { docTypes, openStatuses, site } from './config';
 import { buildGraph } from './graph';
+import { recordOrder } from './order';
 import { introOf } from './team';
 import { t } from './i18n';
 import type { Ink } from './inks';
@@ -50,7 +51,6 @@ export interface Nav {
 /** `pad4` with nothing for an unnumbered record: titles, breadcrumbs and the tree read better without a dash. */
 export const pad = (n: number | null) => pad4(n, '');
 
-const byNumber = (a: Decision, b: Decision) => (a.number ?? 0) - (b.number ?? 0) || a.id.localeCompare(b.id);
 const byOrder = (a: Decision, b: Decision) =>
   (a.entry.data.order ?? 0) - (b.entry.data.order ?? 0) || a.title.localeCompare(b.title);
 
@@ -62,6 +62,7 @@ export async function getNav(): Promise<Nav> {
   const records = docs.filter((d) => d.type !== null);
   const projects = await getAllProjects();
   const styles = await getProjectStyles();
+  const order = recordOrder(site.sidebar.sort);
 
   const inReview = records.filter((d) => d.rfcReview.status !== 'none' && d.status && openStatuses.includes(d.status));
   const linked = buildGraph(records).nodes.length;
@@ -85,7 +86,7 @@ export async function getNav(): Promise<Nav> {
         label: docTypes[type].label,
         items: mine
           .filter((d) => d.type === type)
-          .sort(byNumber)
+          .sort(order)
           .map((d) => ({ href: d.href, title: d.title, number: pad(d.number), status: d.status })),
       }))
       .filter((g) => g.items.length > 0);
@@ -111,13 +112,17 @@ export async function getNav(): Promise<Nav> {
 const norm = (p: string) => (p.endsWith('/') ? p : `${p}/`);
 export const isCurrent = (href: string, pathname: string) => norm(href) === norm(pathname);
 
-/** Previous/next record of the same project and type, in number order. */
+const inNumberOrder = (a: RecordLink, b: RecordLink) =>
+  a.number.localeCompare(b.number, 'en', { numeric: true }) || a.href.localeCompare(b.href);
+
+/** Previous/next record of the same project and type, in number order whatever the sidebar shows. */
 export function prevNext(nav: Nav, pathname: string) {
   for (const project of nav.projects) {
     for (const group of project.groups) {
-      const i = group.items.findIndex((l) => isCurrent(l.href, pathname));
+      const items = [...group.items].sort(inNumberOrder);
+      const i = items.findIndex((l) => isCurrent(l.href, pathname));
       if (i === -1) continue;
-      return { project, group, prev: group.items[i - 1], next: group.items[i + 1] };
+      return { project, group, prev: items[i - 1], next: items[i + 1] };
     }
   }
   return {};

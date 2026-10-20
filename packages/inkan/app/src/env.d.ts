@@ -50,6 +50,7 @@ declare module 'virtual:inkan/config' {
     reviewers: { approvals: number | null };
     /** Open Graph cards; `false` turns them off. */
     og: false | { theme?: 'light' | 'dark' };
+    sidebar: { sort: 'newest' | 'oldest' | 'number' };
     /** Projects pulled from other repositories or folders, see ResolvedSource in lib/index.d.ts. */
     sources: {
       project: string;
