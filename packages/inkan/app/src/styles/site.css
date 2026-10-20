@@ -1564,6 +1564,8 @@ a.rhist__commit span { opacity: .55; }
 .member li a:hover { text-decoration: underline; }
 .member__more {
   justify-self: start;
+  padding-block: 6px;
+  margin-block: -6px;
   font: 700 .6875rem/1.3 var(--inkan-font-mono);
   letter-spacing: .06em;
   text-transform: uppercase;
