@@ -1,13 +1,13 @@
 {
   "name": "@tilaven/create-inkan",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Start a new Inkan site: npm create @tilaven/inkan@latest",
   "license": "MIT",
   "type": "module",
   "bin": { "create-inkan": "bin/create.mjs" },
   "files": ["bin"],
   "engines": { "node": ">=22.22" },
-  "dependencies": { "@tilaven/inkan": "0.1.1" },
+  "dependencies": { "@tilaven/inkan": "0.2.0" },
   "homepage": "https://useinkan.dev",
   "bugs": "https://github.com/tilaven/inkan/issues",
   "repository": {
