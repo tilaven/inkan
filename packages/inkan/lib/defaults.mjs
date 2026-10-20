@@ -5,9 +5,6 @@ export const defaults = {
   description: 'Central, searchable record of architecture decisions (ADR) and proposals (RFC).',
   url: 'http://localhost:4321',
   base: '/',
-  /** Interface language (BCP 47). Built in: 'en', 'pl'; others take their text from `translations`. */
-  locale: 'en',
-  translations: {},
   repo: { url: '', branch: 'main', provider: 'github' },
   contentDir: 'decisions',
   templatesDir: 'templates',

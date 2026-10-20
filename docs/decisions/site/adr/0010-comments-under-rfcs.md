@@ -75,7 +75,7 @@ Setup, once per repository:
 | `strict` | `true` | Find the discussion by an exact hash of the term instead of GitHub's fuzzy search, so a record never picks up a similar record's thread. |
 | `reactions` | `true` | Show the reaction buttons on the discussion. |
 | `inputPosition` | `'top'` | Put the comment box above (`'top'`) or below (`'bottom'`) the comments. |
-| `lang` | The site's `locale` | Language of the widget, e.g. `'pl'` or `'zh-CN'`. |
+| `lang` | `'en'` | Language of the widget, e.g. `'pl'` or `'zh-CN'`. |
 | `theme` | `{ light: 'light', dark: 'dark' }` | giscus theme names, or URLs of a CSS file, for Day and Stage. |
 
 The page loads `https://giscus.app/client.js`, and the comments iframe loads lazily, when the section comes near the viewport. The first comment on a record creates the discussion; giscus does it, not the site.

@@ -6,7 +6,7 @@ import { docTypes } from '../lib/config';
 import { formatDate, person, statusInfo, type Decision, type Person, type ProjectStyle } from '../lib/decisions';
 import { pad4 } from '../lib/card';
 import { REVIEW_MARK, REVIEW_TEXT, reviewText, reviewTitle } from '../lib/review-ui';
-import { locale, t } from '../lib/i18n';
+import { t } from '../lib/i18n';
 
 interface Props {
   d: Decision;
@@ -15,7 +15,7 @@ interface Props {
   /** A repeat of a row shown elsewhere on the page (hidden until the script reveals it). */
   copy?: boolean;
 }
-const monthName = (m: number) => new Date(Date.UTC(2000, m - 1, 1)).toLocaleDateString(locale, { month: 'short', timeZone: 'UTC' });
+const monthName = (m: number) => new Date(Date.UTC(2000, m - 1, 1)).toLocaleDateString('en', { month: 'short', timeZone: 'UTC' });
 
 const { d, project, people, copy = false } = Astro.props;
 const reviewBy = d.entry.data.reviewBy ? formatDate(d.entry.data.reviewBy as Date) : undefined;

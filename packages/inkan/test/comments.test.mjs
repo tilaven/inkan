@@ -34,11 +34,6 @@ describe('comments option', () => {
     expect(resolve(giscus, { url: 'https://gitlab.com/acme/decisions', provider: 'gitlab' }).issues[0].path).toEqual(['repo']);
   });
 
-  it('speaks the site language in giscus unless lang is set', () => {
-    const lang = (locale, extra = {}) => resolveComments({ ...giscus, repo: 'a/b', ...extra }, { repo: { url: '' }, root: '/site', locale }).value.lang;
-    expect([lang('pl'), lang('pl-PL'), lang('zh-CN'), lang('pl', { lang: 'de' })]).toEqual(['pl', 'pl', 'zh-CN', 'de']);
-  });
-
   it('takes the GitLab host and project from repo.url', () => {
     const { value } = resolve({ provider: 'gitlab', statuses: ['proposed'] }, { url: 'https://git.acme.dev/platform/arch/decisions/', provider: 'gitlab' });
     expect(value).toMatchObject({ host: 'https://git.acme.dev', project: 'platform/arch/decisions', labels: [], statuses: ['proposed'] });

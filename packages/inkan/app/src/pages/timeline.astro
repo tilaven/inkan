@@ -3,7 +3,7 @@ import Page from '../layouts/Page.astro';
 import RecordCard from 'virtual:inkan/components/RecordCard';
 import StatusSticker from '../components/StatusSticker.astro';
 import { pad4 } from '../lib/card';
-import { locale, t } from '../lib/i18n';
+import { t } from '../lib/i18n';
 import { getDecisions, getPeople, getProjectStyles, projectStyle, type Decision } from '../lib/decisions';
 
 const dated = (await getDecisions()).filter((d): d is Decision & { date: Date } => Boolean(d.date));
@@ -18,7 +18,7 @@ for (const d of dated) {
 /** Past this many records, years older than the latest two collapse to compact rows to keep the page light. */
 const COMPACT_ABOVE = 150;
 const latestYear = dated.length ? dated[0].date.getUTCFullYear() : 0;
-const monthName = (key: string, month: 'short' | 'long') => new Date(`${key}-01T00:00:00Z`).toLocaleDateString(locale, { month, timeZone: 'UTC' });
+const monthName = (key: string, month: 'short' | 'long') => new Date(`${key}-01T00:00:00Z`).toLocaleDateString('en', { month, timeZone: 'UTC' });
 ---
 
 <Page

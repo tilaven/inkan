@@ -1,6 +1,6 @@
 /** Due dates in the reader's local time zone, as the browser scripts of the review pages use them. Dates are plain `YYYY-MM-DD` strings. */
 import { DEADLINE_SOON, daysUntil, urgency } from '../../../lib/calendar.mjs';
-import { locale, t } from './i18n';
+import { t } from './i18n';
 
 export { DEADLINE_SOON, daysUntil, urgency };
 
@@ -46,6 +46,6 @@ export function stampDueRows(rows: Iterable<HTMLElement>, soon: number, today = 
   return stamped;
 }
 
-export function formatLongDate(date: Date, lang = locale === 'en' ? 'en-GB' : locale): string {
-  return date.toLocaleDateString(lang, { day: 'numeric', month: 'short', year: 'numeric' });
+export function formatLongDate(date: Date): string {
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }

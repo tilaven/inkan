@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import en from './i18n/en.mjs';
-import { translator } from './i18n/index.mjs';
+import { t } from './i18n/index.mjs';
 
 /** Statuses the export includes: `export.statuses` from the config, else every status marked `current`. */
 export function exportStatuses(config) {
@@ -9,8 +8,8 @@ export function exportStatuses(config) {
   return chosen.length ? chosen : Object.keys(config.statuses).filter((s) => config.statuses[s].current);
 }
 
-/** Title on the cover page: `export.title`, else "<site title>: decisions" in the site's language. */
-export const exportTitle = (config, fallback = translator(config.locale ?? 'en', config.messages ?? en)('export.title', { title: config.title })) =>
+/** Title on the cover page: `export.title`, else "<site title>: decisions" */
+export const exportTitle = (config, fallback = t('export.title', { title: config.title })) =>
   config.export?.title || fallback;
 
 /** Comments the export page wraps its document in, so the CLI can lift it out of the site shell. */

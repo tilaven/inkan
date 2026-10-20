@@ -5,10 +5,10 @@ import StatusSticker from '../components/StatusSticker.astro';
 import { docTypes, openStatuses } from '../lib/config';
 import { formatDate, getDecisions, getPeople, getProjectStyles, projectStyle, statusInfo, type Decision } from '../lib/decisions';
 import { pad4 } from '../lib/card';
-import { locale, t } from '../lib/i18n';
+import { t } from '../lib/i18n';
 import { isLive, reviewText } from '../lib/review-ui';
 
-const monthName = (m: number) => new Date(Date.UTC(2000, m - 1, 1)).toLocaleDateString(locale, { month: 'short', timeZone: 'UTC' });
+const monthName = (m: number) => new Date(Date.UTC(2000, m - 1, 1)).toLocaleDateString('en', { month: 'short', timeZone: 'UTC' });
 
 const open = (await getDecisions())
   .filter((d) => d.status && openStatuses.includes(d.status))

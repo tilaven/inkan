@@ -72,7 +72,7 @@ docker build -t inkan-example . && docker run -p 8080:80 inkan-example
 - Filters by team, type, status, author, tag and custom field, kept in the URL so a view can be shared
 - Landing page, timeline, decision graph, authors and tags pages, RSS feed and sitemap
 - Status history from git, Open Graph cards for links shared in Slack or Teams, print and PDF export
-- Day and Stage themes, built for keyboard and screen reader users (WCAG 2.2 AA), interface in English and Polish
+- Day and Stage themes, built for keyboard and screen reader users (WCAG 2.2 AA)
 
 **Running the process**
 
@@ -249,7 +249,6 @@ export default defineConfig({
 export default defineConfig({
   // …
   contentDir: 'decisions',
-  locale: 'pl',                                // interface language: 'en' and 'pl' built in, others via translations
   logo: './brand/logo.svg',
   customCss: ['./brand/theme.css'],            // override any --inkan-* CSS variable
   issueLinks: [{ pattern: '\\b(PAY-\\d+)\\b', url: 'https://acme.atlassian.net/browse/$1' }],

@@ -28,7 +28,7 @@ import rehypeScrollRegions from './src/lib/rehype-scroll-regions.mjs';
 import { pluginCodeLabels } from './src/lib/code-labels.mjs';
 import { codeTheme, codeStyleOverrides } from './src/lib/code-theme.mjs';
 import { loadConfig } from '../lib/config.mjs';
-import { translator } from '../lib/i18n/index.mjs';
+import { t } from '../lib/i18n/index.mjs';
 import { resolveComponent } from '../lib/components.mjs';
 import { pluginMotifs as resolvePluginMotifs } from '../lib/motifs.mjs';
 import { assertNoCollisions, discoverPages, pluginPages as resolvePluginPages } from '../lib/pages.mjs';
@@ -63,7 +63,6 @@ process.env.INKAN_EXCLUDED_PROJECTS = JSON.stringify(
 );
 
 const base = config.base || '/';
-const t = translator(config.locale, config.messages);
 const redirects = resolveRedirects(config.redirects, base);
 const plugins = config.plugins;
 const pluginPages = resolvePluginPages(plugins);
@@ -82,8 +81,7 @@ const EXTERNAL_SEARCH = new Set(['algolia', 'meilisearch', 'typesense', 'custom'
 /** Virtual modules that hand the user's config, assets and CSS to the app. */
 const modules = {
   // `notify` holds webhook URLs (secrets) and functions: it stays out of the site.
-  'virtual:inkan/config': () => `export default ${JSON.stringify({ ...config, plugins: undefined, notify: undefined, messages: undefined })};`,
-  'virtual:inkan/i18n': () => `export const locale = ${JSON.stringify(config.locale)};\nexport const messages = ${JSON.stringify(config.messages)};`,
+  'virtual:inkan/config': () => `export default ${JSON.stringify({ ...config, plugins: undefined, notify: undefined})};`,
   'virtual:inkan/assets': () =>
     [
       config.logo ? `export { default as logo } from ${JSON.stringify(config.logo + '?url')};` : 'export const logo = null;',

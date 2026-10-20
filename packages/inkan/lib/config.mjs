@@ -6,7 +6,6 @@ import { z } from 'astro/zod';
 import { commentsSchema, resolveComments } from './comments.mjs';
 import { componentNames } from './components.mjs';
 import { defaults } from './defaults.mjs';
-import { localizeDefaults, resolveMessages, translator } from './i18n/index.mjs';
 import { fieldsSchema } from './fields.mjs';
 import { MOTIF_NAME } from './motifs.mjs';
 import { PROJECT_NAME } from './records.mjs';
@@ -40,16 +39,6 @@ const motifs = z.record(z.string(), entrypoint).superRefine((map, ctx) => {
     }
   }
 });
-const message = z.union([z.string(), z.object({ zero: z.string(), one: z.string(), two: z.string(), few: z.string(), many: z.string(), other: z.string() }).partial().strict()]);
-/** Language → interface text key → message, e.g. `{ de: { 'nav.timeline': 'Zeitleiste' } }`. */
-const translations = z.record(z.string(), z.record(z.string(), message));
-const locale = z.string().refine((v) => {
-  try {
-    return Intl.getCanonicalLocales(v).length === 1;
-  } catch {
-    return false;
-  }
-}, 'must be a BCP 47 language tag such as "en", "pl" or "pt-BR"');
 
 /** Plugins keep unknown keys (newer plugins may carry more); loadConfig warns about them. */
 const plugin = z
@@ -64,7 +53,6 @@ const plugin = z
     motifs: motifs.optional(),
     head: z.array(headTag).optional(),
     navigation: z.array(navLink).optional(),
-    translations: translations.optional(),
   })
   .passthrough();
 
@@ -161,8 +149,6 @@ export const configSchema = z
     description: z.string(),
     url: z.string(),
     base: z.string(),
-    locale,
-    translations,
     repo: z.object({ url: z.string(), branch: z.string().optional(), provider: z.enum(['github', 'gitlab']).optional() }).strict(),
     contentDir: z.string().min(1),
     templatesDir: z.string().min(1),
@@ -331,7 +317,7 @@ export function unknownPluginKeys(plugins) {
   return plugins.flatMap((p) => Object.keys(p).filter((k) => !pluginKeys.includes(k)).map((k) => `plugin "${p.name}": unknown key "${k}"`));
 }
 
-const afterHooks = z.object({ head: z.array(headTag), navigation: z.array(navLink), locale, translations });
+const afterHooks = z.object({ head: z.array(headTag), navigation: z.array(navLink) });
 
 function merge(base, extra) {
   const out = { ...base };
@@ -341,9 +327,6 @@ function merge(base, extra) {
   }
   return out;
 }
-
-/** Interface text for `locale`: built-ins, then plugin `translations`, then the config's own. */
-const messagesFor = (locale, config) => resolveMessages(Intl.getCanonicalLocales(locale)[0], [...(config.plugins ?? []).map((p) => p.translations), config.translations]);
 
 /**
  * Loads the user's config from `root`, validates it, resolves every path to an absolute one
@@ -360,10 +343,9 @@ export async function loadConfig(root = process.cwd(), { warn = console.warn } =
 
   // Statuses and types replace the defaults when given, so removing one is possible.
   // A fresh copy: plugin hooks may mutate the config, and loadConfig runs on every dev-server restart.
-  const local = localizeDefaults(defaults, translator(user.locale ?? defaults.locale, messagesFor(user.locale ?? defaults.locale, user)));
-  let config = merge({ ...local, statuses: undefined, docTypes: undefined }, user);
-  config.statuses = user.statuses ?? local.statuses;
-  config.docTypes = user.docTypes ?? local.docTypes;
+  let config = merge({ ...structuredClone(defaults), statuses: undefined, docTypes: undefined }, user);
+  config.statuses = user.statuses ?? structuredClone(defaults.statuses);
+  config.docTypes = user.docTypes ?? structuredClone(defaults.docTypes);
   config.banner = user.banner ? { dismissible: false, ...user.banner } : null;
   config.search = user.search === undefined ? { ...defaults.search } : user.search;
   if (process.env.BASE_PATH) config.base = process.env.BASE_PATH;
@@ -410,7 +392,5 @@ export async function loadConfig(root = process.cwd(), { warn = console.warn } =
   if (!checked.success) {
     throw new Error(`Invalid inkan config after plugin hooks:\n  ${formatIssues(checked.error.issues, file, afterHooks).join('\n  ')}`);
   }
-  config.locale = Intl.getCanonicalLocales(config.locale)[0];
-  config.messages = messagesFor(config.locale, config);
   return config;
 }

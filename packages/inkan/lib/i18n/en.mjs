@@ -1,4 +1,4 @@
-/** English interface text, the fallback for every other language. `{name}` is a placeholder; objects are plural forms. */
+/** Interface text. `{name}` is a placeholder; objects are plural forms. */
 export default {
   'site.tagline': 'Architecture Decision Records and RFCs for every team, in one place.',
   'site.description': 'Central, searchable record of architecture decisions (ADR) and proposals (RFC).',

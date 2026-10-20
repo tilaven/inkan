@@ -7,8 +7,6 @@ declare module 'virtual:inkan/config' {
     description: string;
     url: string;
     base: string;
-    /** Interface language, a canonical BCP 47 tag. */
-    locale: string;
     root: string;
     appDir: string;
     repoRoot: string;
@@ -84,12 +82,6 @@ declare module 'virtual:inkan/config' {
     };
   };
   export default config;
-}
-
-declare module 'virtual:inkan/i18n' {
-  export const locale: string;
-  /** Interface text for `locale`, with plugin and config `translations` applied. */
-  export const messages: Record<string, string | Partial<Record<Intl.LDMLPluralRule, string>>>;
 }
 
 declare module 'virtual:inkan/assets' {
