@@ -1,0 +1,55 @@
+name: Release
+
+# Publishes `inkan` and `create-inkan` to npm when a `v*` tag is pushed.
+# Both package versions (and create-inkan's dependency on inkan) must match the tag.
+# Authentication uses npm trusted publishing; until it is set up on npmjs.com,
+# an `NPM_TOKEN` repository secret is used instead.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - run: npm install -g npm@^11.5.1
+      - name: Check versions match the tag
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          for pkg in inkan create-inkan; do
+            actual=$(node -p "require('./packages/$pkg/package.json').version")
+            [ "$actual" = "$version" ] || { echo "::error::packages/$pkg is $actual, tag is $GITHUB_REF_NAME"; exit 1; }
+          done
+          dep=$(node -p "require('./packages/create-inkan/package.json').dependencies.inkan")
+          [ "$dep" = "$version" ] || { echo "::error::create-inkan depends on inkan $dep, tag is $GITHUB_REF_NAME"; exit 1; }
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          case "$version" in *-*) tag=next ;; *) tag=latest ;; esac
+          for pkg in inkan create-inkan; do
+            if npm view "$pkg@$version" version > /dev/null 2>&1; then
+              echo "$pkg@$version is already published"
+            else
+              npm publish -w "packages/$pkg" --access public --provenance --tag "$tag"
+            fi
+          done
