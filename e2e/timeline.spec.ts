@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test.skip(({}, info) => info.project.name !== 'e2e-desktop-light', 'sets its own viewport; one colour scheme is enough');
+test.beforeEach(() => test.skip(test.info().project.name !== 'e2e-desktop-light', 'sets its own viewport; one colour scheme is enough'));
 
 for (const width of [390, 1024, 1440, 1920]) {
   for (const zoom of [1, 2]) {
