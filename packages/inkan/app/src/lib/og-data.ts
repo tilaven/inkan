@@ -99,7 +99,25 @@ export async function projectCards(): Promise<{ id: string; card: OgCard }[]> {
   });
 }
 
-/** The site's card, with the covers of its three busiest projects. */
+/**
+ * `landing.image` for the site card, as PNG: the rasteriser reads only PNG, JPEG and GIF. The conversion uses sharp,
+ * which Astro installs for its image service; without it the card falls back to the covers.
+ */
+async function landingArt() {
+  const image = site.landing.image;
+  if (!image) return undefined;
+  const file = theme === 'dark' && image.dark ? image.dark : image.src;
+  try {
+    const { default: sharp } = await import('sharp');
+    const { data, info } = await sharp(file).resize({ width: 1040, height: 1040, fit: 'inside', withoutEnlargement: true }).png().toBuffer({ resolveWithObject: true });
+    return { src: `data:image/png;base64,${data.toString('base64')}`, width: info.width, height: info.height };
+  } catch (error) {
+    console.warn(`[inkan] landing.image is not on the Open Graph card: ${(error as Error).message}`);
+    return undefined;
+  }
+}
+
+/** The site's card, with `landing.image` or else the covers of its three busiest projects. */
 export async function siteCard(): Promise<OgCard> {
   const [decisions, projects, styles] = await Promise.all([getDecisions(), getAllProjects(), getProjectStyles()]);
   const size = (id: string) => decisions.filter((d) => d.project === id).length;
@@ -108,10 +126,14 @@ export async function siteCard(): Promise<OgCard> {
     kind: 'site',
     title: site.landing.title ?? site.title,
     tagline: site.landing.tagline ?? site.tagline,
-    counts: `${t('og.projectCount', { count: projects.length })} · ${t('project.recordCount', { count: decisions.length })}`,
+    // Like the landing, the card leaves the numbers out without 'stats' and names the site's host instead.
+    counts: site.landing.sections.includes('stats') || !site.url
+      ? `${t('og.projectCount', { count: projects.length })} · ${t('project.recordCount', { count: decisions.length })}`
+      : new URL(site.url).host,
     covers: top.map((p) => {
       const style = styles.get(p.id) ?? projectStyle(p.id);
       return { id: p.id, ink: style.ink, motif: style.motif, project: p.id };
     }),
+    art: await landingArt(),
   };
 }

@@ -46,7 +46,17 @@ export type OgCard =
       cover: Cover;
     }
   | { kind: 'project'; site: string; eyebrow: string; name: string; description?: string; counts: string; cover: Cover }
-  | { kind: 'site'; title: string; tagline?: string; counts: string; covers: Cover[] };
+  | { kind: 'site'; title: string; tagline?: string; counts: string; covers: Cover[]; art?: Art };
+
+/** A raster picture as a data URI with its size in pixels. */
+interface Art {
+  src: string;
+  width: number;
+  height: number;
+}
+
+/** The site card's picture fits this box, in a side panel 40px wider than it. */
+const ART_BOX = { width: 520, height: 520 };
 
 interface Node {
   type: string;
@@ -172,7 +182,13 @@ function card(c: OgCard, theme: PrintTheme): Node {
     );
   }
 
-  const fan = h(
+  const side = c.art ? ART_BOX.width + 40 : COVER_WIDTH + 40;
+  const fit = c.art ? Math.min(ART_BOX.width / c.art.width, ART_BOX.height / c.art.height) : 0;
+  const fan = c.art ? h(
+    'div',
+    { width: side, height: OG_HEIGHT, flexShrink: 0, alignItems: 'center', justifyContent: 'center', paddingRight: 40 },
+    img(c.art.src, Math.round(c.art.width * fit), Math.round(c.art.height * fit)),
+  ) : h(
     'div',
     { width: COVER_WIDTH + 40, height: OG_HEIGHT, flexShrink: 0, position: 'relative' },
     ...c.covers.slice(0, 3).map((cover, i, all) => {
@@ -198,13 +214,13 @@ function card(c: OgCard, theme: PrintTheme): Node {
   return shell(
     h(
       'div',
-      { flexDirection: 'column', justifyContent: 'space-between', width: OG_WIDTH - COVER_WIDTH - 40, flexShrink: 0, padding: `60px 0 56px ${PAD}px` },
+      { flexDirection: 'column', justifyContent: 'space-between', width: OG_WIDTH - side, flexShrink: 0, padding: `60px 0 56px ${PAD}px` },
       h('div', { ...mono, fontSize: 22, color: fg3 }, 'ADR · RFC'),
       h(
         'div',
         { flexDirection: 'column' },
-        h('div', display(c.title, 3), c.title),
-        c.tagline && h('div', { fontFamily: 'Instrument Sans', fontWeight: 500, fontSize: 32, lineHeight: 1.35, color: fg3, marginTop: 28, lineClamp: 3, display: 'block', maxWidth: TEXT_WIDTH - PAD }, c.tagline),
+        h('div', { ...display(c.title, 3), maxWidth: Math.min(TEXT_WIDTH, OG_WIDTH - side - PAD * 2) }, c.title),
+        c.tagline && h('div', { fontFamily: 'Instrument Sans', fontWeight: 500, fontSize: 32, lineHeight: 1.35, color: fg3, marginTop: 28, lineClamp: 3, display: 'block', maxWidth: c.art ? OG_WIDTH - side - PAD * 2 : TEXT_WIDTH - PAD }, c.tagline),
       ),
       h('div', { ...mono, fontSize: 20, color: fg3, borderTop: `2px solid ${fg3}`, paddingTop: 20 }, c.counts),
     ),

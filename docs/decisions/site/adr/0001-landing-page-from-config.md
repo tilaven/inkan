@@ -82,7 +82,7 @@ export default defineConfig({
 });
 ```
 
-`image.src` and `image.dark` are paths relative to the config file and go through the build like the logo, so the files get hashed names and long cache headers. The Day theme shows `src`, the Stage theme `dark`; without `dark`, both themes show `src`, so pick a picture with a transparent background. `alt` is required: describe what the picture shows, or pass an empty string when it is only decoration.
+`image.src` and `image.dark` are paths relative to the config file and go through the build like the logo, so the files get hashed names and long cache headers. The Day theme shows `src`, the Stage theme `dark`; without `dark`, both themes show `src`, so pick a picture with a transparent background. `alt` is required: describe what the picture shows, or pass an empty string when it is only decoration. The same picture and the landing tagline go into the site's Open Graph card and the home page's `og:description`, so a link to the site unfurls with them in Slack, Teams, Messenger or Facebook; see [Open Graph cards](0011-open-graph-cards.md).
 
 The command is shown as a shell line with a copy button. It wraps on narrow screens instead of scrolling.
 
