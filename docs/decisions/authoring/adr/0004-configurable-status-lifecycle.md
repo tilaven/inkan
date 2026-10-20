@@ -55,7 +55,7 @@ Every status, flagged or not, appears in the status filter on `/decisions/` with
 ### Defining your own statuses
 
 ```ts title="inkan.config.ts"
-import { defineConfig } from 'inkan';
+import { defineConfig } from '@tilaven/inkan';
 
 export default defineConfig({
   statuses: {

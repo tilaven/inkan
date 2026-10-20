@@ -1,6 +1,6 @@
 ---
 title: "Scaffold with init and npm create"
-description: "What inkan init and npm create inkan put into a repository, and how they behave in a folder that already has files."
+description: "What inkan init and npm create @tilaven/inkan put into a repository, and how they behave in a folder that already has files."
 status: implemented
 date: 2026-10-16
 authors: [tilaven]
@@ -15,7 +15,7 @@ A tool that needs "only Markdown and one config file" still has a first five min
 
 ## Decision
 
-`inkan init [dir]` copies a starter repository from the package and wires up `package.json`. It never overwrites a file that already exists, so it is safe to run inside an existing repository. `npm create inkan` is a thin wrapper, published as `create-inkan`, that runs the same `init` in a new folder.
+`inkan init [dir]` copies a starter repository from the package and wires up `package.json`. It never overwrites a file that already exists, so it is safe to run inside an existing repository. `npm create @tilaven/inkan` is a thin wrapper, published as `create-inkan`, that runs the same `init` in a new folder.
 
 The starter is complete: it builds and deploys without edits. Everything in it is a plain file you can change or delete afterwards.
 
@@ -24,18 +24,18 @@ The starter is complete: it builds and deploys without edits. Everything in it i
 ### A new repository
 
 ```bash
-npm create inkan@latest my-decisions
+npm create @tilaven/inkan@latest my-decisions
 cd my-decisions
 npm install
 npm run dev
 ```
 
-`npm create inkan [dir]` resolves the `inkan` package it depends on and runs `inkan init <dir>`. When you give no folder name it uses `decisions-site`. After `init` you still run `npm install` yourself; the output ends with the exact next commands.
+`npm create @tilaven/inkan [dir]` resolves the `@tilaven/inkan` package it depends on and runs `inkan init <dir>`. When you give no folder name it uses `decisions-site`. After `init` you still run `npm install` yourself; the output ends with the exact next commands.
 
 ### An existing repository
 
 ```bash
-npm install -D inkan
+npm install -D @tilaven/inkan
 npx inkan init
 ```
 
@@ -74,7 +74,7 @@ If there is no `package.json`, `init` creates one:
     "new": "inkan new"
   },
   "devDependencies": {
-    "inkan": "^0.1.0"
+    "@tilaven/inkan": "^0.1.0"
   }
 }
 ```
@@ -83,7 +83,7 @@ If one exists, `init` only adds to it:
 
 - The four scripts are added. Scripts you already have, including ones with the same names, are kept as they are.
 - `"type": "module"` is set only when `type` is missing. The config file is an ES module, so a repository that uses CommonJS keeps `.ts` for the config and is otherwise unaffected.
-- `inkan` is added to `devDependencies` at the installed version, unless it is already in `dependencies`.
+- `@tilaven/inkan` is added to `devDependencies` at the installed version, unless it is already in `dependencies`.
 
 Nothing else in the file is touched, and key order of your existing fields is preserved.
 
@@ -106,5 +106,5 @@ Nothing else in the file is touched, and key order of your existing fields is pr
 - One command gives a repository that builds and deploys. New users see a working site before reading any documentation.
 - Safe in existing repositories: nothing is overwritten and `package.json` is extended, not replaced.
 - The starter is a snapshot. Files it created are yours from then on; updates to the package's starter do not propagate to them, which is intended for CI files you will edit anyway.
-- `npm create inkan` pins the `inkan` version it was published with. Use `@latest` to get the current one.
+- `npm create @tilaven/inkan` pins the `@tilaven/inkan` version it was published with. Use `@latest` to get the current one.
 - The starter ships files for every target (GitHub, GitLab, Docker). Delete the ones you do not use.

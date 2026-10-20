@@ -80,8 +80,8 @@ An `.astro` file becomes a route at its path. It can use the two layouts the pac
 
 ```astro title="pages/stats.astro"
 ---
-import Page from 'inkan/layouts/Page';
-import { countBy, getDecisions } from 'inkan/data';
+import Page from '@tilaven/inkan/layouts/Page';
+import { countBy, getDecisions } from '@tilaven/inkan/data';
 
 const decisions = await getDecisions();
 const byStatus = countBy(decisions.map((d) => d.status ?? 'none'));
@@ -100,8 +100,8 @@ Dynamic routes work too: `pages/by-tag/[tag].astro` with a `getStaticPaths()` ex
 
 | Import | Shape | Props |
 | --- | --- | --- |
-| `inkan/layouts/Page` | Sidebar and one wide content column; used by the index, timeline and team pages | `title`, `description?`, `image?`, `crumbs?`, `head?` (default `true`), `eyebrow?`, `accent?`, `lede?`, `sidebar?` (default `true`), `ink?` |
-| `inkan/layouts/Docs` | Sidebar, reading column and a sticky right rail with "On this page"; used by records | `title`, `description?`, `image?`, `crumbs?`, `headings?`, `head?` (default `false`), `eyebrow?`, `accent?`, `lede?`, `status?`, `ink?` |
+| `@tilaven/inkan/layouts/Page` | Sidebar and one wide content column; used by the index, timeline and team pages | `title`, `description?`, `image?`, `crumbs?`, `head?` (default `true`), `eyebrow?`, `accent?`, `lede?`, `sidebar?` (default `true`), `ink?` |
+| `@tilaven/inkan/layouts/Docs` | Sidebar, reading column and a sticky right rail with "On this page"; used by records | `title`, `description?`, `image?`, `crumbs?`, `headings?`, `head?` (default `false`), `eyebrow?`, `accent?`, `lede?`, `status?`, `ink?` |
 
 `accent` is the word of the title to underline. `ink` is a project ink class such as `ink-c`. Both layouts
 take a default slot and a `lede` slot for markup under the title; `Page` adds a `head` slot inside the page

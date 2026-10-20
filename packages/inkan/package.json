@@ -1,5 +1,5 @@
 {
-  "name": "inkan",
+  "name": "@tilaven/inkan",
   "version": "0.1.0",
   "description": "Docs site for Architecture Decision Records and RFCs, built from Markdown in your repo.",
   "license": "MIT",

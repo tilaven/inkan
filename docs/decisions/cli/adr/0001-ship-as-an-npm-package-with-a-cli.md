@@ -15,7 +15,7 @@ Most static site generators expect you to own the site: a `src/` folder, layouts
 
 ## Decision
 
-Inkan is one npm package, `inkan`, with an `inkan` binary. The package contains the complete site (an Astro application in `app/`), the built-in templates and the starter files. Your repository holds content and `inkan.config.*` and nothing else. The CLI runs Astro programmatically with the app folder inside the package as the Astro root and your folder as the source of content and config.
+Inkan is one npm package, `@tilaven/inkan`, with an `inkan` binary. The package contains the complete site (an Astro application in `app/`), the built-in templates and the starter files. Your repository holds content and `inkan.config.*` and nothing else. The CLI runs Astro programmatically with the app folder inside the package as the Astro root and your folder as the source of content and config.
 
 Your config reaches the app through virtual modules, the same model Zudoku uses with Vite. There is no generated code in your repository, no `src/` and no framework config to maintain.
 
@@ -24,7 +24,7 @@ Your config reaches the app through virtual modules, the same model Zudoku uses 
 ### Install
 
 ```bash
-npm install -D inkan
+npm install -D @tilaven/inkan
 ```
 
 The package requires Node.js 22.22 or newer. Astro, Pagefind, Mermaid, KaTeX and Expressive Code are dependencies of the package; you do not install them yourself.
@@ -87,7 +87,7 @@ This is how the Inkan repository builds this site: the config is `docs/inkan.con
 flowchart LR
   cfg["inkan.config.ts<br/>decisions/"] --> load["loadConfig()<br/>validate, resolve paths,<br/>run plugin hooks"]
   load --> vm["virtual modules<br/>config, assets, user-css,<br/>mdx-components, components/*"]
-  vm --> astro["Astro app in<br/>node_modules/inkan/app"]
+  vm --> astro["Astro app in<br/>node_modules/@tilaven/inkan/app"]
   astro --> dist["dist/<br/>HTML, CSS, pagefind/, feeds"]
 ```
 

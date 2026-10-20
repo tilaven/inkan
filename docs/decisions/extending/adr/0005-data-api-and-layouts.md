@@ -13,15 +13,15 @@ related: [extending/adr/0003-custom-pages, extending/adr/0002-override-component
 
 Custom pages and component overrides need the same data the built-in pages use: the list of records with
 their status and type, the projects, the author directory, the site config and the URL helpers that respect
-`base`. Reaching into `node_modules/inkan/app/src/lib/...` works until the next release moves a file.
+`base`. Reaching into `node_modules/@tilaven/inkan/app/src/lib/...` works until the next release moves a file.
 
 ## Decision
 
-The package exports one stable module, `inkan/data`, that re-exports the helpers the app itself uses,
-and two layouts, `inkan/layouts/Page` and `inkan/layouts/Docs`. The root export `inkan`
-holds `defineConfig`, `definePlugin` and `defineMotif`, `inkan/covers` the drawing helpers for
+The package exports one stable module, `@tilaven/inkan/data`, that re-exports the helpers the app itself uses,
+and two layouts, `@tilaven/inkan/layouts/Page` and `@tilaven/inkan/layouts/Docs`. The root export `@tilaven/inkan`
+holds `defineConfig`, `definePlugin` and `defineMotif`, `@tilaven/inkan/covers` the drawing helpers for
 plugin motifs (see [Generated record covers](../../theming/adr/0005-generated-record-covers.md)) and
-`inkan/search` the `SearchProviderFactory`, `SearchProvider`, `SearchContext`, `SearchResults` and
+`@tilaven/inkan/search` the `SearchProviderFactory`, `SearchProvider`, `SearchContext`, `SearchResults` and
 `SearchHit` types plus `SearchUnavailableError` for custom search providers (see
 [Full-text search with pluggable providers](../../site/adr/0005-full-text-search-with-pagefind.md)).
 Everything else inside the app is private and may change between releases.
@@ -30,8 +30,8 @@ Everything else inside the app is private and may change between releases.
 
 ```astro
 ---
-import Page from 'inkan/layouts/Page';
-import { getDecisions, getProjects, site, url } from 'inkan/data';
+import Page from '@tilaven/inkan/layouts/Page';
+import { getDecisions, getProjects, site, url } from '@tilaven/inkan/data';
 ---
 ```
 
@@ -77,8 +77,8 @@ Types: `Decision`, `DocEntry`, `ProjectEntry`, `PageEntry`.
 
 ```astro title="pages/stats.astro"
 ---
-import Page from 'inkan/layouts/Page';
-import { countBy, currentStatuses, getDecisions, getProjects, filterHref } from 'inkan/data';
+import Page from '@tilaven/inkan/layouts/Page';
+import { countBy, currentStatuses, getDecisions, getProjects, filterHref } from '@tilaven/inkan/data';
 
 const decisions = await getDecisions();
 const projects = await getProjects();

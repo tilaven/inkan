@@ -1,4 +1,4 @@
-import { definePlugin } from 'inkan';
+import { definePlugin } from '@tilaven/inkan';
 
 /** Tags every page with the owning team, links the on-call page from the header and adds a cover motif. */
 export default definePlugin({

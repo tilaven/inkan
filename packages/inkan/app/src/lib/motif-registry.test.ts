@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { MotifCanvas, MotifFn } from 'inkan';
+import type { MotifCanvas, MotifFn } from '@tilaven/inkan';
 import { Canvas } from './canvas';
 import { coverSvg } from './covers';
 import { getMotif, motifKeywords, motifNames } from './motif-registry';

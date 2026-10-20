@@ -15,7 +15,7 @@ Teams want to know which decisions are read, what people search for and do not f
 
 ## Decision
 
-Analytics is a plugin, `analytics()` from `inkan/analytics`, not a top-level `analytics` config key. The config schema stays closed, and the feature follows the same path as any other optional extra, see [Plugins with definePlugin](0001-plugins-with-defineplugin.md).
+Analytics is a plugin, `analytics()` from `@tilaven/inkan/analytics`, not a top-level `analytics` config key. The config schema stays closed, and the feature follows the same path as any other optional extra, see [Plugins with definePlugin](0001-plugins-with-defineplugin.md).
 
 It is an Astro integration, not only `head` tags, because an integration can inject an inline script with `injectScript('head-inline')` and can see whether the command is `build` or `dev`. Plain tags would load in both. The script is injected only for `inkan build`, unless `dev: true`.
 
@@ -24,8 +24,8 @@ The app reports what happens on the page through one DOM event, `inkan:track`. T
 ## How to use it
 
 ```ts title="inkan.config.ts"
-import { defineConfig } from 'inkan';
-import { analytics } from 'inkan/analytics';
+import { defineConfig } from '@tilaven/inkan';
+import { analytics } from '@tilaven/inkan/analytics';
 
 export default defineConfig({
   title: 'Acme Decisions',

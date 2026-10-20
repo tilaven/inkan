@@ -7,7 +7,7 @@ order: 4
 All configuration lives in one file next to your content. Inkan looks for, in this order, `inkan.config.ts`, `inkan.config.mjs`, `inkan.config.js` and `inkan.config.json` in the folder it runs in (or in `--root`). No file at all is valid: every option has a default.
 
 ```ts title="inkan.config.ts"
-import { defineConfig } from 'inkan';
+import { defineConfig } from '@tilaven/inkan';
 
 export default defineConfig({
   title: 'Acme Decisions',

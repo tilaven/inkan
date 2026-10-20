@@ -1,4 +1,4 @@
-import type { HalftoneOptions } from 'inkan';
+import type { HalftoneOptions } from '@tilaven/inkan';
 import { DEG, n } from '../../../lib/covers.mjs';
 
 export { TAU, DEG, n, circle } from '../../../lib/covers.mjs';

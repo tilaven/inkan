@@ -39,9 +39,9 @@ describe('package', () => {
     expect(expected.filter((f) => !files.has(f))).toEqual([]);
   });
 
-  it('create-inkan installs this version', () => {
+  it('@tilaven/create-inkan installs this version', () => {
     const create = readJson(path.join(pkgDir, '..', 'create-inkan', 'package.json'));
-    expect(create.dependencies.inkan).toBe(pkg.version);
+    expect(create.dependencies['@tilaven/inkan']).toBe(pkg.version);
     expect([...packed(path.join(pkgDir, '..', 'create-inkan'))].sort()).toEqual(['LICENSE', 'README.md', 'bin/create.mjs', 'package.json']);
   });
 });

@@ -1,4 +1,4 @@
-import { defineConfig } from 'inkan';
+import { defineConfig } from '@tilaven/inkan';
 import acmePlugin from './plugins/acme.ts';
 
 export default defineConfig({

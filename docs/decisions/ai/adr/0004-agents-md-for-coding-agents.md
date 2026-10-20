@@ -27,7 +27,7 @@ it is yours. The served copy only gets a short `## MCP` section appended that na
 
 ### The starter file
 
-`init` (and `npm create inkan`) writes this file unless one already exists:
+`init` (and `npm create @tilaven/inkan`) writes this file unless one already exists:
 
 ```md title="AGENTS.md"
 # Instructions for AI agents
@@ -70,7 +70,7 @@ next to the config is the one that is served; the repository's own root `AGENTS.
 
   ```md
   ## MCP
-  Query these records with filters through the MCP server: `npx inkan mcp --url https://decisions.acme.dev` (tools: search_records, get_record, list_projects, list_tags, list_fields, list_authors; resources: decision://<id>).
+  Query these records with filters through the MCP server: `npx @tilaven/inkan mcp --url https://decisions.acme.dev` (tools: search_records, get_record, list_projects, list_tags, list_fields, list_authors; resources: decision://<id>).
   ```
 
   The address is `url` from the config, so set it or the line names `http://localhost:4321`.

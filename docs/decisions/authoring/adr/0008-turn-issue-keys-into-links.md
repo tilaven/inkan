@@ -23,7 +23,7 @@ Decisions cite tickets: the incident that triggered them, the epic that implemen
 ### Configuration
 
 ```ts title="inkan.config.ts"
-import { defineConfig } from 'inkan';
+import { defineConfig } from '@tilaven/inkan';
 
 export default defineConfig({
   issueLinks: [

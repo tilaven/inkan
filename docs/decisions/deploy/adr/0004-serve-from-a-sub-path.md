@@ -74,7 +74,7 @@ In your own components and pages, never write `/decisions/` by hand:
 
 ```astro
 ---
-import { url } from 'inkan/data';
+import { url } from '@tilaven/inkan/data';
 ---
 <a href={url('decisions/')}>All records</a>
 ```

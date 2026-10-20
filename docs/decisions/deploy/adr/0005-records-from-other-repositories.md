@@ -33,7 +33,7 @@ the record came from, and records fetched from a `repo` are read-only for the CL
 ### Configure sources
 
 ```ts title="inkan.config.ts"
-import { defineConfig } from 'inkan';
+import { defineConfig } from '@tilaven/inkan';
 
 export default defineConfig({
   repo: { url: 'https://github.com/acme/decisions', branch: 'main' },

@@ -66,7 +66,7 @@ export default defineConfig({
 });
 ```
 
-The full list of keys, with the English text, is `lib/i18n/en.mjs` in the `inkan` package. `lib/i18n/pl.mjs` is a complete translation to start a new language from.
+The full list of keys, with the English text, is `lib/i18n/en.mjs` in the `@tilaven/inkan` package. `lib/i18n/pl.mjs` is a complete translation to start a new language from.
 
 ### Placeholders and plurals
 
@@ -87,7 +87,7 @@ English needs `one` and `other`; Polish uses `one`, `few`, `many` and `other`. A
 A plugin can carry `translations` in the same shape, to add a language or to translate the text of its own pages. Plugins are applied in order, then the config's `translations` on top:
 
 ```ts title="plugins/german.ts"
-import { definePlugin } from 'inkan';
+import { definePlugin } from '@tilaven/inkan';
 import de from './de.json';
 
 export default definePlugin({ name: 'german', translations: { de } });
@@ -99,7 +99,7 @@ Overridden components, slots and custom pages can use the same dictionary, so th
 
 ```astro title="components/HeaderEnd.astro"
 ---
-import { t } from 'inkan/i18n';
+import { t } from '@tilaven/inkan/i18n';
 ---
 <a href="/on-call/">{t('nav.timeline')}</a>
 ```

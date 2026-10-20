@@ -33,7 +33,7 @@ includes every dev-server restart, so it has to be idempotent.
 This is the plugin from `examples/company-decisions/plugins/acme.ts`, extended with every hook:
 
 ```ts title="plugins/acme.ts"
-import { definePlugin } from 'inkan';
+import { definePlugin } from '@tilaven/inkan';
 import remarkAcmeTerms from './remark-acme-terms.mjs';
 
 /** Tags every page with the owning team, links the on-call page from the header and adds a cover motif. */
@@ -53,7 +53,7 @@ export default definePlugin({
 ```
 
 ```ts title="inkan.config.ts"
-import { defineConfig } from 'inkan';
+import { defineConfig } from '@tilaven/inkan';
 import acmePlugin from './plugins/acme.ts';
 
 export default defineConfig({
@@ -108,8 +108,8 @@ canvas and two seeded generators, one per record and one per project. The option
 `keywords` that make the motif the natural pick for a team:
 
 ```ts title="plugins/stamp.ts"
-import { defineMotif } from 'inkan';
-import { circle, n } from 'inkan/covers';
+import { defineMotif } from '@tilaven/inkan';
+import { circle, n } from '@tilaven/inkan/covers';
 
 export default defineMotif((c, record, project) => {
   const cx = c.w * (project() < 0.5 ? 0.3 : 0.7);
@@ -127,7 +127,7 @@ with `motif: stamp`, and a project whose folder name or `name` contains `audit`,
 `inkan: defineMotif keywords must be an array of strings`. A bad name fails config validation, a missing
 module fails with `plugin "acme" motif "stamp": module not found: ...`, and a module that does not
 default-export a function fails with `plugin motif "stamp" must default-export a function`. The canvas API,
-the ink classes, the `inkan/covers` helpers and the matching rules are described in
+the ink classes, the `@tilaven/inkan/covers` helpers and the matching rules are described in
 [Generated record covers](../../theming/adr/0005-generated-record-covers.md).
 
 ### Unknown keys

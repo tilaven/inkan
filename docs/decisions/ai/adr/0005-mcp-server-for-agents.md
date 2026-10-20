@@ -20,7 +20,7 @@ already publishes.
 
 ## Decision
 
-`inkan mcp` is an MCP server over stdio, shipped inside the `inkan` package with no extra
+`inkan mcp` is an MCP server over stdio, shipped inside the `@tilaven/inkan` package with no extra
 dependency. It has two sources: the content folder of a repository (the default, read live on every call) or a
 published site (`--url`, read through `decisions.json`, the `.md` copies and `llms.txt`). It offers eight
 read-only tools (`list_projects`, `search_records`, `get_record`, `list_tags`, `list_fields`, `list_authors`, `due_reviews`, `rfc_reviews`) and one resource
@@ -33,7 +33,7 @@ per record (`decision://<id>`). Writing records stays with `inkan new` and a pul
 ```bash
 npx inkan mcp                              # records of the config in the current folder
 npx inkan mcp --root ../decisions   # another folder holding inkan.config.*
-npx inkan mcp --url https://decisions.acme.dev
+npx @tilaven/inkan mcp --url https://decisions.acme.dev
 ```
 
 | Flag | Default | What it does |
@@ -107,7 +107,7 @@ the repository):
   "mcpServers": {
     "inkan": {
       "command": "npx",
-      "args": ["inkan", "mcp", "--url", "https://decisions.acme.dev"]
+      "args": ["-y", "@tilaven/inkan", "mcp", "--url", "https://decisions.acme.dev"]
     }
   }
 }

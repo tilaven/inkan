@@ -100,7 +100,7 @@ and `/badges/<project>.svg` (and `.json` for shields.io); see
 Follow a lineage: start from a record, read `supersededBy`, look up that `id` in the same array. For the whole chain at once, `/graph.json` holds every resolved `supersedes` and `related` link as `{nodes, edges, dangling}`, see [Decision graph](../../site/adr/0012-decision-graph.md).
 
 > [!TIP]
-> The same data is available at build time from `inkan/data` (`getDecisions()`), which is the better
+> The same data is available at build time from `@tilaven/inkan/data` (`getDecisions()`), which is the better
 > choice for a custom page inside the site. `decisions.json` is for everything outside the build. An agent
 > with tools gets the same index with filters from the [MCP server](0005-mcp-server-for-agents.md), which reads
 > this file when started with `--url`.

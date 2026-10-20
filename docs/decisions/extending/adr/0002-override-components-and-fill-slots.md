@@ -55,7 +55,7 @@ component may ignore them.
 | `RecordCard` | The cover card on the landing page, the index, the timeline, team pages and the record rail | `decision: Decision`, `project: ProjectStyle`, `width?`, `lod?`, `flippable?`, `people?`, `class?` |
 | `LandingHero` | Hero of the home page | `title`, `eyebrow`, `lede`, `actions`, `stats?` |
 
-The `Decision` and `ProjectStyle` types come from `inkan/data`, see
+The `Decision` and `ProjectStyle` types come from `@tilaven/inkan/data`, see
 [Data API and layouts](0005-data-api-and-layouts.md).
 
 ### Slots
@@ -104,8 +104,8 @@ For Plausible, Umami or Google Analytics there is a ready-made plugin, see [Anal
 
 ### Replacing a built-in component
 
-Start from a copy of the original in `node_modules/inkan/app/src/components/<Name>.astro`. Internal
-imports such as `../lib/config` will not resolve from your repository; use `inkan/data` for the same
+Start from a copy of the original in `node_modules/@tilaven/inkan/app/src/components/<Name>.astro`. Internal
+imports such as `../lib/config` will not resolve from your repository; use `@tilaven/inkan/data` for the same
 values (`site`, `url`, `editUrl`, `markdownUrl`, and so on).
 
 ## Consequences
@@ -114,4 +114,4 @@ values (`site`, `url`, `editUrl`, `markdownUrl`, and so on).
 - A replaced component is yours to maintain. When an Inkan release changes the props of `RecordCard` or `RecordHeader`, your file has to follow.
 - Slots have fixed positions. A new position means a new slot name in Inkan, not a config change.
 - Components resolve at build time, so one site cannot pick a different header per page through this mechanism. A custom page can import any component directly instead.
-- Overrides see only what `inkan/data` exports plus the props they receive; app internals stay private.
+- Overrides see only what `@tilaven/inkan/data` exports plus the props they receive; app internals stay private.

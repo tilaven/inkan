@@ -34,7 +34,7 @@ agents filters and lineage without a new data format and without a database.
 ### Command
 
 ```bash
-npx inkan mcp --site https://decisions.acme.dev
+npx @tilaven/inkan mcp --site https://decisions.acme.dev
 npx inkan mcp --dist ./dist
 ```
 
@@ -69,7 +69,7 @@ resources to tools can attach a record to the conversation by URL.
   "mcpServers": {
     "decisions": {
       "command": "npx",
-      "args": ["inkan", "mcp", "--site", "https://decisions.acme.dev"]
+      "args": ["-y", "@tilaven/inkan", "mcp", "--site", "https://decisions.acme.dev"]
     }
   }
 }
@@ -79,7 +79,7 @@ resources to tools can attach a record to the conversation by URL.
 
 - Read-only. Writing a record stays with `inkan new` and a pull request; `AGENTS.md` explains that path.
 - No full-text ranking beyond substring matching on the loaded bodies. The `search.json` the build writes for external search providers (plain-text `content` per record) could be reused later.
-- Shipped inside the `inkan` package behind the `mcp` command so no second package is needed; the MCP SDK
+- Shipped inside the `@tilaven/inkan` package behind the `mcp` command so no second package is needed; the MCP SDK
   becomes a dependency only when the command runs, if that can be arranged with a lazy import.
 
 ## Open questions

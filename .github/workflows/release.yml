@@ -1,6 +1,6 @@
 name: Release
 
-# Publishes `inkan` and `create-inkan` to npm when a `v*` tag is pushed.
+# Publishes `@tilaven/inkan` and `@tilaven/create-inkan` to npm when a `v*` tag is pushed.
 # Both package versions (and create-inkan's dependency on inkan) must match the tag.
 # Authentication uses npm trusted publishing; until it is set up on npmjs.com,
 # an `NPM_TOKEN` repository secret is used instead.
@@ -35,7 +35,7 @@ jobs:
             actual=$(node -p "require('./packages/$pkg/package.json').version")
             [ "$actual" = "$version" ] || { echo "::error::packages/$pkg is $actual, tag is $GITHUB_REF_NAME"; exit 1; }
           done
-          dep=$(node -p "require('./packages/create-inkan/package.json').dependencies.inkan")
+          dep=$(node -p "require('./packages/create-inkan/package.json').dependencies['@tilaven/inkan']")
           [ "$dep" = "$version" ] || { echo "::error::create-inkan depends on inkan $dep, tag is $GITHUB_REF_NAME"; exit 1; }
       - run: npm ci
       - run: npm test
@@ -46,10 +46,11 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           case "$version" in *-*) tag=next ;; *) tag=latest ;; esac
-          for pkg in inkan create-inkan; do
-            if npm view "$pkg@$version" version > /dev/null 2>&1; then
-              echo "$pkg@$version is already published"
+          for dir in inkan create-inkan; do
+            name=$(node -p "require('./packages/$dir/package.json').name")
+            if npm view "$name@$version" version > /dev/null 2>&1; then
+              echo "$name@$version is already published"
             else
-              npm publish -w "packages/$pkg" --access public --provenance --tag "$tag"
+              npm publish -w "packages/$dir" --access public --provenance --tag "$tag"
             fi
           done

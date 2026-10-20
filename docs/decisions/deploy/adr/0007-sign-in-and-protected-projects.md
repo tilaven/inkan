@@ -61,7 +61,7 @@ projects have different audiences. They combine: nothing stops you from running 
 ### Configure
 
 ```ts title="inkan.config.ts"
-import { defineConfig } from 'inkan';
+import { defineConfig } from '@tilaven/inkan';
 
 export default defineConfig({
   url: 'https://decisions.acme.dev',
@@ -212,7 +212,7 @@ COPY . .
 RUN npm run build
 ENV NODE_ENV=production
 EXPOSE 8080
-CMD ["node", "node_modules/inkan/bin/cli.mjs", "serve"]
+CMD ["node", "node_modules/@tilaven/inkan/bin/cli.mjs", "serve"]
 ```
 
 This is the Dockerfile of the nginx route with one stage and a different last line. `init` already lists `dist`,
