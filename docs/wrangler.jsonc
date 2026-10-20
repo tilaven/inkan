@@ -1,5 +1,5 @@
 // The documentation site at https://useinkan.dev, served as static assets by Cloudflare Workers.
-// Deployed by .github/workflows/site.yml after `npm run docs:build`.
+// Deployed by Workers Builds on every push to main; see docs/decisions/deploy/adr/0008-cloudflare-workers.md.
 {
   "$schema": "https://unpkg.com/wrangler@4.151.2/config-schema.json",
   "name": "inkan-docs",
