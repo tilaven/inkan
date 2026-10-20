@@ -30,9 +30,12 @@ export type Stock = 'paper' | 'flood' | 'black';
 const STOCKS: Stock[] = ['paper', 'paper', 'paper', 'flood', 'black'];
 const ALT: Record<Ink, Ink> = { c: 'm', m: 'y', y: 'c', g: 'c', v: 'm', o: 'm' };
 
-const grayscale = (a: number) => `<feColorMatrix type="saturate" values="${n(1 - a)}"/>`;
+/** Filter coefficients and factors need more precision than coordinates. */
+const fine = (v: number) => String(+v.toFixed(4));
+const saturate = (a: number) => `<feColorMatrix type="saturate" values="${fine(a)}"/>`;
+const grayscale = (a: number) => saturate(1 - a);
 const linear = (slope: number, intercept = 0) =>
-  `<feComponentTransfer>${['R', 'G', 'B'].map((c) => `<feFunc${c} type="linear" slope="${n(slope)}" intercept="${n(intercept)}"/>`).join('')}</feComponentTransfer>`;
+  `<feComponentTransfer>${['R', 'G', 'B'].map((c) => `<feFunc${c} type="linear" slope="${fine(slope)}" intercept="${fine(intercept)}"/>`).join('')}</feComponentTransfer>`;
 const contrast = (a: number) => linear(a, 0.5 - a / 2);
 const sepia = (a: number) => {
   const k = 1 - a;
@@ -41,7 +44,7 @@ const sepia = (a: number) => {
     [0.349 - 0.349 * k, 0.686 + 0.314 * k, 0.168 - 0.168 * k],
     [0.272 - 0.272 * k, 0.534 - 0.534 * k, 0.131 + 0.869 * k],
   ];
-  return `<feColorMatrix type="matrix" values="${m.map((row) => `${row.map(n).join(' ')} 0 0`).join(' ')} 0 0 0 1 0"/>`;
+  return `<feColorMatrix type="matrix" values="${m.map((row) => `${row.map(fine).join(' ')} 0 0`).join(' ')} 0 0 0 1 0"/>`;
 };
 
 /**
@@ -53,7 +56,7 @@ const TREATMENT: Record<string, { filter: string; opacity?: number }> = {
   rejected: { filter: grayscale(1) + contrast(1.05) },
   withdrawn: { filter: grayscale(0.85), opacity: 0.5 },
   superseded: { filter: grayscale(0.7) + contrast(0.95), opacity: 0.78 },
-  deprecated: { filter: sepia(0.55) + `<feColorMatrix type="saturate" values=".7"/>` + linear(1.04), opacity: 0.95 },
+  deprecated: { filter: sepia(0.55) + saturate(0.7) + linear(1.04), opacity: 0.95 },
   draft: { filter: grayscale(0.5), opacity: 0.38 },
 };
 
@@ -76,7 +79,7 @@ export function framing(id: string, width: number, height: number): string {
   const angle = (f() * 2 - 1) * 18;
   const fx = width * (0.25 + f() * 0.5);
   const fy = height * (0.2 + f() * 0.45);
-  return `rotate(${n(angle)} ${n(fx)} ${n(fy)}) translate(${n(fx)} ${n(fy)}) scale(${n(scale)}) translate(${n(-fx)} ${n(-fy)})`;
+  return `rotate(${n(angle)} ${n(fx)} ${n(fy)}) translate(${n(fx)} ${n(fy)}) scale(${fine(scale)}) translate(${n(-fx)} ${n(-fy)})`;
 }
 
 /** A flat shape in the second ink laid over the print, placed per record (none on flood stock, where it would be key). */
@@ -118,7 +121,7 @@ export function coverSvg(
     c.defs.push(
       `<filter id="${filter}" x="0" y="0" ${full} filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">${treatment.filter}</filter>`,
     );
-    const opacity = treatment.opacity === undefined ? '' : ` opacity="${n(treatment.opacity)}"`;
+    const opacity = treatment.opacity === undefined ? '' : ` opacity="${fine(treatment.opacity)}"`;
     body = `<rect ${full} class="bg"/><g filter="url(#${filter})"${opacity}>${print}</g>`;
   }
   return (
