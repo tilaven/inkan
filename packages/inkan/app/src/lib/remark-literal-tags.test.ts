@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import remarkRehype from 'remark-rehype';
 import rehypeRaw from 'rehype-raw';
 import rehypeStringify from 'rehype-stringify';
+import type { Root } from 'mdast';
 import remarkLiteralTags from './remark-literal-tags.mjs';
 
 function run(markdown: string) {
@@ -29,7 +30,7 @@ describe('remark-literal-tags', () => {
   });
 
   it('keeps the source position for line anchors', () => {
-    const tree = unified().use(remarkParse).use(remarkLiteralTags).runSync(unified().use(remarkParse).parse('Intro\n\n<project>'));
+    const tree = unified().use(remarkParse).use(remarkLiteralTags).runSync(unified().use(remarkParse).parse('Intro\n\n<project>')) as Root;
     expect(tree.children[1]).toMatchObject({ type: 'paragraph', position: { start: { line: 3 } } });
   });
 
