@@ -168,7 +168,7 @@ function init() {
     ...pkg.scripts,
   };
   pkg.type ??= 'module';
-  if (!pkg.dependencies?.['inkan']) pkg.devDependencies = { 'inkan': `^${version}`, ...pkg.devDependencies };
+  if (!pkg.dependencies?.['@tilaven/inkan']) pkg.devDependencies = { '@tilaven/inkan': `^${version}`, ...pkg.devDependencies };
   fs.writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + '\n');
   console.log(`inkan initialised in ${target}\n${copied.map((f) => `  + ${f}`).join('\n')}\n  ~ package.json\n\nNext:\n  ${target === process.cwd() ? '' : `cd ${path.relative(process.cwd(), target)} && `}npm install && npm run dev\n`);
 }

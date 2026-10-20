@@ -1,4 +1,4 @@
-/** Helpers for motif authors (`import { n, circle, TAU, DEG } from 'inkan/covers'`). */
+/** Helpers for motif authors (`import { n, circle, TAU, DEG } from '@tilaven/inkan/covers'`). */
 
 export const TAU = Math.PI * 2;
 export const DEG = 180 / Math.PI;

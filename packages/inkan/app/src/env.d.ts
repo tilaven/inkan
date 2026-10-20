@@ -122,7 +122,7 @@ declare module 'virtual:inkan/mdx-components' {
 
 declare module 'virtual:inkan/motifs' {
   /** Cover motifs registered by plugins, by name. */
-  const motifs: Record<string, import('inkan').MotifFn>;
+  const motifs: Record<string, import('@tilaven/inkan').MotifFn>;
   export default motifs;
 }
 

@@ -1,5 +1,5 @@
-import { defineMotif } from 'inkan';
-import { circle, n, TAU } from 'inkan/covers';
+import { defineMotif } from '@tilaven/inkan';
+import { circle, n, TAU } from '@tilaven/inkan/covers';
 
 /** A rubber stamp: a ticked ring over a halftone cloud, with a black seal off to one side. */
 export default defineMotif((c, record, project) => {

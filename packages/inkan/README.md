@@ -9,8 +9,8 @@
 
 <p align="center">
   <a href="https://github.com/tilaven/inkan/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-ff3d9a" alt="License: MIT"></a>
-  <a href="https://www.npmjs.com/package/inkan"><img src="https://img.shields.io/npm/v/inkan?label=inkan&color=1a8cff" alt="inkan on npm"></a>
-  <a href="https://www.npmjs.com/package/create-inkan"><img src="https://img.shields.io/npm/v/create-inkan?label=create-inkan&color=1a8cff" alt="create-inkan on npm"></a>
+  <a href="https://www.npmjs.com/package/@tilaven/inkan"><img src="https://img.shields.io/npm/v/@tilaven/inkan?label=inkan&color=1a8cff" alt="@tilaven/inkan on npm"></a>
+  <a href="https://www.npmjs.com/package/@tilaven/create-inkan"><img src="https://img.shields.io/npm/v/@tilaven/create-inkan?label=create-inkan&color=1a8cff" alt="@tilaven/create-inkan on npm"></a>
   <a href="https://github.com/tilaven/inkan/actions/workflows/ci.yml"><img src="https://github.com/tilaven/inkan/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <img src="https://img.shields.io/badge/node-%E2%89%A522.22-19b45a" alt="Node.js 22.22 or newer">
 </p>
@@ -44,7 +44,7 @@ whole company gets one place to find out why things are the way they are.
 ## 🤩 Try it, right now!
 
 ```bash
-npm create inkan@latest my-decisions
+npm create @tilaven/inkan@latest my-decisions
 cd my-decisions && npm install && npm run dev
 ```
 
@@ -131,7 +131,7 @@ docker build -t inkan-example . && docker run -p 8080:80 inkan-example
 ### ⚡️ Quick start
 
 ```bash
-npm create inkan@latest my-decisions
+npm create @tilaven/inkan@latest my-decisions
 ```
 
 You get `inkan.config.ts`, a sample project, an `AGENTS.md`, CI files for GitHub Actions and GitLab CI, and a
@@ -140,7 +140,7 @@ You get `inkan.config.ts`, a sample project, an `AGENTS.md`, CI files for GitHub
 ### 📦 In an existing repository
 
 ```bash
-npm install -D inkan
+npm install -D @tilaven/inkan
 npx inkan init
 ```
 
@@ -232,7 +232,7 @@ they work when browsing the repo on GitHub or GitLab and on the site.
 
 ```ts
 // inkan.config.ts
-import { defineConfig } from 'inkan';
+import { defineConfig } from '@tilaven/inkan';
 
 export default defineConfig({
   title: 'Acme Decisions',
@@ -291,8 +291,8 @@ second for what all covers of a team share.
 
 ```ts
 // plugins/stamp.ts
-import { defineMotif } from 'inkan';
-import { circle, n } from 'inkan/covers';
+import { defineMotif } from '@tilaven/inkan';
+import { circle, n } from '@tilaven/inkan/covers';
 
 export default defineMotif((c, record, project) => {
   const cx = c.w * (project() < 0.5 ? 0.3 : 0.7);
@@ -303,7 +303,7 @@ export default defineMotif((c, record, project) => {
 }, { keywords: ['audit', 'controls'] });
 
 // plugins/acme.ts
-import { definePlugin } from 'inkan';
+import { definePlugin } from '@tilaven/inkan';
 
 export default definePlugin({ name: 'acme', motifs: { stamp: new URL('./stamp.ts', import.meta.url) } });
 ```
@@ -340,7 +340,7 @@ Issues and pull requests are welcome. This repository is a monorepo:
 
 ```
 packages/inkan                 the CLI and the site (published to npm)
-packages/create-inkan          `npm create inkan`
+packages/create-inkan          `npm create @tilaven/inkan`
 examples/company-decisions     demo content
 docs                           the documentation site, written as ADRs
 ```

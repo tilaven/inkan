@@ -156,7 +156,7 @@ The component is rendered inside the "Discussion" section, on the server. It rec
 
 ```astro title="src/Comments.astro"
 ---
-import type { CommentsProps } from "inkan";
+import type { CommentsProps } from "@tilaven/inkan";
 
 const { discussion, title, pageUrl, options } = Astro.props as CommentsProps;
 const href = discussion ?? `${options.forum}/new?title=${encodeURIComponent(title)}&url=${encodeURIComponent(pageUrl)}`;

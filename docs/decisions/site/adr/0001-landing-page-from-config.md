@@ -27,7 +27,7 @@ Everything on the page is derived from the records in the repository. There are 
 The hero reads `landing.title` and `landing.tagline`; when they are not set it falls back to `title` and `tagline` of the site. The eyebrow line shows the date of the last commit in the repository (`built from git, 16 Oct 2026`); outside git it shows the build time. The lede starts with the record and team counts (`42 records from 5 teams.`) followed by the tagline.
 
 ```ts title="inkan.config.ts"
-import { defineConfig } from 'inkan';
+import { defineConfig } from '@tilaven/inkan';
 
 export default defineConfig({
   title: 'Acme Decisions',

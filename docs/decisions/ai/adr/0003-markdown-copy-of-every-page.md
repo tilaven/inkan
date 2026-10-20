@@ -90,11 +90,11 @@ the repository does.
 
 ### In your own pages and components
 
-`markdownUrl()` from `inkan/data` builds the link for any entry:
+`markdownUrl()` from `@tilaven/inkan/data` builds the link for any entry:
 
 ```astro
 ---
-import { getDecisions, markdownUrl } from 'inkan/data';
+import { getDecisions, markdownUrl } from '@tilaven/inkan/data';
 const latest = (await getDecisions())[0];
 ---
 <a href={markdownUrl(latest)}>Source of {latest.title}</a>

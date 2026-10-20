@@ -9,6 +9,6 @@
     "new": "inkan new"
   },
   "devDependencies": {
-    "inkan": "*"
+    "@tilaven/inkan": "*"
   }
 }

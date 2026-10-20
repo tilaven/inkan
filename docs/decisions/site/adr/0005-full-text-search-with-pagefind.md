@@ -135,10 +135,10 @@ export default defineConfig({
 | `module` | required | A browser module, relative to the config file (a `file:` URL is accepted too). Its default export is a `SearchProviderFactory`. |
 | `options` | `{}` | Passed to the factory as is. |
 
-The module runs in the browser. It gets `options` and returns an object with a `search` method and an optional `preload`, which the palette calls when it opens so the first query is fast. The types come from `inkan/search`, together with `SearchUnavailableError`: throw it to show your own message in the palette (text in backticks renders as code) instead of the generic "Search failed. Try again."
+The module runs in the browser. It gets `options` and returns an object with a `search` method and an optional `preload`, which the palette calls when it opens so the first query is fast. The types come from `@tilaven/inkan/search`, together with `SearchUnavailableError`: throw it to show your own message in the palette (text in backticks renders as code) instead of the generic "Search failed. Try again."
 
 ```ts title="search.ts"
-import { SearchUnavailableError, type SearchProviderFactory } from 'inkan/search';
+import { SearchUnavailableError, type SearchProviderFactory } from '@tilaven/inkan/search';
 
 const acme: SearchProviderFactory<{ endpoint: string }> = ({ endpoint }) => ({
   async search(query, { limit, signal, base }) {
@@ -160,7 +160,7 @@ export default acme;
 | `SearchResults` | `{ hits: SearchHit[]; total: number }`. `total` may be larger than `hits.length`; the footer shows both. |
 | `SearchHit` | `{ url: string; title: string; excerpt?: string; marked?: boolean; project?: string; type?: string; status?: string; ref?: string }`. `url` includes `base`. Set `marked: true` when `excerpt` is HTML whose only markup is `<mark>`; otherwise it is plain text and the palette marks the query terms itself. `project` is the project id, used to show the project's name and colour. |
 
-The same types are also exported from the root module `inkan` (`SearchConfig`, `SearchRecord`, `SearchHit`, `SearchProvider`, `SearchProviderFactory`, `SearchContext`, `SearchResults`). To ship a provider as a package, let a plugin set `search` in its `config` hook; give `module` an absolute path or a `file:` URL (`new URL('./search.ts', import.meta.url).href`), because a relative path is resolved against the site's config file, not the plugin.
+The same types are also exported from the root module `@tilaven/inkan` (`SearchConfig`, `SearchRecord`, `SearchHit`, `SearchProvider`, `SearchProviderFactory`, `SearchContext`, `SearchResults`). To ship a provider as a package, let a plugin set `search` in its `config` hook; give `module` an absolute path or a `file:` URL (`new URL('./search.ts', import.meta.url).href`), because a relative path is resolved against the site's config file, not the plugin.
 
 ### Drafts and hidden pages
 

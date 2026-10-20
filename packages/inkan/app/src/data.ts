@@ -1,4 +1,4 @@
-/** Public data helpers for custom pages and component overrides (`import { getDecisions } from 'inkan/data'`). */
+/** Public data helpers for custom pages and component overrides (`import { getDecisions } from '@tilaven/inkan/data'`). */
 export { site, docTypes, statuses, openStatuses, currentStatuses } from './lib/config';
 export {
   url,

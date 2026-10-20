@@ -15,12 +15,12 @@ order: 2
 ### New repository
 
 ```bash
-npm create inkan@latest my-decisions
+npm create @tilaven/inkan@latest my-decisions
 cd my-decisions
 npm install
 ```
 
-`npm create inkan` runs `inkan init` in the folder you name (`decisions-site` when you give none). The result is a small repository that already builds:
+`npm create @tilaven/inkan` runs `inkan init` in the folder you name (`decisions-site` when you give none). The result is a small repository that already builds:
 
 ```text
 my-decisions/
@@ -40,7 +40,7 @@ my-decisions/
 ### Existing repository
 
 ```bash
-npm install -D inkan
+npm install -D @tilaven/inkan
 npx inkan init
 ```
 
@@ -106,7 +106,7 @@ npm run check
 Everything about the site lives in `inkan.config.ts`:
 
 ```ts title="inkan.config.ts"
-import { defineConfig } from 'inkan';
+import { defineConfig } from '@tilaven/inkan';
 
 export default defineConfig({
   title: 'Acme Decisions',

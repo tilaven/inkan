@@ -244,8 +244,8 @@ The SVG uses classes that `cover.css` maps to tokens: `--inkan-ink-<ink>`, `--in
 A motif is a module whose default export is a `MotifFn`, wrapped in `defineMotif`. A plugin registers it under a name with the `motifs` key, and any `_project.yml` can then pin that name. The second argument of `defineMotif` takes `keywords`, so projects whose id or name contains one of them get the motif without pinning it. This is `examples/company-decisions/plugins/stamp.ts`:
 
 ```ts title="plugins/stamp.ts"
-import { defineMotif } from 'inkan';
-import { circle, n, TAU } from 'inkan/covers';
+import { defineMotif } from '@tilaven/inkan';
+import { circle, n, TAU } from '@tilaven/inkan/covers';
 
 /** A rubber stamp: a ticked ring over a halftone cloud, with a black seal off to one side. */
 export default defineMotif((c, record, project) => {
@@ -275,7 +275,7 @@ export default defineMotif((c, record, project) => {
 ```
 
 ```ts title="plugins/acme.ts"
-import { definePlugin } from 'inkan';
+import { definePlugin } from '@tilaven/inkan';
 
 export default definePlugin({
   name: 'acme',
@@ -329,7 +329,7 @@ The canvas is a `MotifCanvas` (types in `lib/index.d.ts`):
 
 `halftone` takes `HalftoneOptions`: `spacing` between dots, the screen `angle` in radians, `maxR` (dot radius where the field is 1), `cls` (`a`, `b`, `k` or `p`), an optional `clip` id, and `field`, either one radial fall-off `{ cx, cy, r, pow, amp }` or a list of linear ramps `{ x1, y1, x2, y2, amp? }` that multiply.
 
-`inkan/covers` exports four helpers for writing the markup: `TAU` (a full turn in radians), `DEG` (radians to degrees), `n(v)` (a number as an attribute value, one decimal, no `-0`) and `circle(cx, cy, r, attrs?)` (a `<circle>` element; `attrs` is raw attribute markup such as `' class="k"'`). The built-in motifs in `app/src/lib/motifs.ts`, `motifs-infra.ts` and `motifs-product.ts` are written with the same API and are the best reference for more complex prints.
+`@tilaven/inkan/covers` exports four helpers for writing the markup: `TAU` (a full turn in radians), `DEG` (radians to degrees), `n(v)` (a number as an attribute value, one decimal, no `-0`) and `circle(cx, cy, r, attrs?)` (a `<circle>` element; `attrs` is raw attribute markup such as `' class="k"'`). The built-in motifs in `app/src/lib/motifs.ts`, `motifs-infra.ts` and `motifs-product.ts` are written with the same API and are the best reference for more complex prints.
 
 ## Consequences
 

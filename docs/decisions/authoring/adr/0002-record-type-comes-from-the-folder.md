@@ -45,7 +45,7 @@ All three fields are required. The config loader rejects unknown fields inside a
 Give the full map. The defaults are replaced, not merged, so repeat `adr` and `rfc` if you still want them:
 
 ```ts title="inkan.config.ts"
-import { defineConfig } from 'inkan';
+import { defineConfig } from '@tilaven/inkan';
 
 export default defineConfig({
   docTypes: {
