@@ -179,8 +179,14 @@ const theme = site.theme.default;
           el.removeAttribute('aria-label');
         }
       };
-      const scrollers = new ResizeObserver((entries) => entries.forEach((e) => sync(e.target as HTMLElement)));
-      document.querySelectorAll<HTMLElement>('[data-scroll-label]').forEach((el) => scrollers.observe(el));
+      // The content is watched too: it can widen after the box settles, e.g. once a web font loads.
+      const scrollers = new ResizeObserver((entries) =>
+        entries.forEach((e) => sync((e.target as HTMLElement).closest<HTMLElement>('[data-scroll-label]')!)),
+      );
+      document.querySelectorAll<HTMLElement>('[data-scroll-label]').forEach((el) => {
+        scrollers.observe(el);
+        if (el.firstElementChild) scrollers.observe(el.firstElementChild);
+      });
     </script>
     <style is:global>
       .side__close { align-self: flex-end; margin-bottom: -6px; }
