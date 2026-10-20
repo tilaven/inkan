@@ -28,9 +28,12 @@ describe('coverSvg', () => {
     }
   });
   it('bakes a treatment into retired records only', () => {
-    expect(coverSvg({ ...input, status: 'rejected' })).toContain('grayscale(1)');
-    expect(coverSvg({ ...input, status: 'accepted' })).not.toContain('filter:');
-    expect(coverSvg({ ...input, status: 'custom' })).not.toContain('filter:');
+    expect(coverSvg({ ...input, status: 'rejected' })).toContain('color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0"/>');
+    expect(coverSvg({ ...input, status: 'draft' })).toContain('<feColorMatrix type="saturate" values="0.5"/></filter>');
+    expect(coverSvg({ ...input, status: 'draft' })).toContain('opacity="0.38"');
+    expect(coverSvg({ ...input, status: 'superseded' })).toContain('slope="0.95" intercept="0.025"');
+    expect(coverSvg({ ...input, status: 'accepted' })).not.toContain('filterUnits');
+    expect(coverSvg({ ...input, status: 'custom' })).not.toContain('filterUnits');
   });
   it('honours the requested size', () => {
     expect(coverSvg(input, { width: 440, height: 680 })).toContain('viewBox="0 0 440 680"');
