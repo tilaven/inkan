@@ -19,7 +19,7 @@ export function setupFilters(): void {
     project: r.dataset.project!,
     type: r.dataset.type!,
     status: r.dataset.status!,
-    authors: JSON.parse(r.dataset.authors!),
+    people: JSON.parse(r.dataset.people!),
     tags: JSON.parse(r.dataset.tags!),
     fields: JSON.parse(r.dataset.fields!),
     text: r.dataset.text!,

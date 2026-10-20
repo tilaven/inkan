@@ -107,3 +107,15 @@ test('the record header lists the custom fields', async ({ page }) => {
   await row('Risk').locator('a').click();
   await expect(page.locator('#factive .chip')).toHaveAccessibleName(/^Remove filter Risk: medium/);
 });
+
+test('the authors page lists five newest records and links the rest to the index', async ({ page }) => {
+  await page.goto('/authors/');
+  for (const list of await page.locator('.member ul').all()) expect(await list.locator('li').count()).toBeLessThanOrEqual(5);
+  const member = page.locator('.member', { has: page.locator('.member__more') }).first();
+  const more = member.locator('.member__more');
+  await expect(more).toHaveText(/See 1 more record/);
+  await expect(more).toHaveAccessibleName(/^See 1 more record by Jules Marchand/);
+  await more.click();
+  await expect(page).toHaveURL(/\/decisions\/\?author=jules$/);
+  await expect(page.locator('#count')).toHaveText(/^6 /);
+});

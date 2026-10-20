@@ -6,7 +6,7 @@ const rec: ListRecord = {
   project: 'sre',
   type: 'adr',
   status: 'accepted',
-  authors: ['ania', 'marek'],
+  people: ['ania', 'marek'],
   tags: ['slo', 'observability'],
   fields: { risk: ['medium'], pci: ['true'], cost: 25, decided: '2025-03-01' },
   text: 'define slos before dashboards #slo #observability every journey gets an slo',
