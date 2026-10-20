@@ -88,6 +88,8 @@ export default {
   'landing.ghostText': 'Dodaj folder z plikiem {file}. Po następnym buildzie pojawi się tutaj, w panelu bocznym i w każdym filtrze.',
   'landing.latest': 'Najnowsze',
   'landing.latestHint': 'od najnowszych',
+  'landing.features': 'Funkcje',
+  'landing.copyCommand': 'Kopiuj polecenie',
   'landing.content': 'Treść',
   'landing.contentHint': 'z pliku _landing.md',
   'landing.agents': 'Dla agentów',

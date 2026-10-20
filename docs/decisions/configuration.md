@@ -233,10 +233,14 @@ See [Fill date and authors from git](authoring/adr/0009-fill-date-and-authors-fr
 | --- | --- | --- | --- |
 | `landing.title` | `string \| null` | `null` (uses `title`) | Heading of the hero. |
 | `landing.tagline` | `string \| null` | `null` (uses `tagline`) | Text under the heading. |
+| `landing.eyebrow` | `string \| null` | `null` ("Decision archive" and the last commit date) | Small line above the heading. |
+| `landing.image` | `{ src, dark?, alt } \| null` | `null` | Picture beside the hero text. `dark` is used in the Stage theme. Paths are relative to the config file. |
+| `landing.command` | `string \| null` | `null` | Shell command under the buttons, with a copy button. |
+| `landing.features` | `{ title, text, link? }[]` | `[]` | Cards of the `features` section. |
 | `landing.actions` | `{ text, link, variant? }[]` | Browse all records, Timeline, Open decisions | Buttons in the hero. `variant` is `'primary'`, `'secondary'` or `'ghost'`. |
 | `landing.sections` | `string[]` | `['stats', 'projects', 'latest', 'content', 'agents']` | Blocks below the hero, in this order. Remove one to hide it. |
 
-Section names: `stats` adds the record counts to the hero, `projects` lists the project cards, `latest` the newest records, `content` renders `<contentDir>/_landing.md`, `agents` lists the machine-readable endpoints. Any other name renders nothing.
+Section names: `stats` adds the record counts to the hero and the lede, `features` shows the `landing.features` cards, `projects` lists the project cards, `latest` the newest records, `content` renders `<contentDir>/_landing.md`, `agents` lists the machine-readable endpoints. Any other name renders nothing.
 
 ```ts title="inkan.config.ts"
 export default defineConfig({

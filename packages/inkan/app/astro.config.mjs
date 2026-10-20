@@ -88,6 +88,8 @@ const modules = {
     [
       config.logo ? `export { default as logo } from ${JSON.stringify(config.logo + '?url')};` : 'export const logo = null;',
       config.favicon ? `export { default as favicon } from ${JSON.stringify(config.favicon + '?url')};` : 'export const favicon = null;',
+      config.landing.image ? `export { default as landingImage } from ${JSON.stringify(config.landing.image.src + '?url')};` : 'export const landingImage = null;',
+      config.landing.image?.dark ? `export { default as landingImageDark } from ${JSON.stringify(config.landing.image.dark + '?url')};` : 'export const landingImageDark = null;',
     ].join('\n'),
   'virtual:inkan/search': () => {
     const { enabled, type, maxResults, module, options, ...rest } = config.search;

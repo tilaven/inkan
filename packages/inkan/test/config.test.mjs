@@ -45,6 +45,7 @@ describe('loadConfig', () => {
         customCss: ['./brand/theme.css'],
         components: { Footer: './parts/Footer.astro' },
         mdxComponents: './parts/mdx.ts',
+        landing: { image: { src: './brand/hero.webp', dark: './brand/hero-dark.webp', alt: 'Hero' } },
       }),
     });
     const config = await loadConfig(root);
@@ -53,7 +54,9 @@ describe('loadConfig', () => {
     expect(config.customCss).toEqual([path.join(root, 'brand/theme.css')]);
     expect(config.components).toEqual({ Footer: path.join(root, 'parts/Footer.astro') });
     expect(config.mdxComponents).toBe(path.join(root, 'parts/mdx.ts'));
+    expect(config.landing.image).toEqual({ src: path.join(root, 'brand/hero.webp'), dark: path.join(root, 'brand/hero-dark.webp'), alt: 'Hero' });
   });
+
 
   it('does not share default objects between loads', async () => {
     const config = await loadConfig(tmpSite());
@@ -155,6 +158,12 @@ describe('validateConfig', () => {
     expect(errorOf({ statuses: { x: { label: 'X', opne: true } } })).toContain('statuses.x.opne: unknown option, did you mean "open"?');
     expect(errorOf({ plugins: [{ name: 'p', pages: [{ pattern: '/x', entrypiont: '/x.astro' }] }] })).toContain('plugins.0.pages.0.entrypiont: unknown option, did you mean "entrypoint"?');
     expect(knownKeysAt(configSchema, ['plugins', 0])).toContain('remarkPlugins');
+  });
+
+  it('validates the landing image, command and features', () => {
+    expect(() => validateConfig({ landing: { command: 'npx inkan new adr', features: [{ title: 'A', text: 'B', link: '/a/' }] } })).not.toThrow();
+    expect(errorOf({ landing: { image: { src: './a.webp' } } })).toContain('landing.image.alt');
+    expect(errorOf({ landing: { features: [{ title: 'A', txt: 'B' }] } })).toContain('did you mean "text"?');
   });
 
   it('keeps unknown plugin keys but lists them', () => {

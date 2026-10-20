@@ -381,8 +381,16 @@ export interface InkanConfig {
   landing?: {
     title?: string;
     tagline?: string;
+    /** Small line above the title. Defaults to "Decision archive" and the date of the last commit. */
+    eyebrow?: string;
+    /** Picture beside the hero text; `dark` is used in the Stage theme. Paths are relative to the config file. */
+    image?: { src: string; dark?: string; alt: string };
+    /** A shell command shown under the buttons with a copy button, e.g. `npm create my-tool@latest`. */
+    command?: string;
+    /** Cards of the "features" section. A `link` makes the whole card a link. */
+    features?: { title: string; text: string; link?: string }[];
     actions?: { text: string; link: string; variant?: 'primary' | 'secondary' | 'ghost' }[];
-    /** Any order of: 'stats', 'projects', 'latest', 'content', 'agents'. */
+    /** Any order of: 'stats', 'features', 'projects', 'latest', 'content', 'agents'. */
     sections?: string[];
   };
 }
