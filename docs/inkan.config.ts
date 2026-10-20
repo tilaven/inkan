@@ -3,6 +3,7 @@ import { defineConfig } from '@tilaven/inkan';
 export default defineConfig({
   title: 'Inkan',
   tagline: 'Docs for Inkan, written as the decisions behind each feature.',
+  url: 'https://useinkan.dev',
   description: 'How to install, configure, extend and deploy inkan. Every feature is documented as an ADR, so this site is also a live example.',
   repo: { url: 'https://github.com/tilaven/inkan', branch: 'main', provider: 'github' },
   // The repository's code carries @adr markers for the example site, not for these docs.

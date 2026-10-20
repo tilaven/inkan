@@ -8,7 +8,7 @@
   "files": ["bin"],
   "engines": { "node": ">=22.22" },
   "dependencies": { "@tilaven/inkan": "0.1.1" },
-  "homepage": "https://github.com/tilaven/inkan#readme",
+  "homepage": "https://useinkan.dev",
   "bugs": "https://github.com/tilaven/inkan/issues",
   "repository": {
     "type": "git",

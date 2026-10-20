@@ -19,7 +19,7 @@
   <strong>
     <a href="#-try-it-right-now">Quick start</a> ·
     <a href="#-features">Features</a> ·
-    <a href="docs">Docs</a> ·
+    <a href="https://useinkan.dev">Docs</a> ·
     <a href="#-a-look-around">Screenshots</a> ·
     <a href="#-contributing">Contributing</a> ·
     <a href="#-motivation">Motivation</a>
@@ -330,9 +330,10 @@ and your config injected as a virtual module. Search is [Pagefind](https://pagef
 
 ## 📚 Documentation
 
-The docs live in [`docs/`](docs) and are an Inkan site themselves: every feature is described as an ADR, with why it
-exists, what was decided and how to use it. Start with the [introduction](docs/decisions/introduction.md) and the
-[quick start](docs/decisions/quick-start.md), or run them locally with `npm run docs:dev`.
+The docs are online at [useinkan.dev](https://useinkan.dev) and are an Inkan site themselves: every feature is
+described as an ADR, with why it exists, what was decided and how to use it. Start with the
+[introduction](https://useinkan.dev/introduction/) and the [quick start](https://useinkan.dev/quick-start/). The
+sources live in [`docs/`](docs); run them locally with `npm run docs:dev`.
 
 ## 🤝 Contributing
 
