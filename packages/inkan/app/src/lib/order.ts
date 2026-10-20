@@ -12,9 +12,12 @@ export const byNumber = (a: Sortable, b: Sortable) => (a.number ?? 0) - (b.numbe
 /** By date (undated records last), then by number in the same direction. */
 export function recordOrder(sort: SidebarSort) {
   if (sort === 'number') return byNumber;
-  const dir = sort === 'newest' ? -1 : 1;
+  const dir = sort === 'oldest' ? 1 : -1;
+  const time = (r: Sortable) => (r.date && !Number.isNaN(r.date.getTime()) ? r.date.getTime() : null);
   return (a: Sortable, b: Sortable) => {
-    if (!a.date !== !b.date) return a.date ? -1 : 1;
-    return dir * ((a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0) || byNumber(a, b));
+    const ta = time(a);
+    const tb = time(b);
+    if ((ta === null) !== (tb === null)) return ta === null ? 1 : -1;
+    return dir * ((ta ?? 0) - (tb ?? 0) || byNumber(a, b));
   };
 }

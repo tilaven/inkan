@@ -65,7 +65,7 @@ See [Open Graph cards](site/adr/0011-open-graph-cards.md), [Brand with logo and 
 | Option | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `navigation` | `{ label, href }[]` | `[]` | Links in the header, after the built-in ones. Plugins may append more. |
-| `sidebar.sort` | `'newest' \| 'oldest' \| 'number'` | `'newest'` | Order of the records under each project in the sidebar. `newest` and `oldest` go by `date`, then by number; undated records come last. `number` lists them by record number. See [Sidebar order](site/adr/0017-sidebar-order.md). |
+| `sidebar.sort` | `'newest' \| 'oldest' \| 'number'` | `'newest'` | Order of the records under each project in the sidebar. `newest` and `oldest` go by `date`, then by number; undated records come last. `number` lists them by record number, unnumbered records first. See [Sidebar order](site/adr/0017-sidebar-order.md). |
 | `banner` | `{ message, dismissible? } \| null` | `null` | A strip above the header. `message` may contain inline HTML; `dismissible` defaults to `false`. |
 | `footer.copyright` | `string` | `''` | Text in the footer. Inline HTML allowed. |
 | `footer.links` | `{ label, href }[]` | `[]` | Links in the footer. |
