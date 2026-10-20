@@ -30,7 +30,7 @@ jobs:
           npm pack -w packages/inkan --pack-destination "$RUNNER_TEMP"
           mkdir "$RUNNER_TEMP/site" && cd "$RUNNER_TEMP/site"
           git init -q && npm init -y > /dev/null
-          npm install "$RUNNER_TEMP"/inkan-*.tgz
+          npm install "$RUNNER_TEMP"/tilaven-inkan-*.tgz
           npx inkan init
           npx inkan new rfc platform "Smoke test" --author ci
           npx inkan build
