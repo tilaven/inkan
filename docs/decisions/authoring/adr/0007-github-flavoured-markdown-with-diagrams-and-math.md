@@ -35,7 +35,7 @@ Records are GitHub-flavoured Markdown (tables, task lists, strikethrough, autoli
 | Kafka | Yes | High | **Accepted** |
 | NATS JetStream | Yes | Medium | ~~Shortlisted~~ Dropped |
 
-Column alignment with `:---:` and `---:` works. Inline formatting inside cells works too. A table wider than the page scrolls sideways and, while it does, is a focusable region named "Table 1 in <record title>", "Table 2 in <record title>" and so on, so it can be reached and moved with the keyboard; a table that fits is left alone. Display math gets the same treatment as "Equation 1 in <record title>".
+Column alignment with `:---:` and `---:` works. Inline formatting inside cells works too. A table wider than the page scrolls sideways and, while it does, is a focusable region named "Table 1 in &lt;record title&gt;", "Table 2 in &lt;record title&gt;" and so on, so it can be reached and moved with the keyboard; a table that fits is left alone. Display math gets the same treatment as "Equation 1 in &lt;record title&gt;".
 
 ### Task lists
 
