@@ -31,6 +31,8 @@ export const defaults = {
   codeRefs: { include: ['**/*'], exclude: ['**/*.{md,mdx}'], marker: '@adr' },
   /** Open Graph cards drawn from the covers (`/og/*.png`), so shared links unfurl with a picture. `false` turns them off. */
   og: { theme: 'light' },
+  /** Order of records under each project in the sidebar: `newest` or `oldest` by date, or `number`. */
+  sidebar: { sort: 'newest' },
   /** What `/export/` and `inkan export` include; statuses default to the "current" ones. */
   export: { title: '' },
   /** RFC review: approvals needed before a record counts as approved; `null` means every reviewer. */
