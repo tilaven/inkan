@@ -13,7 +13,7 @@ const hasClass = (node, name) => {
  * blocks in place) and the page script turns it into a focusable, named region for as long as it overflows.
  * Labels count per document and carry the record title when there is one ("Table 2 in Use Kafka"), so the
  * landmarks stay unique on a page that prints several records, like the export. The templates come from the
- * site's dictionary; `{n}`, `{label}` and `{title}` are the placeholders.
+ * interface text; `{n}`, `{label}` and `{title}` are the placeholders.
  */
 export default function rehypeScrollRegions({ table = 'Table {n}', equation = 'Equation {n}', inRecord = '{label} in {title}' } = {}) {
   return (tree, file) => {

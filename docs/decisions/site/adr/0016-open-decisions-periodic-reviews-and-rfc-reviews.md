@@ -17,11 +17,11 @@ Three pages list records against a date: `/backlog/`, `/reviews/` and `/rfc-revi
 
 The sidebar, the header and the landing page name the pages after the question they answer:
 
-| Page | English | Polish | Question |
-| --- | --- | --- | --- |
-| `/backlog/` | Open decisions | Do decyzji | What still waits for a decision? |
-| `/reviews/` | Periodic reviews | Przeglądy | Is a decision we made still right? |
-| `/rfc-reviews/` | RFC reviews | Recenzje RFC | Who still has to review a proposal? |
+| Page | Label | Question |
+| --- | --- | --- |
+| `/backlog/` | Open decisions | What still waits for a decision? |
+| `/reviews/` | Periodic reviews | Is a decision we made still right? |
+| `/rfc-reviews/` | RFC reviews | Who still has to review a proposal? |
 
 The URLs stay as they are, so existing links keep working.
 
@@ -57,16 +57,6 @@ flowchart LR
 1. An RFC is written with `status: proposed` and `reviewBy: 2026-11-15`. It is on Open decisions.
 2. `reviewers: [ann, marek]` is added. It stays on Open decisions and appears on RFC reviews, where it shows under "Waiting on you" for whichever of them picks themselves on that page.
 3. It is accepted with `reviewEvery: 1 year`, and the proposal's `reviewBy` is removed. It leaves both pages and appears on Periodic reviews, due a year after its date. A `reviewBy` left in place would be read as the review date instead, so the record would show as overdue from 15 November.
-
-### Renaming the pages for your site
-
-The labels are interface text, so `translations` replaces them like any other:
-
-```ts title="inkan.config.ts"
-export default defineConfig({
-  translations: { en: { 'nav.backlog': 'Decision queue', 'backlog.title': 'Decision queue', 'backlog.titleAccent': 'queue' } },
-});
-```
 
 ## Consequences
 

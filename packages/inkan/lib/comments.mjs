@@ -56,18 +56,12 @@ function repoPath(repo, provider) {
   }
 }
 
-/** giscus names Chinese by region and every other language by its base tag. */
-const giscusLang = (locale = 'en') => {
-  const tag = Intl.getCanonicalLocales(locale)[0];
-  return tag.startsWith('zh-') ? tag : tag.split('-')[0];
-};
-
 /**
  * The resolved `comments` option: `enabled`, `provider`, `types`, `statuses` (null for every status) and the
  * provider's own keys with defaults, `repo`/`project` taken from `repo.url` when not given. Idempotent.
  * @returns {{ issues: { path: PropertyKey[], message: string }[], value: any }}
  */
-export function resolveComments(comments, { repo, root, docTypes, statuses: known, locale }) {
+export function resolveComments(comments, { repo, root, docTypes, statuses: known }) {
   if (!comments || comments.provider === null) return { issues: [], value: OFF };
   const parsed = commentsProvider.safeParse(comments.statuses === null ? { ...comments, statuses: undefined } : comments);
   if (!parsed.success) return { issues: parsed.error.issues, value: OFF };
@@ -89,7 +83,7 @@ export function resolveComments(comments, { repo, root, docTypes, statuses: know
       strict: out.strict ?? true,
       reactions: out.reactions ?? true,
       inputPosition: out.inputPosition ?? 'top',
-      lang: out.lang ?? giscusLang(locale),
+      lang: out.lang ?? 'en',
       theme: { light: 'light', dark: 'dark', ...out.theme },
     });
   } else if (out.provider === 'gitlab') {

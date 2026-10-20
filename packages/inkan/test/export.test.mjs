@@ -25,11 +25,6 @@ describe('exportTitle', () => {
     expect(exportTitle(config({ title: 'Acme' }))).toBe('Acme: decisions');
     expect(exportTitle(config({ export: { title: 'Acme audit pack' } }))).toBe('Acme audit pack');
   });
-
-  it('writes the default in the site language', async () => {
-    const { resolveMessages } = await import('../lib/i18n/index.mjs');
-    expect(exportTitle({ ...config({ title: 'Acme' }), locale: 'pl', messages: resolveMessages('pl') })).toBe('Acme: decyzje');
-  });
 });
 
 describe('sitePath', () => {

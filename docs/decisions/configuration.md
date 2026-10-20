@@ -31,13 +31,9 @@ All paths are relative to the config file.
 | `description` | `string` | `'Central, searchable record of architecture decisions (ADR) and proposals (RFC).'` | Default `<meta name="description">`, RSS description and the lead of `llms.txt`. |
 | `url` | `string` | `'http://localhost:4321'` | Public URL of the deployed site. Used for absolute links in `llms.txt`, RSS, the sitemap and Open Graph images. |
 | `base` | `string` | `'/'` | Sub-path when the site is not at the domain root, e.g. `'/decisions'`. The `BASE_PATH` environment variable overrides it. |
-| `locale` | `string` | `'en'` | Interface language as a BCP 47 tag. `'en'` and `'pl'` are built in; any other tag takes its text from `translations`. Also sets `<html lang>`, date formats and the default `tagline`, `description`, status and type labels. |
-| `translations` | `Record<string, Record<string, Message>>` | `{}` | Interface text by language and key, e.g. `{ pl: { 'nav.backlog': 'Kolejka' } }`. Wins over the built-in and plugin text. |
 | `repo.url` | `string` | `''` | Repository that holds the content. Enables "Edit this page" and "New ADR / New RFC" buttons. |
 | `repo.branch` | `string` | `'main'` | Branch those links point at. |
 | `repo.provider` | `'github' \| 'gitlab'` | `'github'` | Decides the URL format of edit and new-file links. |
-
-See [Interface in your language](site/adr/0015-interface-in-your-language.md) for the keys and plural forms.
 
 `BASE_PATH` matters in CI: the workflow and pipeline that `init` creates set `BASE_PATH=/<repository name>` for project pages. See [Serve from a sub-path](deploy/adr/0004-serve-from-a-sub-path.md) and [GitHub and GitLab Pages](deploy/adr/0002-github-and-gitlab-pages.md).
 
@@ -277,4 +273,4 @@ The build then writes the public site to `dist/` and the full one to `dist-prote
 
 ## Resolved config
 
-Plugins and `.astro` pages see the resolved config, not your file: defaults applied, every path absolute, plus `root`, `configFile`, `repoRoot` (the Git top level, or `root` outside Git), `contentPath` (content folder relative to `repoRoot`, used in edit links), `messages` (the interface text resolved for `locale`, set after the plugin hooks ran) and `templates` (type to template text). `sources` is resolved too: each entry becomes a `ResolvedSource` with the clone or folder as `root`, the absolute `contentDir`, the derived `web` URL and `provider`. Its type is `ResolvedConfig` in `lib/index.d.ts`. See [Data API and layouts](extending/adr/0005-data-api-and-layouts.md).
+Plugins and `.astro` pages see the resolved config, not your file: defaults applied, every path absolute, plus `root`, `configFile`, `repoRoot` (the Git top level, or `root` outside Git), `contentPath` (content folder relative to `repoRoot`, used in edit links) and `templates` (type to template text). `sources` is resolved too: each entry becomes a `ResolvedSource` with the clone or folder as `root`, the absolute `contentDir`, the derived `web` URL and `provider`. Its type is `ResolvedConfig` in `lib/index.d.ts`. See [Data API and layouts](extending/adr/0005-data-api-and-layouts.md).

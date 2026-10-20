@@ -60,7 +60,7 @@ Each row shows the day and month of the deadline, the sticker and status label, 
 | 0 | `D-DAY` | `today` | `is-soon` |
 | negative | `D+4` | `4 days late` | `is-overdue` |
 
-The eyebrow of the page gains "today is 16 Oct 2026" and the lede says how many rows are past due, or "Nothing is overdue." The same `D-n` chip appears next to "Review by" on the record's own page, with the text ("4 days late") for screen readers and the word "overdue" on a late chip, so lateness is not shown by colour alone. The chip and the sentence come from the dictionary (`due.tagToday`, `due.tagBefore`, `due.tagAfter`, `due.today`, `due.in`, `due.late`), so a Polish site shows `DZIŚ` and `za 3 dni`.
+The eyebrow of the page gains "today is 16 Oct 2026" and the lede says how many rows are past due, or "Nothing is overdue." The same `D-n` chip appears next to "Review by" on the record's own page, with the text ("4 days late") for screen readers and the word "overdue" on a late chip, so lateness is not shown by colour alone.
 
 ### Choosing your own open statuses
 
