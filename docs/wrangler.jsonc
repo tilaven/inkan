@@ -1,0 +1,15 @@
+// The documentation site at https://useinkan.dev, served as static assets by Cloudflare Workers.
+// Deployed by Workers Builds on every push to main; see docs/decisions/deploy/adr/0008-cloudflare-workers.md.
+{
+  "$schema": "https://unpkg.com/wrangler@4.151.2/config-schema.json",
+  "name": "inkan-docs",
+  "compatibility_date": "2026-10-20",
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "routes": [{ "pattern": "useinkan.dev", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false
+}

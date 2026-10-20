@@ -138,7 +138,7 @@ always safe. The `_gitignore` that `init` writes already excludes `dist/` and `n
 ### Hosting
 
 Any static host works: GitHub Pages and GitLab Pages (workflows come with `init`), an S3 or GCS bucket behind
-a CDN, nginx in a container, Netlify, Cloudflare Pages. Two things to configure on hosts that do not do it
+a CDN, nginx in a container, Netlify, [Cloudflare Workers](0008-cloudflare-workers.md). Two things to configure on hosts that do not do it
 by default:
 
 - serve `<folder>/index.html` for a request to `<folder>/`;

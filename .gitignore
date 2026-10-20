@@ -8,3 +8,4 @@ blob-report/
 playwright/.cache/
 coverage/
 deploy/oauth2-proxy/.env
+.wrangler/
