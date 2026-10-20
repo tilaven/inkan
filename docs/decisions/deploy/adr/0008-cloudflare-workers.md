@@ -52,14 +52,15 @@ The Worker name must equal `name` in `wrangler.jsonc`.
 
 | Setting | Value |
 | --- | --- |
-| Root directory | The folder that holds `wrangler.jsonc` and `inkan.config.ts` |
-| Build command | `git fetch --unshallow \|\| true; npm ci && npm run build` |
+| Root directory | The folder that holds `package.json` and `package-lock.json`; Cloudflare runs `npm ci` there |
+| Build command | `(git fetch --unshallow \|\| true) && npm run build` |
 | Deploy command | `npx wrangler deploy` |
 | Production branch | `main` |
 
 The `git fetch` keeps the "Last updated" dates right, which come from `git log` and would all show the build
-day in a shallow clone. In a monorepo where the site is a workspace, run the install and build from the
-repository root, as this site does with `cd .. && npm ci && npm run docs:build`.
+day in a shallow clone. In a monorepo where the site is a workspace, keep the repository root as the root
+directory and point wrangler at the site's configuration, as this site does with `npm run docs:build` and
+`npx wrangler deploy --config docs/wrangler.jsonc`.
 
 ### GitHub Actions
 
