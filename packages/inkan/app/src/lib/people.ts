@@ -32,6 +32,7 @@ export async function getMembers(): Promise<Member[]> {
       const p = person(people, id);
       const mine = authored.get(id) ?? [];
       const signed = decided.get(id) ?? [];
+      const involved = new Set([...mine, ...signed]);
       return {
         ...p,
         teamProject: projectForTeam(p.team, styles.values()),
@@ -39,7 +40,7 @@ export async function getMembers(): Promise<Member[]> {
         profile: profileLink(info),
         authored: mine.length,
         decided: signed.length,
-        records: [...new Set([...mine, ...signed])],
+        records: decisions.filter((d) => involved.has(d)),
       };
     })
     .sort((a, b) => b.records.length - a.records.length || a.name.localeCompare(b.name));

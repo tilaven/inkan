@@ -38,7 +38,8 @@ deciders: [tomasz.wojcik, anna.kowalska]
 - the team, linking to the team page when it matches a project;
 - `N authored · M decided`;
 - a GitHub or GitLab profile link when the directory has one;
-- the records the person authored or signed off, with their status stickers.
+- the five newest records the person authored or signed off, with their status stickers;
+- when there are more, a `See N more records` link to `/decisions/?author=<handle>`, which lists all of them.
 
 To put names and teams behind the handles, add `_authors.yml` at the top of the content folder. See [Optional author directory](../../authoring/adr/0005-optional-author-directory.md) for the full format.
 
@@ -88,4 +89,5 @@ The sidebar hub shows "Authors" with the number of distinct handles across `auth
 - Without `_authors.yml` the pages show handles instead of names, which is fine for small teams and poor for a company-wide site.
 - Tag spelling is not enforced. Reviewing `/tags/` from time to time is the intended control.
 - The authors page lists everyone in the directory even with zero records, which is useful as a staff list and noisy if the directory is large.
-- Deciders count toward a person's records but are not a filter facet of their own; `?author=` matches the `authors` list only.
+- A busy author does not stretch the page: each entry stays at five records however many the person has.
+- `?author=` matches deciders as well as authors, so the filtered index and the authors page agree on a person's records. There is no filter for authors only.
