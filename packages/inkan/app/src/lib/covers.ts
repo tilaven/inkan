@@ -5,7 +5,7 @@
  * works in Day (inks multiply on paper) and Stage (lights screen on black).
  */
 import { hash, rng } from './rng';
-import { Canvas, n } from './canvas';
+import { Canvas, circle, n } from './canvas';
 import { getMotif } from './motif-registry';
 import type { Ink } from './inks';
 
@@ -30,13 +30,34 @@ export type Stock = 'paper' | 'flood' | 'black';
 const STOCKS: Stock[] = ['paper', 'paper', 'paper', 'flood', 'black'];
 const ALT: Record<Ink, Ink> = { c: 'm', m: 'y', y: 'c', g: 'c', v: 'm', o: 'm' };
 
-/** Treatments baked into the print for records that no longer describe the current state. */
-const TREATMENT: Record<string, string> = {
-  rejected: 'filter:grayscale(1) contrast(1.05)',
-  withdrawn: 'filter:grayscale(.85);opacity:.5',
-  superseded: 'filter:grayscale(.7) contrast(.95);opacity:.78',
-  deprecated: 'filter:sepia(.55) saturate(.7) brightness(1.04);opacity:.95',
-  draft: 'filter:grayscale(.5);opacity:.38',
+/** Filter coefficients and factors need more precision than coordinates. */
+const fine = (v: number) => String(+v.toFixed(4));
+const saturate = (a: number) => `<feColorMatrix type="saturate" values="${fine(a)}"/>`;
+const grayscale = (a: number) => saturate(1 - a);
+const linear = (slope: number, intercept = 0) =>
+  `<feComponentTransfer>${['R', 'G', 'B'].map((c) => `<feFunc${c} type="linear" slope="${fine(slope)}" intercept="${fine(intercept)}"/>`).join('')}</feComponentTransfer>`;
+const contrast = (a: number) => linear(a, 0.5 - a / 2);
+const sepia = (a: number) => {
+  const k = 1 - a;
+  const m = [
+    [0.393 + 0.607 * k, 0.769 - 0.769 * k, 0.189 - 0.189 * k],
+    [0.349 - 0.349 * k, 0.686 + 0.314 * k, 0.168 - 0.168 * k],
+    [0.272 - 0.272 * k, 0.534 - 0.534 * k, 0.131 + 0.869 * k],
+  ];
+  return `<feColorMatrix type="matrix" values="${m.map((row) => `${row.map(fine).join(' ')} 0 0`).join(' ')} 0 0 0 1 0"/>`;
+};
+
+/**
+ * Treatments baked into the print for records that no longer describe the current state: the CSS filter
+ * functions written as SVG primitives, so the filter region can be pinned to the card (rasterisers choke on
+ * the oversized regions that framed motifs would otherwise get).
+ */
+const TREATMENT: Record<string, { filter: string; opacity?: number }> = {
+  rejected: { filter: grayscale(1) + contrast(1.05) },
+  withdrawn: { filter: grayscale(0.85), opacity: 0.5 },
+  superseded: { filter: grayscale(0.7) + contrast(0.95), opacity: 0.78 },
+  deprecated: { filter: sepia(0.55) + saturate(0.7) + linear(1.04), opacity: 0.95 },
+  draft: { filter: grayscale(0.5), opacity: 0.38 },
 };
 
 let rendered = 0;
@@ -46,6 +67,31 @@ export const nextCoverInstance = () => rendered++;
 /** Which card stock a record is printed on, derived from its id. */
 export function coverStock(id: string): Stock {
   return STOCKS[Math.floor(rng(`v:${id}`)() * STOCKS.length)];
+}
+
+/**
+ * How the print sits on the card: every record zooms into its own part of the motif at its own angle, so
+ * covers that share a project's motif and ink still look different side by side.
+ */
+export function framing(id: string, width: number, height: number): string {
+  const f = rng(`frame:${id}`);
+  const scale = 1.15 + f() * 0.7;
+  const angle = (f() * 2 - 1) * 18;
+  const fx = width * (0.25 + f() * 0.5);
+  const fy = height * (0.2 + f() * 0.45);
+  return `rotate(${n(angle)} ${n(fx)} ${n(fy)}) translate(${n(fx)} ${n(fy)}) scale(${fine(scale)}) translate(${n(-fx)} ${n(-fy)})`;
+}
+
+/** A flat shape in the second ink laid over the print, placed per record (none on flood stock, where it would be key). */
+export function overprint(id: string, stock: Stock, width: number, height: number): string {
+  if (stock === 'flood') return '';
+  const f = rng(`over:${id}`);
+  const x = width * (f() * 1.1 - 0.05);
+  const y = height * (0.08 + f() * 0.5);
+  if (f() < 0.6) return circle(x, y, width * (0.2 + f() * 0.22), ' class="b x"');
+  const t = width * (0.14 + f() * 0.16);
+  const angle = -50 + f() * 100;
+  return `<rect x="${n(-width)}" y="${n(y - t / 2)}" width="${n(width * 3)}" height="${n(t)}" class="b x" transform="rotate(${n(angle)} ${n(x)} ${n(y)})"/>`;
 }
 
 /** The cover as an inline SVG string. Pure: the same input always gives the same markup. */
@@ -63,13 +109,21 @@ export function coverSvg(
   } catch (error) {
     throw new Error(`inkan: motif "${motif}" failed for ${id}: ${(error as Error).message}`, { cause: error });
   }
-  const motifMarkup = `<g transform="translate(${n(-off * 0.5)} ${n(off * 0.35)})">${c.parts.join('')}</g>`;
+  const motifMarkup = `<g transform="translate(${n(-off * 0.5)} ${n(off * 0.35)}) ${framing(id, width, height)}">${c.parts.join('')}</g>`;
   c.parts.length = 0;
   c.grain(Math.floor(r() * 1000), stock === 'black' ? 0.1 : 0.16);
   const full = `width="${n(width)}" height="${n(height)}"`;
-  const print = `<rect ${full} class="bg"/>${motifMarkup}${c.parts.join('')}`;
+  const print = `<rect ${full} class="bg"/>${motifMarkup}${overprint(id, stock, width, height)}${c.parts.join('')}`;
   const treatment = status && Object.hasOwn(TREATMENT, status) ? TREATMENT[status] : undefined;
-  const body = treatment ? `<rect ${full} class="bg"/><g style="${treatment}">${print}</g>` : print;
+  let body = print;
+  if (treatment) {
+    const filter = c.id();
+    c.defs.push(
+      `<filter id="${filter}" x="0" y="0" ${full} filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">${treatment.filter}</filter>`,
+    );
+    const opacity = treatment.opacity === undefined ? '' : ` opacity="${fine(treatment.opacity)}"`;
+    body = `<rect ${full} class="bg"/><g filter="url(#${filter})"${opacity}>${print}</g>`;
+  }
   return (
     `<svg class="cv cv--${stock}" viewBox="0 0 ${n(width)} ${n(height)}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" ` +
     `style="--cv-ink:var(--inkan-ink-${ink});--cv-alt:var(--inkan-ink-${ALT[ink]})">` +

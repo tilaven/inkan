@@ -212,6 +212,8 @@ A motif receives two seeded random generators. `record` is seeded by the record 
 
 Each ink has a fixed second ink for overprints (cyan with magenta, magenta with yellow, yellow with cyan, green with cyan, violet with magenta, orange with magenta), so the same two-plate misregistration appears across a team's set.
 
+A shared motif alone would make a team's cards hard to tell apart in a grid, so the record id also frames the print. Every cover zooms into its own part of the motif (1.15 to 1.85 times) at its own angle (up to 18 degrees either way), and the paper and black stocks get one flat shape in the second ink laid over the print, a disc or a band in its own place. A team's set keeps its ink and motif while neighbouring cards differ in composition and colour balance. Plugin motifs are framed the same way and need no changes.
+
 Renaming a file changes its id and therefore its cover. Changing a record's `title` or body does not.
 
 ### Status treatments
