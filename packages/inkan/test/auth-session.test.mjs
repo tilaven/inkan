@@ -8,10 +8,12 @@ const secret = 'a'.repeat(32);
 
 describe('seal / unseal', () => {
   it('round-trips data in an opaque url-safe token', () => {
-    const token = seal({ sub: '1', name: 'Ann' }, secret, 60);
+    const data = { sub: '1', name: 'Annika Lindqvist-Okafor' };
+    const token = seal(data, secret, 60);
     expect(token).toMatch(/^[A-Za-z0-9_-]+$/);
-    expect(token).not.toContain('Ann');
-    expect(unseal(token, secret)).toEqual({ sub: '1', name: 'Ann' });
+    expect(token).not.toContain(data.name);
+    expect(token).not.toContain(Buffer.from(JSON.stringify(data)).toString('base64url').slice(0, 16));
+    expect(unseal(token, secret)).toEqual(data);
   });
 
   it('rejects tampering, other secrets and garbage', () => {
