@@ -223,6 +223,10 @@ export const configSchema = z
       .object({
         title: z.string().nullable().optional(),
         tagline: z.string().nullable().optional(),
+        eyebrow: z.string().nullable(),
+        image: z.object({ src: z.string(), dark: z.string().optional(), alt: z.string() }).strict().nullable(),
+        command: z.string().nullable(),
+        features: z.array(z.object({ title: z.string(), text: z.string(), link: z.string().optional() }).strict()),
         actions: z.array(z.object({ text: z.string(), link: z.string(), variant: z.enum(['primary', 'secondary', 'ghost']).optional() }).strict()),
         sections: z.array(z.string()),
       })
@@ -357,6 +361,7 @@ export async function loadConfig(root = process.cwd(), { warn = console.warn } =
   config.customCss = config.customCss.map(abs);
   config.logo = abs(config.logo);
   config.favicon = abs(config.favicon);
+  if (config.landing.image) config.landing.image = { ...config.landing.image, src: abs(config.landing.image.src), dark: abs(config.landing.image.dark) };
   config.pagesDir = abs(config.pagesDir);
   config.mdxComponents = abs(config.mdxComponents);
   config.components = Object.fromEntries(Object.entries(config.components).map(([name, file]) => [name, abs(file)]));

@@ -511,6 +511,55 @@ a { color: inherit; }
   color: var(--inkan-fg-3);
 }
 .stat.hot b { color: var(--inkan-ink-m); }
+.hero--image { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .9fr); gap: 32px; align-items: center; }
+.hero__art { min-width: 0; }
+.hero__img { display: block; width: 100%; height: auto; }
+.hero__img--stage { display: none; }
+:root[data-theme="dark"] .hero__img--day { display: none; }
+:root[data-theme="dark"] .hero__img--stage { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hero__img--day { display: none; }
+  :root:not([data-theme="light"]) .hero__img--stage { display: block; }
+}
+@media (max-width: 1080px) {
+  .hero--image { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .hero__art { max-width: 560px; }
+}
+.cmd {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  margin-top: 22px;
+  padding: 8px 8px 8px 16px;
+  border: 1.5px solid var(--inkan-rule-strong);
+  border-radius: 4px;
+  background: var(--inkan-surface);
+}
+.cmd code { font: 500 .875rem/1.4 var(--inkan-font-mono); overflow-wrap: anywhere; }
+.cmd code > span:first-child { color: var(--inkan-fg-3); }
+.cmd__cp {
+  appearance: none;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--inkan-fg-2);
+  cursor: pointer;
+}
+.cmd__cp:hover { background: color-mix(in srgb, var(--inkan-fg) 9%, transparent); color: var(--inkan-fg); }
+.cmd__cp svg { width: 16px; height: 16px; }
+.cmd__ok, .cmd__cp[data-copied] .cmd__ic { display: none; }
+.cmd__cp[data-copied] .cmd__ok { display: block; }
+.features { margin: 0; padding: 0; list-style: none; }
+.features li { display: grid; }
+.feature { border-top: 6px solid var(--ink); }
+.feature h3 { font-size: 1.375rem; }
+.feature--static:hover { transform: none; box-shadow: 5px 6px 0 0 color-mix(in srgb, var(--inkan-fg) 14%, transparent); }
 .units { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
 .unit {
   position: relative;
