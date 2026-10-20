@@ -1,39 +1,152 @@
+<p align="center">
+  <a href="https://github.com/tilaven/inkan">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/hero-dark.webp">
+      <img src=".github/assets/hero-light.webp" width="900" alt="Inkan: architecture decisions and RFCs from Markdown in your repo, printed as one searchable site. Next to the title, a fan of five record cards with risograph-style covers for the SRE, Payments, Platform, DBRE and Checkout teams.">
+    </picture>
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/tilaven/inkan/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-ff3d9a" alt="License: MIT"></a>
+  <a href="https://www.npmjs.com/package/inkan"><img src="https://img.shields.io/npm/v/inkan?label=inkan&color=1a8cff" alt="inkan on npm"></a>
+  <a href="https://www.npmjs.com/package/create-inkan"><img src="https://img.shields.io/npm/v/create-inkan?label=create-inkan&color=1a8cff" alt="create-inkan on npm"></a>
+  <a href="https://github.com/tilaven/inkan/actions/workflows/ci.yml"><img src="https://github.com/tilaven/inkan/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
+  <img src="https://img.shields.io/badge/node-%E2%89%A522.22-19b45a" alt="Node.js 22.22 or newer">
+</p>
+
+<p align="center">
+  <strong>
+    <a href="#-try-it-right-now">Quick start</a> ·
+    <a href="#-features">Features</a> ·
+    <a href="docs">Docs</a> ·
+    <a href="#-a-look-around">Screenshots</a> ·
+    <a href="#-contributing">Contributing</a> ·
+    <a href="#-motivation">Motivation</a>
+  </strong>
+</p>
+
 # Inkan
 
-**A docs site for Architecture Decision Records (ADR) and RFCs, built from Markdown in your repo.**
-As easy to set up as Zudoku, focused on decisions instead of API references.
+**Decisions deserve a home as good as your API docs.**
 
-- Plain Markdown (GitHub/GitLab flavoured), Mermaid, code highlighting, math, callouts (`> [!NOTE]` alerts and `:::note` admonitions)
-- One repo for all teams: a folder per project (SRE, Payments, Infra, DBRE…) defined by a small `_project.yml`
-- Custom metadata fields (risk, cost, data class…) declared in the config or per project, validated at build time, filterable on the index and exposed in `decisions.json` and the MCP server
-- Full-text search (built-in Pagefind, or Algolia, Meilisearch, Typesense and your own provider), filters by project, type, status, **tag** and **author**, timeline and decision backlog
-- Landing page out of the box, configurable from one file
-- Static HTML output: host it on GitHub/GitLab Pages, S3, nginx – no server, no database
-- Analytics without writing script tags: Plausible, Umami or Google Analytics 4 with page views, search queries and page actions (`inkan/analytics` plugin)
-- Made for AI too: `llms.txt`, `llms-full.txt`, `decisions.json`, `AGENTS.md`
+Inkan (印鑑, the seal that makes a document official) turns a folder of Markdown Architecture Decision Records and
+RFCs into a fast, searchable static site. Every team gets its own folder, every record its own printed cover, and the
+whole company gets one place to find out why things are the way they are.
 
-## Documentation
+- 🆓 Free and open source, MIT licensed
+- 📝 Plain Markdown in your repo: no database, no CMS, reviewed in pull requests like code
+- 🏢 One site for every team: SRE, Payments, Infra, DBRE… a folder each
+- ⚡ Up and running with one command, deployed anywhere that serves static files
+- 🧩 Extensible with plugins, component overrides, custom pages and CSS tokens
+- 🤖 Readable by people and by agents: `llms.txt`, `decisions.json` and an MCP server
 
-The docs live in [`docs/`](docs) and are an Inkan site themselves: every feature is described as an ADR
-(why it exists, what was decided, how to use it). Run them with `npm run docs:dev`.
-
-## Quick start
+## 🤩 Try it, right now!
 
 ```bash
 npm create inkan@latest my-decisions
-cd my-decisions
-npm install
-npm run dev          # http://localhost:4321
+cd my-decisions && npm install && npm run dev
 ```
 
-Or add it to an existing repository:
+Open http://localhost:4321 and you are looking at your own decision archive, with a sample project to edit.
+
+Want to see a full site first? Run the demo content from this repository:
+
+```bash
+docker build -t inkan-example . && docker run -p 8080:80 inkan-example
+```
+
+## ✨ Features
+
+**Writing**
+
+- GitHub and GitLab flavoured Markdown, Mermaid diagrams, math, code highlighting, `> [!NOTE]` alerts and `:::note` admonitions
+- Record type comes from the folder: `adr/`, `rfc/`, or your own (`postmortem/`, `guides/`…)
+- Status lifecycle, supersedes / superseded by, related records, linked by path or by plain relative Markdown links
+- Custom metadata fields (risk, cost, data class…) validated at build time and filterable on the index
+- Dates and authors filled from git, issue keys turned into links, `@adr` references from your code back to the record
+
+**Reading**
+
+- Full-text search with Pagefind built in, or Algolia, Meilisearch, Typesense and your own provider
+- Filters by team, type, status, author, tag and custom field, kept in the URL so a view can be shared
+- Landing page, timeline, decision graph, authors and tags pages, RSS feed and sitemap
+- Status history from git, Open Graph cards for links shared in Slack or Teams, print and PDF export
+- Day and Stage themes, built for keyboard and screen reader users (WCAG 2.2 AA), interface in English and Polish
+
+**Running the process**
+
+- Open decisions with deadlines, periodic reviews of decided records, RFC reviews with a "Waiting on you" view
+- Comments under RFCs with giscus, GitLab or your own provider, pull request review comments pinned to paragraphs
+- `inkan check` in CI for broken references, numbering, statuses and metadata
+- Slack, Teams or webhook notifications when a decision is accepted
+- Records pulled in from other repositories, sign-in and protected projects for what must stay internal
+- Import from log4brains, MADR and adr-tools
+
+**Built for agents too**
+
+- `llms.txt`, `llms-full.txt`, `decisions.json` and a Markdown copy of every page
+- `inkan mcp`: an MCP server over your content folder or a published site
+- A "Copy page" menu that hands a record to Claude or ChatGPT, and an `AGENTS.md` for coding agents in your repo
+
+## 📸 A look around
+
+<table>
+  <tr>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset=".github/assets/home-dark.webp">
+        <img src=".github/assets/home-light.webp" alt="Home page of the Acme Decisions demo: the title, counters for 16 decisions, 6 teams, 8 in force and 2 reviews overdue, and team cards with generated covers.">
+      </picture>
+      <p align="center"><strong>Landing page</strong><br>Counters, teams and the latest records, configured from one file.</p>
+    </td>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset=".github/assets/record-dark.webp">
+        <img src=".github/assets/record-light.webp" alt="A record page for Payments ADR 0001, Use PostgreSQL for the ledger: status, dates, authors, custom fields, related records, the record card and a table of contents.">
+      </picture>
+      <p align="center"><strong>Record page</strong><br>Status, review dates, custom fields and links at a glance.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset=".github/assets/decisions-dark.webp">
+        <img src=".github/assets/decisions-light.webp" alt="The All decisions index with a filter field and a grid of record cards with colourful halftone covers.">
+      </picture>
+      <p align="center"><strong>All decisions</strong><br>Filter by anything, as cards or as a table.</p>
+    </td>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset=".github/assets/graph-dark.webp">
+        <img src=".github/assets/graph-light.webp" alt="The decision graph: records placed on a timeline in one lane per team, with lines showing which record supersedes or relates to which.">
+      </picture>
+      <p align="center"><strong>Decision graph</strong><br>Which record supersedes which, across teams and over time.</p>
+    </td>
+  </tr>
+</table>
+
+## ⚙️ Installation
+
+### ⚡️ Quick start
+
+```bash
+npm create inkan@latest my-decisions
+```
+
+You get `inkan.config.ts`, a sample project, an `AGENTS.md`, CI files for GitHub Actions and GitLab CI, and a
+`Dockerfile` with `nginx.conf`. Inkan needs Node.js 22.22 or newer.
+
+### 📦 In an existing repository
 
 ```bash
 npm install -D inkan
 npx inkan init
 ```
 
-## Your repository
+Files that already exist are left alone.
+
+### 🗂️ Your repository
 
 ```
 inkan.config.ts                ← the only config file
@@ -50,7 +163,7 @@ templates/adr.md               ← optional: your own templates for `inkan new`
 
 New project = new folder. New record = new file. Nothing else to register.
 
-## Commands
+## 🧰 Commands
 
 | Command | What it does |
 | --- | --- |
@@ -69,9 +182,24 @@ New project = new folder. New record = new file. Nothing else to register.
 | `inkan notify` | Post to Slack, Teams or a webhook when records become `accepted` (`--since`, `--dry-run`) |
 | `inkan sync` | Fetch the records listed in `sources` |
 | `inkan export` | All current decisions as one self-contained HTML file, or a PDF with `--pdf` |
-| `inkan mcp` | MCP server (stdio) for AI agents, over the content folder or a published site (`--url`) |
+| `inkan mcp` | MCP server (stdio) for agents, over the content folder or a published site (`--url`) |
 
-## Front matter
+## 📝 Writing a record
+
+```yaml
+---
+title: Use Stripe as the primary payment provider   # required
+description: One-line summary for lists, search and llms.txt
+status: accepted          # draft | proposed | in-review | accepted | implemented | rejected | withdrawn | deprecated | superseded
+date: 2026-01-18
+authors: [piotr.nowak]
+tags: [payments, vendor]
+related: [dbre/adr/0001-postgresql-as-default-database]   # path inside decisions/, no extension
+---
+```
+
+<details>
+<summary>All front matter fields</summary>
 
 ```yaml
 ---
@@ -96,9 +224,11 @@ draft: false              # true hides the page from production builds
 ```
 
 Links between records can also be plain relative Markdown links (`[see](../rfc/0001-x.md)`):
-they work when browsing the repo on GitHub/GitLab and on the site.
+they work when browsing the repo on GitHub or GitLab and on the site.
 
-## Configuration
+</details>
+
+## 🔧 Configuration
 
 ```ts
 // inkan.config.ts
@@ -109,6 +239,15 @@ export default defineConfig({
   tagline: 'Architecture decisions from every team.',
   url: 'https://decisions.acme.dev',
   repo: { url: 'https://github.com/acme/decisions', branch: 'main', provider: 'github' },
+});
+```
+
+<details>
+<summary>More options</summary>
+
+```ts
+export default defineConfig({
+  // …
   contentDir: 'decisions',
   locale: 'pl',                                // interface language: 'en' and 'pl' built in, others via translations
   logo: './brand/logo.svg',
@@ -121,18 +260,19 @@ export default defineConfig({
 });
 ```
 
-All options with their defaults are in [`packages/inkan/lib/index.d.ts`](packages/inkan/lib/index.d.ts).
+All options with their defaults are in [`packages/inkan/lib/index.d.ts`](packages/inkan/lib/index.d.ts) and in the
+[configuration reference](docs/decisions/configuration.md).
 
-## Covers and motifs
+</details>
 
-Every record gets a riso-style cover, generated at build time as inline SVG from the record's id: a motif drawn with
-the team's ink on a random card stock, deterministic per record so a cover never changes between builds. Each project
-is assigned an (ink, motif) pair no other project has, so teams stay distinct until every pair is in use.
+## 🎨 Covers and motifs
 
-Motifs carry team keywords, so a project called `security`, `frontend` or `dbre` gets the matching picture (a shield,
-a browser window, database discs) without any configuration. Pin either or both in `_project.yml`; what you leave out
-is chosen so the pair stays unique. Pinned projects are
-reserved first, so adding a pin can change the pair of an unpinned project.
+Every record gets a risograph-style cover, generated at build time as inline SVG from the record's id: a motif drawn
+in the team's ink on a random card stock, the same on every build. Each project gets an (ink, motif) pair no other
+project has, so teams stay easy to tell apart.
+
+Motifs carry team keywords, so a project called `security`, `frontend` or `dbre` gets a matching picture (a shield,
+a browser window, database discs) without any configuration. Pin either or both in `_project.yml`:
 
 ```yaml
 # decisions/payments/_project.yml
@@ -140,6 +280,9 @@ name: Payments
 ink: m          # c, m, y, g, v or o
 motif: ticker   # a built-in or a plugin motif
 ```
+
+<details>
+<summary>Draw your own motif</summary>
 
 A plugin adds motifs with `motifs`. A motif is a function that draws on a canvas with ink classes (`a` main ink,
 `b` alt ink, `k` black, `p` paper, `sa`/`sk` strokes, `n` no fill, `x` blend) instead of colours, so one print works
@@ -166,37 +309,59 @@ export default definePlugin({ name: 'acme', motifs: { stamp: new URL('./stamp.ts
 ```
 
 Motif names are lowercase (`/^[a-z][a-z0-9-]*$/`); a plugin may replace a built-in name. An unknown `motif:` fails
-the build and lists the available names.
+the build and lists the available names. Pinned projects are reserved first, so adding a pin can change the pair of
+an unpinned project.
 
-## Deploying
+</details>
 
-`inkan build` writes plain HTML/CSS (plus small scripts for search, diagrams and filters) to `dist/`.
-`init` adds ready workflows for **GitHub Pages** and **GitLab Pages**. Anything that serves static files works.
-Set `BASE_PATH=/sub/path` when the site is not at the domain root.
+## 🚀 Deploying
 
-## How it works
+`inkan build` writes plain HTML and CSS, plus small scripts for search, diagrams and filters, to `dist/`.
+`init` adds ready workflows for **GitHub Pages** and **GitLab Pages**, and a `Dockerfile` for nginx. Anything that
+serves static files works: S3, Netlify, Cloudflare Pages, your own server. Set `BASE_PATH=/sub/path` when the site
+is not at the domain root.
 
-Inkan is a CLI with a complete site inside the package, built on [Astro](https://astro.build) as a
-static HTML compiler. Your repository only holds content and `inkan.config.ts`; the CLI runs Astro with
-the app from the package and your config injected as a virtual module (the same model Zudoku uses with Vite).
-Search is [Pagefind](https://pagefind.app), code blocks are [Expressive Code](https://expressive-code.com),
-diagrams are [Mermaid](https://mermaid.js.org).
+## 🧩 How it works
 
-## This repository
+Inkan is a CLI with a complete site inside the package, built on [Astro](https://astro.build) as a static HTML
+compiler. Your repository only holds content and `inkan.config.ts`; the CLI runs Astro with the app from the package
+and your config injected as a virtual module. Search is [Pagefind](https://pagefind.app), code blocks are
+[Expressive Code](https://expressive-code.com), diagrams are [Mermaid](https://mermaid.js.org).
+
+## 📚 Documentation
+
+The docs live in [`docs/`](docs) and are an Inkan site themselves: every feature is described as an ADR, with why it
+exists, what was decided and how to use it. Start with the [introduction](docs/decisions/introduction.md) and the
+[quick start](docs/decisions/quick-start.md), or run them locally with `npm run docs:dev`.
+
+## 🤝 Contributing
+
+Issues and pull requests are welcome. This repository is a monorepo:
 
 ```
-packages/inkan          the CLI + site (published to npm)
-packages/create-inkan   `npm create inkan`
+packages/inkan                 the CLI and the site (published to npm)
+packages/create-inkan          `npm create inkan`
 examples/company-decisions     demo content
 docs                           the documentation site, written as ADRs
 ```
 
 ```bash
 npm install
-npm run dev        # runs the example against the local package
-npm run docs:dev   # runs the documentation site
+npm run dev          # the example against the local package
+npm run docs:dev     # the documentation site
+npm test             # unit tests
+npm run test:e2e     # end-to-end and accessibility tests
 ```
 
-## License
+A feature that lands also adds or updates its ADR in `docs/decisions/`.
 
-MIT
+## 🎯 Motivation
+
+Architecture decisions tend to end up scattered across wikis, chat threads and slide decks, where nobody finds them
+when it matters. Keeping them as Markdown next to the code fixes the writing part, but a folder of files is a poor
+place to read them. Inkan gives those files what API references have had for years: a site that is pleasant to
+browse, quick to search and easy to run, without taking the records out of the repository.
+
+## 📄 License
+
+Inkan is [MIT licensed](LICENSE).
