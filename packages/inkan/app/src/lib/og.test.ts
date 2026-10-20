@@ -36,6 +36,13 @@ describe('ogSvg', () => {
     const svgs = await Promise.all(cards.map((c) => ogSvg(c, { fontsDir })));
     expect(new Set(svgs).size).toBe(cards.length);
   });
+  it('puts the landing picture on the site card in place of the covers, fitted to its panel', async () => {
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYPj/HwADAgH/eL9GtQAAAABJRU5ErkJggg==';
+    const site: OgCard = { kind: 'site', title: 'Acme', counts: 'acme.dev', covers: [cover], art: { src: png, width: 1000, height: 500 } };
+    const svg = await ogSvg(site, { fontsDir });
+    expect(svg).toContain('<image');
+    expect(svg).toMatch(/<image[^>]*width="520"[^>]*height="260"/);
+  });
 });
 
 describe('ogPng', () => {

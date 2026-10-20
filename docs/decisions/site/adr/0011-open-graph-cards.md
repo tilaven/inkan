@@ -41,7 +41,7 @@ With `base` set, the cards sit under the sub-path: `https://acme.dev/docs/og/ind
 | --- | --- | --- |
 | Record | `/og/<record id>.png` | Project and type eyebrow, the big record number, the title, the status sticker, the status label and date, the site title, and the record's generated cover on the right |
 | Team | `/og/<project>.png` | Project name, description, record counts per type, the project's cover |
-| Site | `/og/index.png` | Site title, tagline, counts, and the covers of the three busiest projects fanned out |
+| Site | `/og/index.png` | Site title, tagline, counts, and the covers of the three busiest projects fanned out. With `landing.image` set, that picture takes the place of the covers (the `dark` one when `og.theme` is `dark`), and without `stats` in `landing.sections` the counts give way to the site's host. |
 
 The cover is the one the record shows on the site, with the project's motif and ink. The status sticker uses the same colours as the record page.
 
@@ -57,7 +57,9 @@ Every page gets these tags in `<head>`, with `og:image` resolved against `url` a
 | `twitter:card` | `summary_large_image` |
 | `twitter:image`, `twitter:title`, `twitter:description` | Same image, the page title and its description |
 
-`og:title`, `og:description` and the rest of the existing tags are unchanged.
+`og:title`, `og:description` and the rest of the existing tags are unchanged. On the home page the description is `landing.tagline` when it is set, so a shared link to the site carries the same pitch as the landing.
+
+The card is rasterised without a browser, which reads PNG, JPEG and GIF only, so `landing.image` is converted to PNG with sharp, the image library Astro installs for its own image service. If sharp is missing, the build prints a warning and the card shows the covers.
 
 ### Choose the theme
 

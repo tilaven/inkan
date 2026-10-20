@@ -60,7 +60,7 @@ const latest = decisions.slice(0, 4);
 const endpoints = agentEndpoints();
 ---
 
-<Page title={site.title} description={site.tagline} head={false}>
+<Page title={site.title} description={tagline} head={false}>
   <LandingHero
     title={landing.title ?? site.title}
     eyebrow={landing.eyebrow ?? t('landing.eyebrow', { date: formatLongDate(built) })}
