@@ -88,6 +88,8 @@ export default {
   'landing.ghostText': 'Add a folder with a {file}. It appears here, in the sidebar and in every filter on the next build.',
   'landing.latest': 'Latest',
   'landing.latestHint': 'newest first',
+  'landing.features': 'Features',
+  'landing.copyCommand': 'Copy command',
   'landing.content': 'Content',
   'landing.contentHint': 'from _landing.md',
   'landing.agents': 'For agents',

@@ -50,5 +50,8 @@ export function agentEndpoints(): Endpoint[] {
   return list;
 }
 
+/** Href of a landing link: a path gets the base prefixed, a URL with a scheme stays as it is. */
+export const landingHref = (link: string) => (/^[a-z]+:/.test(link) ? link : url(link));
+
 /** Button class of a landing action, see `landing.actions` in the config. */
 export const actionClass = (variant?: string) => ({ primary: 'btn--p', secondary: 'btn--s', ghost: 'btn--g' })[variant ?? 'secondary'] ?? 'btn--s';

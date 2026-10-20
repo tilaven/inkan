@@ -1,13 +1,16 @@
 ---
 /**
- * The landing's hero: eyebrow, display title, lede, the config's action buttons and the four stats.
+ * The landing's hero: eyebrow, display title, lede, the config's action buttons, an optional command to copy,
+ * the four stats and an optional picture beside the text. Both theme variants of the picture are lazy, so the browser
+ * fetches only the one CSS shows.
  * Overridable (`components.LandingHero`); the page passes the computed numbers in.
  * "Review overdue" counts decided records whose next scheduled review is in the past, the same
  * rule as /reviews/, and links there. It is recounted in the browser from the due dates so the
  * static page never goes stale; the build-time count shows with JS off.
  */
 import PageHead from './PageHead.astro';
-import { actionClass, titleAccent } from '../lib/home';
+import Icon from './Icon.astro';
+import { actionClass, landingHref, titleAccent } from '../lib/home';
 import { url } from '../lib/decisions';
 import { t } from '../lib/i18n';
 
@@ -16,40 +19,75 @@ interface Props {
   eyebrow: string;
   lede: string;
   actions: { text: string; link: string; variant?: string }[];
+  command?: string | null;
+  /** URLs of the picture and its Stage-theme variant. */
+  image?: { src: string; dark: string | null; alt: string } | null;
   /** The numbers; absent when 'stats' is not among the landing sections. `reviewDates` are the due dates behind `overdue`. */
   stats?: { decisions: number; teams: number; inForce: number; overdue: number; reviewDates: string[] };
 }
 
-const { title, eyebrow, lede, actions, stats } = Astro.props;
-const link = (l: string) => (/^[a-z]+:/.test(l) ? l : url(l));
+const { title, eyebrow, lede, actions, command, image, stats } = Astro.props;
 ---
 
-<PageHead title={title} accent={titleAccent(title)} eyebrow={eyebrow} lede={lede}>
+<div class:list={['hero', image && 'hero--image']}>
+  <PageHead title={title} accent={titleAccent(title)} eyebrow={eyebrow} lede={lede}>
+    {
+      actions.length > 0 && (
+        <p class="actions">
+          {actions.map((a) => (
+            <a class:list={['btn', actionClass(a.variant)]} href={landingHref(a.link)}>
+              {a.text}
+            </a>
+          ))}
+        </p>
+      )
+    }
+    {
+      command && (
+        <div class="cmd">
+          <code><span aria-hidden="true">$ </span><span data-command>{command}</span></code>
+          <button class="cmd__cp" type="button" data-copy-command aria-label={t('landing.copyCommand')}>
+            <Icon name="copy" class="cmd__ic" /><Icon name="check" class="cmd__ok" />
+          </button>
+        </div>
+      )
+    }
+    {
+      stats && (
+        <div class="stats">
+          <div class="stat"><b>{stats.decisions}</b><span>{t('landing.statDecisions')}</span></div>
+          <div class="stat"><b>{stats.teams}</b><span>{t('landing.statTeams')}</span></div>
+          <div class="stat"><b>{stats.inForce}</b><span>{t('landing.statInForce')}</span></div>
+          <a class="stat hot" href={url('reviews/')}><b data-review-dates={stats.reviewDates.join(',')}>{stats.overdue}</b><span>{t('landing.statOverdue')}</span></a>
+        </div>
+      )
+    }
+  </PageHead>
   {
-    actions.length > 0 && (
-      <p class="actions">
-        {actions.map((a) => (
-          <a class:list={['btn', actionClass(a.variant)]} href={link(a.link)}>
-            {a.text}
-          </a>
-        ))}
-      </p>
-    )
-  }
-  {
-    stats && (
-      <div class="stats">
-        <div class="stat"><b>{stats.decisions}</b><span>{t('landing.statDecisions')}</span></div>
-        <div class="stat"><b>{stats.teams}</b><span>{t('landing.statTeams')}</span></div>
-        <div class="stat"><b>{stats.inForce}</b><span>{t('landing.statInForce')}</span></div>
-        <a class="stat hot" href={url('reviews/')}><b data-review-dates={stats.reviewDates.join(',')}>{stats.overdue}</b><span>{t('landing.statOverdue')}</span></a>
+    image && (
+      <div class="hero__art">
+        <img class:list={['hero__img', image.dark && 'hero__img--day']} src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+        {image.dark && <img class="hero__img hero__img--stage" src={image.dark} alt={image.alt} loading="lazy" decoding="async" />}
       </div>
     )
   }
-</PageHead>
+</div>
 
 <script>
   import { overdueCount } from '../lib/dates';
+  import { toast } from '../lib/share';
+  import { t } from '../lib/i18n';
   const el = document.querySelector<HTMLElement>('[data-review-dates]');
   if (el) el.textContent = String(overdueCount((el.dataset.reviewDates ?? '').split(',').filter(Boolean)));
+  const copy = document.querySelector<HTMLButtonElement>('[data-copy-command]');
+  copy?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(document.querySelector('[data-command]')?.textContent ?? '');
+      copy.dataset.copied = '1';
+      setTimeout(() => delete copy.dataset.copied, 1600);
+      toast(t('actions.copied'));
+    } catch {
+      toast(t('actions.copyBlocked'));
+    }
+  });
 </script>

@@ -67,12 +67,23 @@ export const defaults = {
     /** Defaults to `title` / `tagline`. */
     title: null,
     tagline: null,
+    /** Small line above the title; `null` shows "Decision archive" and the date of the last commit. */
+    eyebrow: null,
+    /** Picture beside the hero text: `{ src, dark?, alt }`, paths relative to the config file. */
+    image: null,
+    /** A shell command shown under the buttons with a copy button, e.g. how to install something. */
+    command: null,
+    /** Cards for the "features" section: `{ title, text, link? }`. */
+    features: [],
     actions: [
       { text: 'Browse all records', link: '/decisions/', variant: 'primary' },
       { text: 'Timeline', link: '/timeline/', variant: 'ghost' },
       { text: 'Open decisions', link: '/backlog/', variant: 'ghost' },
     ],
-    /** Order of the sections below the hero; remove one to hide it. "stats" adds the numbers to the hero, "content" renders `_landing.md`. */
+    /**
+     * Order of the sections below the hero; remove one to hide it. "stats" adds the numbers to the hero and the lede,
+     * "features" renders `features`, "content" renders `_landing.md`.
+     */
     sections: ['stats', 'projects', 'latest', 'content', 'agents'],
   },
 };
