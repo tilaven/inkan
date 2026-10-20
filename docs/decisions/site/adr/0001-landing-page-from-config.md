@@ -55,7 +55,6 @@ export default defineConfig({
 | `landing.tagline` | `null` (uses `tagline`) | Sentence after the record and team counts in the lede. |
 | `landing.actions` | Browse all records (primary), Timeline (ghost), Open decisions (ghost) | Buttons under the lede. An empty list removes them. |
 | `landing.sections` | `['stats', 'projects', 'latest', 'content', 'agents']` | Blocks below the hero, in this order. Remove a name to hide the block. |
-
 | `landing.eyebrow` | `null` ("Decision archive" and the date) | Small line above the title. |
 | `landing.image` | `null` | `{ src, dark?, alt }`: a picture beside the text, below it on narrow screens. |
 | `landing.command` | `null` | A shell command under the buttons with a copy button. |

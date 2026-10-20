@@ -1,7 +1,8 @@
 ---
 /**
  * The landing's hero: eyebrow, display title, lede, the config's action buttons, an optional command to copy,
- * the four stats and an optional picture beside the text.
+ * the four stats and an optional picture beside the text. Both theme variants of the picture are lazy, so the browser
+ * fetches only the one CSS shows.
  * Overridable (`components.LandingHero`); the page passes the computed numbers in.
  * "Review overdue" counts decided records whose next scheduled review is in the past, the same
  * rule as /reviews/, and links there. It is recounted in the browser from the due dates so the
@@ -65,8 +66,8 @@ const { title, eyebrow, lede, actions, command, image, stats } = Astro.props;
   {
     image && (
       <div class="hero__art">
-        <img class:list={['hero__img', image.dark && 'hero__img--day']} src={image.src} alt={image.alt} decoding="async" />
-        {image.dark && <img class="hero__img hero__img--stage" src={image.dark} alt={image.alt} decoding="async" />}
+        <img class:list={['hero__img', image.dark && 'hero__img--day']} src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+        {image.dark && <img class="hero__img hero__img--stage" src={image.dark} alt={image.alt} loading="lazy" decoding="async" />}
       </div>
     )
   }

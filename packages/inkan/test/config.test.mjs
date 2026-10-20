@@ -57,7 +57,6 @@ describe('loadConfig', () => {
     expect(config.landing.image).toEqual({ src: path.join(root, 'brand/hero.webp'), dark: path.join(root, 'brand/hero-dark.webp'), alt: 'Hero' });
   });
 
-
   it('does not share default objects between loads', async () => {
     const config = await loadConfig(tmpSite());
     config.navigation.push({ label: 'x', href: '/x/' });
