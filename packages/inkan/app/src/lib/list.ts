@@ -34,7 +34,8 @@ export interface ListRecord {
   project: string;
   type: string;
   status: string;
-  authors: string[];
+  /** Handles of the record's authors and deciders. */
+  people: string[];
   tags: string[];
   /** Custom field values: chip fields as strings (`true`/`false` for booleans), range fields as a number or `YYYY-MM-DD`. */
   fields: Record<string, string[] | number | string>;
@@ -142,7 +143,7 @@ export function matches(r: ListRecord, state: ListState): boolean {
   if (facets.project.size && !facets.project.has(r.project)) return false;
   if (facets.type.size && !facets.type.has(r.type)) return false;
   if (facets.status.size && !facets.status.has(r.status)) return false;
-  if (facets.author.size && !r.authors.some((a) => facets.author.has(a))) return false;
+  if (facets.author.size && !r.people.some((a) => facets.author.has(a))) return false;
   if (facets.tag.size && !r.tags.some((t) => facets.tag.has(t))) return false;
   for (const [name, set] of Object.entries(state.chips)) {
     if (!set.size) continue;
