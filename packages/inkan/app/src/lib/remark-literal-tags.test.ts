@@ -28,8 +28,14 @@ describe('remark-literal-tags', () => {
     expect(html).toContain('<li>&#x3C;owner></li>');
   });
 
+  it('keeps the source position for line anchors', () => {
+    const tree = unified().use(remarkParse).use(remarkLiteralTags).runSync(unified().use(remarkParse).parse('Intro\n\n<project>'));
+    expect(tree.children[1]).toMatchObject({ type: 'paragraph', position: { start: { line: 3 } } });
+  });
+
   it('leaves real HTML and custom elements alone', () => {
     expect(run('Press <kbd>K</kbd> or <my-widget></my-widget>.')).toBe('<p>Press <kbd>K</kbd> or <my-widget></my-widget>.</p>');
+    expect(run('<svg>\n\n<feGaussianBlur stdDeviation="2"/>\n\n</svg>')).not.toContain('&#x3C;feGaussianBlur');
     expect(run('<details>\n<summary>More</summary>\n\nBody\n\n</details>')).toContain('<summary>More</summary>');
   });
 });
