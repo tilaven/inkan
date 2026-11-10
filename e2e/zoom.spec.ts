@@ -67,3 +67,22 @@ test('the wheel zooms around the pointer and dragging moves the diagram', async 
   await dialog.getByRole('button', { name: 'Close' }).click();
   await expect(dialog).toBeHidden();
 });
+
+test('a double-click zooms in on the point it lands on', async ({ page }) => {
+  await page.goto(record, { waitUntil: 'networkidle' });
+  await expect(page.locator('pre.mermaid svg')).toBeAttached();
+  await page.getByRole('button', { name: 'Enlarge: Diagram 1', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Diagram 1', exact: true });
+  const item = dialog.locator('[data-zoom-item]');
+  const stage = (await dialog.locator('[data-zoom-stage]').boundingBox())!;
+  const fitted = (await item.boundingBox())!;
+  const px = stage.x + stage.width / 2 - stage.width / 5;
+  const u = (px - fitted.x) / fitted.width;
+
+  await page.mouse.dblclick(px, stage.y + stage.height / 2);
+  const zoomed = (await item.boundingBox())!;
+  expect(zoomed.width).toBeGreaterThan(fitted.width * 1.5);
+  // The clicked point moves to the centre, as far as the edges of the picture allow.
+  const left = Math.min(24, Math.max(stage.width - 24 - zoomed.width, stage.width / 2 - u * zoomed.width));
+  expect(Math.abs(zoomed.x - stage.x - left)).toBeLessThan(stage.width / 20);
+});

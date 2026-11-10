@@ -82,15 +82,21 @@ import { t } from '../lib/i18n';
     /** Zoom levels reached by a button or a key are read out; the wheel and pinch stay quiet. */
     const step = (run: () => void) => {
       run();
-      live.textContent = level.textContent;
+      // Emptied first, so the same level is read out again when it did not change.
+      live.textContent = '';
+      requestAnimationFrame(() => (live.textContent = level.textContent));
     };
 
-    const fit = () => {
+    const measure = () => {
       const r = stage.getBoundingClientRect();
       // Vector pictures may grow a little to fill the screen; photos never grow past their own pixels.
       const inset = moved ? 32 : 0;
       fitS = Math.min((r.width - 2 * PAD - inset) / w, (r.height - 2 * PAD - inset) / h, vector ? 2 : 1);
       minS = Math.min(fitS, 1) / 2;
+    };
+
+    const fit = () => {
+      measure();
       s = fitS;
       x = y = -Infinity;
       apply();
@@ -121,6 +127,7 @@ import { t } from '../lib/i18n';
       }
       title.textContent = name;
       opener = from;
+      clicked = null;
       document.documentElement.classList.add('is-zooming');
       dialog.showModal();
       fit();
@@ -147,7 +154,7 @@ import { t } from '../lib/i18n';
     for (const el of media) {
       if (el.closest('a, .zoomable')) continue;
       const isImage = el instanceof HTMLImageElement;
-      const name = isImage ? (el as HTMLImageElement).alt.trim() || t('zoom.image') : t('zoom.diagram', { n: ++diagrams });
+      let name = isImage ? (el as HTMLImageElement).alt.trim() || t('zoom.image') : t('zoom.diagram', { n: ++diagrams });
       const wrap = document.createElement(isImage ? 'span' : 'div');
       wrap.className = `zoomable zoomable--${isImage ? 'image' : 'diagram'}`;
       el.replaceWith(wrap);
@@ -172,7 +179,12 @@ import { t } from '../lib/i18n';
         img.addEventListener('load', check);
         img.addEventListener('error', () => wrap.classList.add('zoomable--off'));
       } else {
-        const ready = () => wrap.classList.toggle('zoomable--off', !el.querySelector('svg'));
+        const ready = () => {
+          wrap.classList.toggle('zoomable--off', !el.querySelector('svg'));
+          // A diagram with an `accTitle` is named after it.
+          const label = el.querySelector('svg > title')?.textContent?.trim();
+          if (label) btn.setAttribute('aria-label', t('zoom.open', { name: (name = label) }));
+        };
         ready();
         new MutationObserver(ready).observe(el, { childList: true });
       }
@@ -192,7 +204,6 @@ import { t } from '../lib/i18n';
         '=': () => step(() => zoomAt(s * STEP)),
         '-': () => step(() => zoomAt(s / STEP)),
         '−': () => step(() => zoomAt(s / STEP)),
-        _: () => step(() => zoomAt(s / STEP)),
         '0': () => step(fit),
         ArrowLeft: () => { x += move; apply(); },
         ArrowRight: () => { x -= move; apply(); },
@@ -213,13 +224,25 @@ import { t } from '../lib/i18n';
     stage.addEventListener('wheel', (e) => {
       e.preventDefault();
       const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
-      zoomAt(s * Math.exp(-dy * 0.002), ...local(e));
+      // Trackpad pinches arrive as wheel events with ctrlKey and small deltas.
+      zoomAt(s * Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.002)), ...local(e));
     }, { passive: false });
 
-    // The first click already brought the point to the centre, so a double-click zooms there.
+    /** The point of the picture the last single click landed on, as a fraction of its size. */
+    let clicked: { u: number; v: number } | null = null;
+    const centre = (u: number, v: number) => {
+      const r = stage.getBoundingClientRect();
+      const inset = moved ? 16 : 0;
+      x = r.width / 2 - inset - u * w * s;
+      y = r.height / 2 - inset - v * h * s;
+      apply();
+    };
+
     stage.addEventListener('dblclick', () => {
-      if (s < fitS * 1.9) zoomAt(Math.max(fitS * 2, 1));
-      else fit();
+      if (s >= fitS * 1.9 || !clicked) return fit();
+      const { u, v } = clicked;
+      s = clamp(Math.max(fitS * 2, 1), minS, MAX);
+      centre(u, v);
     });
 
     // One pointer drags the view, or centres the point it clicks without dragging; two pinch to zoom around the point between them.
@@ -258,12 +281,12 @@ import { t } from '../lib/i18n';
       if (!pointers.delete(e.pointerId)) return;
       if (pointers.size) { travel = Infinity; return; }
       stage.classList.remove('is-dragging');
-      if (e.type === 'pointerup' && travel < 6) {
-        const r = stage.getBoundingClientRect();
+      // The second click of a double-click leaves the view to the dblclick handler.
+      if (e.type === 'pointerup' && travel < 6 && e.detail < 2) {
         const [px, py] = local(e);
-        x += r.width / 2 - px;
-        y += r.height / 2 - py;
-        apply();
+        const inset = moved ? 16 : 0;
+        clicked = { u: (px - x - inset) / (w * s), v: (py - y - inset) / (h * s) };
+        centre(clicked.u, clicked.v);
       }
     };
     stage.addEventListener('pointerup', release);
@@ -272,7 +295,9 @@ import { t } from '../lib/i18n';
 
     addEventListener('resize', () => {
       if (!dialog.open) return;
-      if (s === fitS) fit();
+      const fitted = s === fitS;
+      measure();
+      if (fitted) fit();
       else apply();
     });
   }
@@ -302,7 +327,6 @@ import { t } from '../lib/i18n';
     border: 0; background: var(--inkan-bg); color: var(--inkan-fg);
   }
   .zoom[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
-  .zoom::backdrop { background: var(--inkan-bg); }
   .zoom__bar {
     display: flex; align-items: center; gap: 16px; padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top));
     border-bottom: 1.5px solid var(--inkan-rule-strong);
@@ -325,7 +349,7 @@ import { t } from '../lib/i18n';
   }
   .zoom__stage.is-dragging { cursor: grabbing; }
   .zoom__stage:focus-visible { outline: none; }
-  .zoom__stage:focus-visible::after { content: ''; position: absolute; inset: 0; z-index: 1; box-shadow: inset 0 0 0 3px var(--inkan-focus); pointer-events: none; }
+  .zoom__stage:focus-visible::after { content: ''; position: absolute; inset: 0; z-index: 1; outline: 3px solid var(--inkan-focus); outline-offset: -3px; pointer-events: none; }
   .zoom__item {
     position: absolute; top: 0; left: 0; box-sizing: content-box; transform-origin: 0 0;
     background: var(--inkan-surface); border: 1.5px solid var(--inkan-rule-strong); border-radius: 4px;
