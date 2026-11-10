@@ -8,7 +8,7 @@ npm create @tilaven/inkan@latest my-decisions
 cd my-decisions && npm install && npm run dev
 ```
 
-Open http://localhost:4321 and you are looking at your own decision archive, with a sample project to edit. Already have a repository with ADRs? Run `npm install -D @tilaven/inkan` and `npx inkan init` there, or bring them over with `inkan import` from log4brains, MADR or adr-tools.
+Open http://localhost:4321 and you are looking at your own decision archive, with a sample project to edit. Already have a repository? Skip `npm create`. Run `npm install -D @tilaven/inkan` and then `npx inkan init` in its root instead, and bring your ADRs over with `inkan import` from log4brains, MADR or adr-tools. The [quick start](quick-start.md) explains both paths.
 
 ## How to read these docs
 
