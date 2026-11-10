@@ -12,7 +12,7 @@ declare module 'virtual:inkan/config' {
     repoRoot: string;
     /** Content folder relative to the repo root, e.g. `decisions`. */
     contentPath: string;
-    repo: { url: string; branch: string; provider: 'github' | 'gitlab' };
+    repo: { url: string; branch: string; provider: 'github' | 'gitlab' | 'gitea' };
     contentDir: string;
     pagesDir: string;
     templatesDir: string;
@@ -62,7 +62,7 @@ declare module 'virtual:inkan/config' {
       contentDir: string;
       recordsPath: string;
       web: string | null;
-      provider: 'github' | 'gitlab' | null;
+      provider: 'github' | 'gitlab' | 'gitea' | null;
       remote: string | null;
       head: string | null;
     }[];

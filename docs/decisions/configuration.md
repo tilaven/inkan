@@ -52,7 +52,7 @@ You rarely need more than these. The sections below list every option.
 | `base` | `string` | `'/'` | Sub-path when the site is not at the domain root, e.g. `'/decisions'`. The `BASE_PATH` environment variable overrides it. |
 | `repo.url` | `string` | `''` | Repository that holds the content. Enables "Edit this page" and "New ADR / New RFC" buttons. |
 | `repo.branch` | `string` | `'main'` | Branch those links point at. |
-| `repo.provider` | `'github' \| 'gitlab'` | `'github'` | Decides the URL format of edit and new-file links. |
+| `repo.provider` | `'github' \| 'gitlab' \| 'gitea'` | `'github'` | Decides the URL format of edit, new-file and code links. Use `'gitea'` for Gitea and Forgejo (Codeberg). Inkan does not prefill new records there, so "New ADR" opens the folder's new-file page. |
 
 `BASE_PATH` matters in CI: the workflow and pipeline that `init` creates set `BASE_PATH=/<repository name>` for project pages. See [Serve from a sub-path](deploy/adr/0004-serve-from-a-sub-path.md) and [GitHub and GitLab Pages](deploy/adr/0002-github-and-gitlab-pages.md).
 
@@ -192,7 +192,7 @@ Records kept in other repositories or folders, shown as one project each, exactl
 | `sources[].repo` | `string` | not set | Git remote to fetch: an https or ssh URL, `git@host:org/repo.git`, or a local path. Exactly one of `repo` or `dir`. |
 | `sources[].dir` | `string` | not set | A local folder, relative to the config file. Read in place, nothing is fetched. |
 | `sources[].branch` | `string` | the remote's default branch | Branch to follow. `repo` only. |
-| `sources[].provider` | `'github' \| 'gitlab'` | guessed from `repo` | Decides the edit and "New ADR" link format for that source. Set it for self-hosted GitLab. `repo` only. |
+| `sources[].provider` | `'github' \| 'gitlab' \| 'gitea'` | guessed from `repo` | Decides the edit and "New ADR" link format for that source. Guessed as `gitlab` or `gitea` when the URL contains "gitlab", "gitea", "forgejo" or `codeberg.org`; set it for other self-hosted instances. `repo` only. |
 | `sources[].path` | `string` | `'docs/decisions'` | Records folder inside the source. A `<path>/<project>/<type>/` layout is accepted too. |
 
 ```ts title="inkan.config.ts"

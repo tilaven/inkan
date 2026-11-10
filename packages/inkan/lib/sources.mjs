@@ -27,8 +27,13 @@ export function repoWebUrl(repo) {
   return `https://${ssh[1]}/${ssh[2]}`;
 }
 
-/** `github` unless the host looks like GitLab (set `provider` on the source for self-hosted instances). */
-export const repoProvider = (repo) => (/gitlab/i.test(repo) ? 'gitlab' : 'github');
+/** `gitlab` or `gitea` when the host says so (Codeberg runs Forgejo), else `github`; set `provider` on the source for other self-hosted instances. */
+export function repoProvider(repo) {
+  const host = /^https?:\/\/([^/]+)/.exec(repoWebUrl(repo) ?? '')?.[1] ?? '';
+  if (/gitlab/i.test(host)) return 'gitlab';
+  if (/gitea|forgejo|codeberg\.org/i.test(host)) return 'gitea';
+  return 'github';
+}
 
 const canonical = (p) => {
   try {
@@ -60,7 +65,7 @@ const branchOf = (dir) => {
 /**
  * Resolves the `sources` of a config: absolute folders, defaults and the layout found on disk.
  * `root` is the clone (or the local folder), `contentDir` the folder with the `<type>/` subfolders.
- * @param {{ project: string, repo?: string, provider?: 'github' | 'gitlab', dir?: string, branch?: string, path?: string }[]} sources
+ * @param {{ project: string, repo?: string, provider?: 'github' | 'gitlab' | 'gitea', dir?: string, branch?: string, path?: string }[]} sources
  */
 export function resolveSources(sources, { root, contentDir, docTypes }) {
   const seen = new Set();
