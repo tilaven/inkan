@@ -63,7 +63,7 @@ const source = z
   .object({
     project: z.string().min(1).regex(PROJECT_NAME, 'must be a folder name (letters, digits, - and _)'),
     repo: z.string().min(1).regex(noDash, 'must not start with "-"').optional(),
-    provider: z.enum(['github', 'gitlab']).optional(),
+    provider: z.enum(['github', 'gitlab', 'gitea']).optional(),
     dir: z.string().min(1).optional(),
     branch: z.string().min(1).regex(noDash, 'must not start with "-"').optional(),
     path: z.string().regex(noDash, 'must not start with "-"').regex(/^(?!\/|\.\.(\/|$))(?!.*\/\.\.(\/|$)).*$/, 'must be a relative path inside the source').optional(),
@@ -149,7 +149,7 @@ export const configSchema = z
     description: z.string(),
     url: z.string(),
     base: z.string(),
-    repo: z.object({ url: z.string(), branch: z.string().optional(), provider: z.enum(['github', 'gitlab']).optional() }).strict(),
+    repo: z.object({ url: z.string(), branch: z.string().optional(), provider: z.enum(['github', 'gitlab', 'gitea']).optional() }).strict(),
     contentDir: z.string().min(1),
     templatesDir: z.string().min(1),
     pagesDir: z.string().min(1),

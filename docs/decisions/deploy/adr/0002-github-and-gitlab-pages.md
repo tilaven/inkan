@@ -139,6 +139,10 @@ GitLab publishes the `public` folder of a job named `pages`, hence the `mv`. The
 build line. With `repo.provider: 'gitlab'` in the config, the edit and "New ADR" links point at GitLab's
 web editor.
 
+On Gitea, Forgejo or Codeberg, set `repo.provider: 'gitea'`: edit links use `_edit` and "New ADR" opens the
+folder's new-file page, since those hosts cannot prefill a record. Comments and review pins support GitHub and
+GitLab only.
+
 GitLab has no annotation format, so `check` prints its report to the job log; `--format json` gives a
 machine-readable report if you want to post it elsewhere.
 

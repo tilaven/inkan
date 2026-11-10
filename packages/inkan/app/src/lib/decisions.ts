@@ -8,6 +8,7 @@ import { reviewSummary, type ReviewSummary } from '../../../lib/rfc-reviews.mjs'
 import { combineFields, projectFields, readFields, type Field, type FieldValue } from '../../../lib/fields.mjs';
 import { docTypes, openStatuses, site, statuses, type DocType, type Status } from './config';
 import { hidden, hiddenRef } from './auth';
+import { editFileUrl, newRecordUrl } from './repo-links';
 import { initials } from './card';
 import { once, relativeInside } from './once';
 import { assignStyles, fallbackStyle, type Ink, type ProjectStyle } from './inks';
@@ -206,19 +207,6 @@ export const formatDate = (d?: Date) =>
 export const filterHref = (facet: 'tag' | 'author' | 'project' | 'status' | 'type' | (string & {}), value: string) =>
   url(`decisions/?${facet}=${encodeURIComponent(value)}`);
 
-/**
- * Link that opens the repo's web editor with a new, pre-filled record
- * (GitHub fills name and content; GitLab fills the file name).
- */
-const encodePath = (p: string) => p.split('/').map(encodeURIComponent).join('/');
-
-export function newRecordUrl(repo: { url: string; branch: string; provider: 'github' | 'gitlab' }, dir: string, fileName: string, content: string) {
-  if (repo.provider === 'gitlab') {
-    return `${repo.url}/-/new/${repo.branch}/${encodePath(dir)}?file_name=${encodeURIComponent(fileName)}`;
-  }
-  return `${repo.url}/new/${repo.branch}/${encodePath(dir)}?filename=${encodeURIComponent(fileName)}&value=${encodeURIComponent(content)}`;
-}
-
 /** Any content entry backed by a file (records, user pages, the landing extra). */
 export type FileEntry = { id: string; filePath?: string };
 
@@ -230,7 +218,7 @@ type Source = (typeof site.sources)[number];
 export interface RecordRepo {
   url: string;
   branch: string;
-  provider: 'github' | 'gitlab';
+  provider: 'github' | 'gitlab' | 'gitea';
   /** Folder of the records inside that repository (`decisions` or the source's `path`). */
   dir: string;
 }
@@ -279,14 +267,14 @@ export function repoFile(entry: FileEntry) {
     : relativeInside(site.repoRoot, absolutePath(entry));
 }
 
-/** "Edit this page" link on GitHub/GitLab: in the source repository for sourced records, else in the hub's repo. */
+/** "Edit this page" link on GitHub, GitLab or Gitea: in the source repository for sourced records, else in the hub's repo. */
 export function editUrl(entry: FileEntry) {
   const source = sourceOf(entry);
   const repo = source ? projectRepo(source.project) : site.repo.url ? { ...site.repo, dir: '' } : undefined;
   if (!repo) return undefined;
   const file = repoFile(entry);
   if (!file) return undefined;
-  return repo.provider === 'gitlab' ? `${repo.url}/-/edit/${repo.branch}/${encodePath(file)}` : `${repo.url}/edit/${repo.branch}/${encodePath(file)}`;
+  return editFileUrl(repo, file);
 }
 
 /** Folders whose files get dates and authors from git: the hub's own, plus `dir` sources that may sit in other repositories. */
@@ -400,3 +388,5 @@ export async function getAllProjects() {
     }),
   ];
 }
+
+export { newRecordUrl };
