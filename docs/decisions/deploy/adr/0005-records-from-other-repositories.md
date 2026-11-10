@@ -40,7 +40,7 @@ export default defineConfig({
   sources: [
     // path defaults to docs/decisions; branch to the remote's default branch
     { project: 'checkout', repo: 'git@github.com:acme/checkout.git', branch: 'main' },
-    // self-hosted GitLab: name the provider so edit links use GitLab's editor URLs
+    // self-hosted GitLab, Gitea or Forgejo: name the provider so edit links use its editor URLs
     { project: 'mobile', repo: 'https://git.acme.dev/apps/mobile.git', provider: 'gitlab', path: 'adr' },
     // a folder next to this repository, read in place, never fetched
     { project: 'search', dir: '../search-service', path: 'adrs' },
@@ -55,7 +55,7 @@ export default defineConfig({
 | `dir` | none | Folder relative to the config folder, read as it is. Exactly one of `repo` or `dir` |
 | `path` | `docs/decisions` | Records folder inside the repository or folder. Relative, no `..` segments |
 | `branch` | remote default | Branch to follow. `repo` only |
-| `provider` | guessed | `'github'` or `'gitlab'`, for edit links; guessed from `repo` (`gitlab` when the URL contains "gitlab"). `repo` only |
+| `provider` | guessed | `'github'`, `'gitlab'` or `'gitea'` (Gitea and Forgejo), for edit links; guessed from `repo` (`gitlab` when the URL contains "gitlab", `gitea` when it contains "gitea", "forgejo" or `codeberg.org`). `repo` only |
 
 `repo`, `branch` and `path` must not start with `-`. Listing the same `project` twice is an error.
 

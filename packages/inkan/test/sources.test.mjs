@@ -98,6 +98,16 @@ describe('sources config', () => {
       { root, contentDir: path.join(root, 'decisions'), docTypes: {} },
     );
     expect([a.provider, b.provider]).toEqual(['gitlab', 'gitlab']);
+    const guessed = (repo) => resolveSources([{ project: 'a', repo }], { root, contentDir: path.join(root, 'decisions'), docTypes: {} })[0].provider;
+    expect(guessed('https://codeberg.org/acme/x.git')).toBe('gitea');
+    expect(guessed('git@gitea.example.com:acme/x.git')).toBe('gitea');
+    expect(guessed('https://forgejo.corp/acme/x')).toBe('gitea');
+    expect(guessed('https://git.corp.example/acme/x')).toBe('github');
+    expect(guessed('https://github.com/acme/gitea-docs.git')).toBe('github');
+    expect(guessed('git@github.com:acme/gitlab-tools.git')).toBe('github');
+    expect(validateConfig({ sources: [{ project: 'a', repo: 'x', provider: 'gitea' }] }).sources[0].provider).toBe('gitea');
+    expect(validateConfig({ repo: { url: 'https://codeberg.org/a/b', provider: 'gitea' } }).repo.provider).toBe('gitea');
+    expect(() => validateConfig({ repo: { url: 'x', provider: 'bitbucket' } })).toThrow('repo.provider');
     expect(validateConfig({ sources: [{ project: 'a', repo: 'x', provider: 'gitlab' }] }).sources[0].provider).toBe('gitlab');
     expect(() => validateConfig({ sources: [{ project: 'a', repo: 'x', provider: 'bitbucket' }] })).toThrow('sources.0.provider');
     expect(() => validateConfig({ sources: [{ project: 'a', dir: 'x', provider: 'gitlab' }] })).toThrow('sources.0.provider: only applies to repo sources');

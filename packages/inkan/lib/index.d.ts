@@ -273,7 +273,7 @@ export interface InkanConfig {
   /** Sub-path when not served from the domain root, e.g. '/decisions'. BASE_PATH env var overrides it. */
   base?: string;
   /** Repository holding the content. Enables "Edit page" and "New ADR" links. */
-  repo?: { url: string; branch?: string; provider?: 'github' | 'gitlab' };
+  repo?: { url: string; branch?: string; provider?: 'github' | 'gitlab' | 'gitea' };
   /** Folder with the records, relative to the config file. Default: 'decisions'. */
   contentDir?: string;
   /** Folder with your own record templates (adr.md, rfc.md, …). Default: 'templates'. */
@@ -318,7 +318,7 @@ export interface InkanConfig {
    * `<contentDir>/<project>`. One of `repo` (git URL, fetched by `inkan sync`) or `dir` (folder relative
    * to the config file); `path` is the records folder inside it (default `docs/decisions`), `branch` the git branch.
    */
-  sources?: { project: string; repo?: string; provider?: 'github' | 'gitlab'; dir?: string; branch?: string; path?: string }[];
+  sources?: { project: string; repo?: string; provider?: 'github' | 'gitlab' | 'gitea'; dir?: string; branch?: string; path?: string }[];
   /**
    * Fill missing `date` / `authors` from git history, and list who changed a record's status on its page (all default to true).
    */
@@ -404,7 +404,7 @@ export interface ResolvedSource {
   /** Web URL of `repo` (https form), when it can be derived. */
   web: string | null;
   /** Explicit `provider` of the source, else guessed from `repo`. */
-  provider: 'github' | 'gitlab' | null;
+  provider: 'github' | 'gitlab' | 'gitea' | null;
   /** What git clones from: `repo` as given for remotes, a file:// URL for local paths. */
   remote: string | null;
   /** Branch the clone is on when `branch` is not set, once synced. */

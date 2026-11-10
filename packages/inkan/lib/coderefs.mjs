@@ -126,7 +126,12 @@ export function blobUrl(repo, file, line) {
   if (!repo?.url) return undefined;
   const branch = repo.branch || 'main';
   const encoded = file.split('/').map(encodeURIComponent).join('/');
-  const base = repo.provider === 'gitlab' ? `${repo.url}/-/blob/${branch}/${encoded}` : `${repo.url}/blob/${branch}/${encoded}`;
+  const base =
+    repo.provider === 'gitlab'
+      ? `${repo.url}/-/blob/${branch}/${encoded}`
+      : repo.provider === 'gitea'
+        ? `${repo.url}/src/branch/${branch}/${encoded}`
+        : `${repo.url}/blob/${branch}/${encoded}`;
   return line ? `${base}#L${line}` : base;
 }
 
@@ -134,5 +139,6 @@ export function blobUrl(repo, file, line) {
 export function commitDiffUrl(repo, sha, file) {
   if (!repo?.url) return undefined;
   if (repo.provider === 'gitlab') return `${repo.url}/-/commit/${sha}#${createHash('sha1').update(file).digest('hex')}`;
+  if (repo.provider === 'gitea') return `${repo.url}/commit/${sha}#diff-${createHash('sha1').update(file).digest('hex')}`;
   return `${repo.url}/commit/${sha}#diff-${createHash('sha256').update(file).digest('hex')}`;
 }
