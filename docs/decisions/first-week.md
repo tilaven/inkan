@@ -67,7 +67,7 @@ repo: { url: 'https://git.acme.dev/platform/decisions', branch: 'main', provider
 url: 'https://platform.pages.acme.dev/decisions',
 ```
 
-The same goes for records you pull from other repositories. Inkan guesses `gitlab` only when the repository URL contains "gitlab". Otherwise set `provider: 'gitlab'` on the source (see [Records in other repositories](#records-in-other-repositories)).
+The same goes for records you pull from other repositories. Inkan guesses `gitlab` only when the repository host contains "gitlab". Otherwise set `provider: 'gitlab'` on the source (see [Records in other repositories](#records-in-other-repositories)).
 
 If your instance has no Pages, build in CI and serve `dist/` from any web server, or use the [Docker image](deploy/adr/0003-docker-and-nginx.md).
 
