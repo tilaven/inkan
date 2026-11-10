@@ -40,6 +40,10 @@ jobs:
   windows:
     runs-on: windows-latest
     timeout-minutes: 30
+    # Astro cannot build across drives: keep temporary sites on the drive of the checkout (D:), not the user profile's (C:).
+    env:
+      TEMP: ${{ runner.temp }}
+      TMP: ${{ runner.temp }}
     defaults:
       run:
         shell: bash

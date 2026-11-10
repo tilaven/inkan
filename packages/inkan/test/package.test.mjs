@@ -35,7 +35,7 @@ describe('package', () => {
   it('ships the whole starter, dotfiles included', () => {
     const starter = (dir) =>
       fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? starter(path.join(dir, e.name)) : [path.join(dir, e.name)]));
-    const expected = starter(path.join(pkgDir, 'starter')).map((f) => path.relative(pkgDir, f));
+    const expected = starter(path.join(pkgDir, 'starter')).map((f) => path.relative(pkgDir, f).split(path.sep).join('/'));
     expect(expected.filter((f) => !files.has(f))).toEqual([]);
   });
 
