@@ -73,13 +73,15 @@ config.pages = userPages.map(({ route, kind }) => ({ route, kind }));
 
 /** Overridable components and empty slots, see ComponentName in lib/index.d.ts. */
 const COMPONENT_PREFIX = 'virtual:inkan/components/';
-const componentPath = (/** @type {string} */ name) => resolveComponent(name, config.components, appDir);
+/** Vite ids are slash-separated; Astro keys a component's hoisted scripts by that spelling, so a backslash id never finds them. */
+const slash = (/** @type {string} */ file) => file.split(path.sep).join('/');
+const componentPath = (/** @type {string} */ name) => slash(resolveComponent(name, config.components, appDir));
 
 /** Providers whose index lives elsewhere; the build writes `search.json` to feed it. */
 const EXTERNAL_SEARCH = new Set(['algolia', 'meilisearch', 'typesense', 'custom']);
 
 /** Import specifier for a file: Vite resolves `C:/dir/file` on Windows without trouble, backslashes it may not. */
-const spec = (/** @type {string} */ file) => JSON.stringify(file.split(path.sep).join('/'));
+const spec = (/** @type {string} */ file) => JSON.stringify(slash(file));
 
 /** Virtual modules that hand the user's config, assets and CSS to the app. */
 const modules = {
