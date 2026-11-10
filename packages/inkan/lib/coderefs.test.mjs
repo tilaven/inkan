@@ -96,6 +96,8 @@ describe('blobUrl', () => {
   it('links to the line on GitHub and GitLab', () => {
     expect(blobUrl({ url: 'https://github.com/acme/x', branch: 'main', provider: 'github' }, 'src/a.ts', 12)).toBe('https://github.com/acme/x/blob/main/src/a.ts#L12');
     expect(blobUrl({ url: 'https://gitlab.com/acme/x', branch: 'dev', provider: 'gitlab' }, 'src/a.ts', 3)).toBe('https://gitlab.com/acme/x/-/blob/dev/src/a.ts#L3');
+    expect(blobUrl({ url: 'https://codeberg.org/acme/x', branch: 'dev', provider: 'gitea' }, 'src/a b.ts', 3)).toBe('https://codeberg.org/acme/x/src/branch/dev/src/a%20b.ts#L3');
+    expect(blobUrl({ url: 'https://codeberg.org/acme/x', branch: 'dev', provider: 'gitea' }, 'src/a.ts', 3)).toBe('https://codeberg.org/acme/x/src/branch/dev/src/a.ts#L3');
     expect(blobUrl({ url: '', branch: 'main', provider: 'github' }, 'a', 1)).toBeUndefined();
   });
 });
@@ -109,6 +111,9 @@ describe('commitDiffUrl', () => {
     );
     expect(commitDiffUrl({ url: 'https://gitlab.com/acme/x', provider: 'gitlab' }, sha, file)).toBe(
       `https://gitlab.com/acme/x/-/commit/${sha}#${createHash('sha1').update(file).digest('hex')}`,
+    );
+    expect(commitDiffUrl({ url: 'https://codeberg.org/acme/x', provider: 'gitea' }, sha, file)).toBe(
+      `https://codeberg.org/acme/x/commit/${sha}#diff-${createHash('sha1').update(file).digest('hex')}`,
     );
     expect(commitDiffUrl({ url: '', provider: 'github' }, sha, file)).toBeUndefined();
   });

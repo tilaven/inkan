@@ -1,6 +1,6 @@
 ---
 title: "Reference records from code"
-description: "Point at a record from a code comment with @adr, and get the list of referencing files and lines on the record page, linked to GitHub or GitLab."
+description: "Point at a record from a code comment with @adr, and get the list of referencing files and lines on the record page, linked to GitHub, GitLab or Gitea."
 status: implemented
 date: 2026-10-17
 authors: [tilaven]
@@ -106,7 +106,7 @@ Referenced in code  3
   services/jobs/run.test.py   L1 ↗
 ```
 
-Entries are sorted by file, then line. With `repo.url` set, each entry links to the file and line in the web UI: `<url>/blob/<branch>/<file>#L<line>` for GitHub, `<url>/-/blob/<branch>/<file>#L<line>` for GitLab, with `repo.branch` defaulting to `main`. Without `repo.url` the entries are plain text. The section is excluded from search indexing. Records without references show nothing.
+Entries are sorted by file, then line. With `repo.url` set, each entry links to the file and line in the web UI: `<url>/blob/<branch>/<file>#L<line>` for GitHub, `<url>/-/blob/<branch>/<file>#L<line>` for GitLab, `<url>/src/branch/<branch>/<file>#L<line>` for Gitea and Forgejo (`repo.provider: 'gitea'`), with `repo.branch` defaulting to `main`. Without `repo.url` the entries are plain text. The section is excluded from search indexing. Records without references show nothing.
 
 The same list is in `decisions.json` as `codeRefs: [{ "file": "services/api/handler.ts", "line": 1 }]`, with paths relative to the repository root. `llms.txt` and the MCP server do not include it.
 

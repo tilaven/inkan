@@ -3,7 +3,7 @@ import { url } from './decisions';
 /** Site-relative paths get the base prefix; fragments, protocol-relative and absolute URLs pass through. */
 export const resolveHref = (href: string) => (/^(#|\/\/|[a-z][a-z0-9+.-]*:)/i.test(href) ? href : url(href));
 
-const PROVIDER_NAMES: Record<string, string> = { github: 'GitHub', gitlab: 'GitLab', bitbucket: 'Bitbucket' };
+const PROVIDER_NAMES: Record<string, string> = { github: 'GitHub', gitlab: 'GitLab', gitea: 'Gitea', bitbucket: 'Bitbucket' };
 
 /** The display name of a repository host: `github` → `GitHub`. */
 export const providerName = (id: string) => PROVIDER_NAMES[id.toLowerCase()] ?? id.charAt(0).toUpperCase() + id.slice(1);
