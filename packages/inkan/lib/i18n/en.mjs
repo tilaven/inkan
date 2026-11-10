@@ -357,5 +357,5 @@ export default {
   'zoom.out': 'Zoom out',
   'zoom.fit': 'Fit to screen',
   'zoom.close': 'Close',
-  'zoom.hint': 'Drag or use the arrow keys to move. Scroll, pinch or press + and − to zoom, 0 to fit.',
+  'zoom.hint': 'Drag, click a point to centre it, or use the arrow keys to move. Scroll, pinch or press + and − to zoom, 0 to fit.',
 };

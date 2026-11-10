@@ -20,13 +20,14 @@ Every image and Mermaid diagram in Markdown can be opened in a full-screen viewe
 | Action | Mouse or touch | Keyboard |
 | --- | --- | --- |
 | Zoom in or out | Wheel, pinch, or the `+` and `−` buttons | `+` and `−` |
-| Fit to the screen | The fit button, or double-click | `0` |
-| Move | Drag | Arrow keys, with `Shift` for bigger steps |
+| Zoom in on a point | Double-click: the first click centres the point, the second zooms in. Double-click again to fit. | |
+| Fit to the screen | The fit button | `0` |
+| Move | Drag, or click a point to bring it to the centre | Arrow keys, with `Shift` for bigger steps |
 | Close | The close button | `Esc` |
 
-The viewer is a modal dialog: focus moves into it, stays inside while it is open, and goes back to the enlarge button when it closes. The enlarge button is named after the image's alt text, or "Diagram 1", "Diagram 2" for diagrams, and the zoom level is announced as it changes. A diagram is moved into the viewer rather than copied, so it keeps its accessible name and its colours follow the Day and Stage themes.
+The viewer is a modal dialog: focus moves into it, stays inside while it is open, and goes back to the enlarge button when it closes. The enlarge button is named after the image's alt text ("Image" when there is none), or "Diagram 1", "Diagram 2" for diagrams. The zoom level is announced after each button or key press, not on every wheel step. Every movement has a single-click way to do it, so nobody has to drag. A diagram is moved into the viewer rather than copied, so it keeps its accessible name and its colours follow the Day and Stage themes.
 
-Images inside a link stay links, and images narrower than 48 pixels, such as badges and icons, get no button. Printed pages leave the buttons out.
+Images inside a link stay links. Images narrower than 48 pixels, such as badges and icons, and images that fail to load get no button. Printed pages leave the buttons out.
 
 ## How to use it
 
@@ -48,5 +49,5 @@ Give every image a meaningful alt text: it names the enlarge button and the view
 ## Consequences
 
 - Wide diagrams no longer have to be split up or redrawn vertically to stay readable.
-- The viewer is about 200 lines of script and styles with no new dependency, and it runs only on pages that have an image or a diagram.
+- The viewer is one component with no new dependency. Every page carries its markup, and its script does nothing on pages without an image or a diagram.
 - The viewer follows the OVERPRINT look: the picture sits on a dotted paper stage with the hard ink shadow used by cards and the search palette.

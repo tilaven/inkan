@@ -7,11 +7,11 @@ const wcag = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 test('a diagram opens full screen, zooms and pans from the keyboard, and goes back on Escape', async ({ page }) => {
   await page.goto(record, { waitUntil: 'networkidle' });
   await expect(page.locator('pre.mermaid svg')).toBeAttached();
-  const open = page.getByRole('button', { name: 'Enlarge: Diagram 1' });
+  const open = page.getByRole('button', { name: 'Enlarge: Diagram 1', exact: true });
   await open.focus();
   await page.keyboard.press('Enter');
 
-  const dialog = page.getByRole('dialog', { name: 'Diagram 1' });
+  const dialog = page.getByRole('dialog', { name: 'Diagram 1', exact: true });
   await expect(dialog).toBeVisible();
   await expect(page.getByRole('region', { name: 'Zoomable view' })).toBeFocused();
   await expect(dialog.locator('svg[id^="mermaid-"]')).toBeVisible();
@@ -26,6 +26,7 @@ test('a diagram opens full screen, zooms and pans from the keyboard, and goes ba
   expect((await item.boundingBox())!.x).toBeGreaterThan(before!.x);
   await page.keyboard.press('0');
   await expect(level).toHaveText(fitted!);
+  await expect(dialog.getByRole('status')).toHaveText(fitted!);
 
   const { violations } = await new AxeBuilder({ page }).withTags(wcag).analyze();
   expect(violations.filter((v) => v.impact === 'serious' || v.impact === 'critical').map((v) => v.id)).toEqual([]);
@@ -40,7 +41,7 @@ test('the wheel zooms around the pointer and dragging moves the diagram', async 
   await page.goto(record, { waitUntil: 'networkidle' });
   await expect(page.locator('pre.mermaid svg')).toBeAttached();
   await page.locator('pre.mermaid').click();
-  const dialog = page.getByRole('dialog', { name: 'Diagram 1' });
+  const dialog = page.getByRole('dialog', { name: 'Diagram 1', exact: true });
   await expect(dialog).toBeVisible();
   const level = dialog.locator('[data-zoom-level]');
   const fitted = Number.parseInt((await level.textContent())!);
@@ -57,6 +58,11 @@ test('the wheel zooms around the pointer and dragging moves the diagram', async 
   await page.mouse.up();
   const after = (await item.boundingBox())!;
   expect(after.x).toBeLessThan(before.x);
+
+  // A click without dragging brings the clicked point to the centre, so pointer users never have to drag.
+  const offset = Math.round(stage.width / 5);
+  await page.mouse.click(stage.x + stage.width / 2 - offset, stage.y + stage.height / 2);
+  expect((await item.boundingBox())!.x).toBeCloseTo(after.x + offset, 0);
 
   await dialog.getByRole('button', { name: 'Close' }).click();
   await expect(dialog).toBeHidden();

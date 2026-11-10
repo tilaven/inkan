@@ -1,5 +1,5 @@
 ---
-/** Full-screen viewer for images and Mermaid diagrams in Markdown: zoom with buttons, wheel, pinch or keys, pan by dragging. */
+/** Full-screen viewer for images and Mermaid diagrams in Markdown: zoom with buttons, wheel, pinch or keys; pan by dragging, clicking or keys. */
 import Icon from './Icon.astro';
 import { t } from '../lib/i18n';
 ---
@@ -12,7 +12,7 @@ import { t } from '../lib/i18n';
     <h2 class="zoom__title" id="zoom-title" data-zoom-title></h2>
     <div class="zoom__tools">
       <button class="icon-btn" type="button" aria-label={t('zoom.out')} data-zoom-step="-1"><Icon name="zoom-out" /></button>
-      <output class="zoom__level" data-zoom-level>100%</output>
+      <span class="zoom__level" data-zoom-level>100%</span>
       <button class="icon-btn" type="button" aria-label={t('zoom.in')} data-zoom-step="1"><Icon name="zoom-in" /></button>
       <button class="icon-btn" type="button" aria-label={t('zoom.fit')} data-zoom-fit><Icon name="fit" /></button>
       <button class="icon-btn zoom__close" type="button" aria-label={t('zoom.close')} data-zoom-close><Icon name="x" /></button>
@@ -22,6 +22,7 @@ import { t } from '../lib/i18n';
     <div class="zoom__item" data-zoom-item></div>
   </div>
   <p class="zoom__hint" id="zoom-hint">{t('zoom.hint')}</p>
+  <span class="zoom__sr" role="status" data-zoom-live></span>
 </dialog>
 
 <script>
@@ -33,7 +34,8 @@ import { t } from '../lib/i18n';
 
   if (dialog && trigger && media.length) {
     const title = dialog.querySelector<HTMLElement>('[data-zoom-title]')!;
-    const level = dialog.querySelector<HTMLOutputElement>('[data-zoom-level]')!;
+    const level = dialog.querySelector<HTMLElement>('[data-zoom-level]')!;
+    const live = dialog.querySelector<HTMLElement>('[data-zoom-live]')!;
     const stage = dialog.querySelector<HTMLElement>('[data-zoom-stage]')!;
     const item = dialog.querySelector<HTMLElement>('[data-zoom-item]')!;
     const PAD = 24;
@@ -61,7 +63,7 @@ import { t } from '../lib/i18n';
       item.style.height = `${ch}px`;
       item.style.padding = `${inset}px`;
       item.style.transform = `translate(${x}px, ${y}px)`;
-      level.value = `${Math.round(s * 100)}%`;
+      level.textContent = `${Math.round(s * 100)}%`;
       dialog.querySelector('[data-zoom-step="-1"]')!.setAttribute('aria-disabled', String(s <= minS));
       dialog.querySelector('[data-zoom-step="1"]')!.setAttribute('aria-disabled', String(s >= MAX));
     };
@@ -75,6 +77,12 @@ import { t } from '../lib/i18n';
       y = py - ((py - y) * n) / s;
       s = n;
       apply();
+    };
+
+    /** Zoom levels reached by a button or a key are read out; the wheel and pinch stay quiet. */
+    const step = (run: () => void) => {
+      run();
+      live.textContent = level.textContent;
     };
 
     const fit = () => {
@@ -127,6 +135,9 @@ import { t } from '../lib/i18n';
         moved = null;
       }
       item.replaceChildren();
+      pointers.clear();
+      stage.classList.remove('is-dragging');
+      live.textContent = '';
       document.documentElement.classList.remove('is-zooming');
       // The page stays inert until the dialog leaves the top layer, so focus moves back a frame later.
       requestAnimationFrame(() => opener?.focus());
@@ -149,10 +160,17 @@ import { t } from '../lib/i18n';
         if (!wrap.classList.contains('zoomable--off') && !(e.target as Element).closest('a')) open(el, name, btn);
       });
       if (isImage) {
-        // Icons and badges are too small to be worth enlarging.
-        const check = () => wrap.classList.toggle('zoomable--off', el.getBoundingClientRect().width < 48);
-        if ((el as HTMLImageElement).complete) check();
-        else el.addEventListener('load', check, { once: true });
+        // Icons and badges are too small to be worth enlarging, and a broken image has nothing to show.
+        // Width 0 means not laid out yet (a closed <details>), so the check runs again when it is.
+        const img = el as HTMLImageElement;
+        const check = () => {
+          const width = img.getBoundingClientRect().width;
+          if (width) wrap.classList.toggle('zoomable--off', width < 48 || (img.complete && !img.naturalWidth));
+        };
+        wrap.classList.add('zoomable--off');
+        new ResizeObserver(check).observe(img);
+        img.addEventListener('load', check);
+        img.addEventListener('error', () => wrap.classList.add('zoomable--off'));
       } else {
         const ready = () => wrap.classList.toggle('zoomable--off', !el.querySelector('svg'));
         ready();
@@ -161,20 +179,21 @@ import { t } from '../lib/i18n';
     }
 
     dialog.querySelector('[data-zoom-close]')!.addEventListener('click', () => dialog.close());
-    dialog.querySelector('[data-zoom-fit]')!.addEventListener('click', fit);
+    dialog.querySelector('[data-zoom-fit]')!.addEventListener('click', () => step(fit));
     for (const b of dialog.querySelectorAll<HTMLElement>('[data-zoom-step]')) {
-      b.addEventListener('click', () => zoomAt(s * STEP ** Number(b.dataset.zoomStep)));
+      b.addEventListener('click', () => step(() => zoomAt(s * STEP ** Number(b.dataset.zoomStep))));
     }
 
     dialog.addEventListener('keydown', (e) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const move = e.shiftKey ? 160 : 40;
       const keys: Record<string, () => void> = {
-        '+': () => zoomAt(s * STEP),
-        '=': () => zoomAt(s * STEP),
-        '-': () => zoomAt(s / STEP),
-        _: () => zoomAt(s / STEP),
-        '0': fit,
+        '+': () => step(() => zoomAt(s * STEP)),
+        '=': () => step(() => zoomAt(s * STEP)),
+        '-': () => step(() => zoomAt(s / STEP)),
+        '−': () => step(() => zoomAt(s / STEP)),
+        _: () => step(() => zoomAt(s / STEP)),
+        '0': () => step(fit),
         ArrowLeft: () => { x += move; apply(); },
         ArrowRight: () => { x -= move; apply(); },
         ArrowUp: () => { y += move; apply(); },
@@ -197,13 +216,15 @@ import { t } from '../lib/i18n';
       zoomAt(s * Math.exp(-dy * 0.002), ...local(e));
     }, { passive: false });
 
-    stage.addEventListener('dblclick', (e) => {
-      if (s < fitS * 1.9) zoomAt(Math.max(fitS * 2, 1), ...local(e));
+    // The first click already brought the point to the centre, so a double-click zooms there.
+    stage.addEventListener('dblclick', () => {
+      if (s < fitS * 1.9) zoomAt(Math.max(fitS * 2, 1));
       else fit();
     });
 
-    // One pointer drags the view; two pinch to zoom around the point between them.
+    // One pointer drags the view, or centres the point it clicks without dragging; two pinch to zoom around the point between them.
     const pointers = new Map<number, { x: number; y: number }>();
+    let travel = 0;
     const pinch = () => {
       const [a, b] = [...pointers.values()];
       return { d: Math.hypot(a.x - b.x, a.y - b.y), cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 };
@@ -211,6 +232,7 @@ import { t } from '../lib/i18n';
     stage.addEventListener('pointerdown', (e) => {
       if (e.button !== 0) return;
       stage.setPointerCapture(e.pointerId);
+      if (!pointers.size) travel = 0;
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       stage.classList.add('is-dragging');
     });
@@ -227,16 +249,26 @@ import { t } from '../lib/i18n';
         return;
       }
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      travel += Math.abs(e.clientX - prev.x) + Math.abs(e.clientY - prev.y);
       x += e.clientX - prev.x;
       y += e.clientY - prev.y;
       apply();
     });
     const release = (e: PointerEvent) => {
-      pointers.delete(e.pointerId);
-      if (!pointers.size) stage.classList.remove('is-dragging');
+      if (!pointers.delete(e.pointerId)) return;
+      if (pointers.size) { travel = Infinity; return; }
+      stage.classList.remove('is-dragging');
+      if (e.type === 'pointerup' && travel < 6) {
+        const r = stage.getBoundingClientRect();
+        const [px, py] = local(e);
+        x += r.width / 2 - px;
+        y += r.height / 2 - py;
+        apply();
+      }
     };
     stage.addEventListener('pointerup', release);
     stage.addEventListener('pointercancel', release);
+    stage.addEventListener('lostpointercapture', release);
 
     addEventListener('resize', () => {
       if (!dialog.open) return;
@@ -282,6 +314,7 @@ import { t } from '../lib/i18n';
   .zoom__tools { display: flex; align-items: center; gap: 8px; }
   .zoom__tools [aria-disabled='true'] { opacity: .4; cursor: default; }
   .zoom__tools [aria-disabled='true']:hover { background: transparent; color: var(--inkan-fg); }
+  .zoom__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .zoom__level { min-width: 4.5ch; text-align: center; font: 600 .75rem/1 var(--inkan-font-mono); font-variant-numeric: tabular-nums; }
   .zoom__close { margin-left: 8px; }
   .zoom__stage {
