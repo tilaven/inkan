@@ -33,7 +33,7 @@ All paths are relative to the config file.
 | `base` | `string` | `'/'` | Sub-path when the site is not at the domain root, e.g. `'/decisions'`. The `BASE_PATH` environment variable overrides it. |
 | `repo.url` | `string` | `''` | Repository that holds the content. Enables "Edit this page" and "New ADR / New RFC" buttons. |
 | `repo.branch` | `string` | `'main'` | Branch those links point at. |
-| `repo.provider` | `'github' \| 'gitlab' \| 'gitea'` | `'github'` | Decides the URL format of edit, new-file and code links. Use `'gitea'` for Gitea and Forgejo (Codeberg). Gitea cannot prefill a new record, so "New ADR" opens the folder's new-file page. |
+| `repo.provider` | `'github' \| 'gitlab' \| 'gitea'` | `'github'` | Decides the URL format of edit, new-file and code links. Use `'gitea'` for Gitea and Forgejo (Codeberg). Inkan does not prefill new records there, so "New ADR" opens the folder's new-file page. |
 
 `BASE_PATH` matters in CI: the workflow and pipeline that `init` creates set `BASE_PATH=/<repository name>` for project pages. See [Serve from a sub-path](deploy/adr/0004-serve-from-a-sub-path.md) and [GitHub and GitLab Pages](deploy/adr/0002-github-and-gitlab-pages.md).
 

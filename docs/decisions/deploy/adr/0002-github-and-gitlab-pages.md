@@ -140,7 +140,7 @@ build line. With `repo.provider: 'gitlab'` in the config, the edit and "New ADR"
 web editor.
 
 On Gitea, Forgejo or Codeberg, set `repo.provider: 'gitea'`: edit links use `_edit` and "New ADR" opens the
-folder's new-file page, since those hosts cannot prefill a record. Comments and review pins support GitHub and
+folder's new-file page, since Inkan does not prefill records there. Comments and review pins support GitHub and
 GitLab only.
 
 GitLab has no annotation format, so `check` prints its report to the job log; `--format json` gives a

@@ -16,7 +16,7 @@ export function editFileUrl(repo: Repo, file: string) {
 
 /**
  * Link that opens the host's web editor with a new record: GitHub fills name and content, GitLab the file name,
- * Gitea and Forgejo cannot prefill either and open the folder's new-file page.
+ * Gitea and Forgejo links are not prefilled and open the folder's new-file page.
  */
 export function newRecordUrl(repo: Repo, dir: string, fileName: string, content: string) {
   const folder = encodePath(dir);

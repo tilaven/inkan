@@ -103,6 +103,8 @@ describe('sources config', () => {
     expect(guessed('git@gitea.example.com:acme/x.git')).toBe('gitea');
     expect(guessed('https://forgejo.corp/acme/x')).toBe('gitea');
     expect(guessed('https://git.corp.example/acme/x')).toBe('github');
+    expect(guessed('https://github.com/acme/gitea-docs.git')).toBe('github');
+    expect(guessed('git@github.com:acme/gitlab-tools.git')).toBe('github');
     expect(validateConfig({ sources: [{ project: 'a', repo: 'x', provider: 'gitea' }] }).sources[0].provider).toBe('gitea');
     expect(validateConfig({ repo: { url: 'https://codeberg.org/a/b', provider: 'gitea' } }).repo.provider).toBe('gitea');
     expect(() => validateConfig({ repo: { url: 'x', provider: 'bitbucket' } })).toThrow('repo.provider');

@@ -28,7 +28,12 @@ export function repoWebUrl(repo) {
 }
 
 /** `gitlab` or `gitea` when the host says so (Codeberg runs Forgejo), else `github`; set `provider` on the source for other self-hosted instances. */
-export const repoProvider = (repo) => (/gitlab/i.test(repo) ? 'gitlab' : /gitea|forgejo|codeberg\.org/i.test(repo) ? 'gitea' : 'github');
+export function repoProvider(repo) {
+  const host = /^https?:\/\/([^/]+)/.exec(repoWebUrl(repo) ?? '')?.[1] ?? '';
+  if (/gitlab/i.test(host)) return 'gitlab';
+  if (/gitea|forgejo|codeberg\.org/i.test(host)) return 'gitea';
+  return 'github';
+}
 
 const canonical = (p) => {
   try {
