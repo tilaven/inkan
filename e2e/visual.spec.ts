@@ -27,3 +27,12 @@ for (const [name, url] of Object.entries(pages)) {
     await expect(page).toHaveScreenshot(`${name}.png`, { fullPage: true, animations: 'disabled' });
   });
 }
+
+test('visual zoom', async ({ page }) => {
+  await page.goto('/platform/adr/0009-move-the-event-bus-to-kafka/', { waitUntil: 'networkidle' });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page.locator('pre.mermaid svg')).toBeAttached();
+  await page.getByRole('button', { name: 'Enlarge: Diagram 1', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Diagram 1', exact: true })).toBeVisible();
+  await expect(page).toHaveScreenshot('zoom.png', { animations: 'disabled' });
+});
