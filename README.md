@@ -128,7 +128,7 @@ docker build -t inkan-example . && docker run -p 8080:80 inkan-example
 
 ## ⚙️ Installation
 
-### ⚡️ Quick start
+### ⚡️ Quick start (new repository)
 
 ```bash
 npm create @tilaven/inkan@latest my-decisions
@@ -137,7 +137,9 @@ npm create @tilaven/inkan@latest my-decisions
 You get `inkan.config.ts`, a sample project, an `AGENTS.md`, CI files for GitHub Actions and GitLab CI, and a
 `Dockerfile` with `nginx.conf`. Inkan needs Node.js 22.22 or newer.
 
-### 📦 In an existing repository
+### 📦 Or: in an existing repository
+
+Instead of `npm create`, not in addition to it. Run both commands in the repository root:
 
 ```bash
 npm install -D @tilaven/inkan
