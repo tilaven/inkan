@@ -192,7 +192,7 @@ Records kept in other repositories or folders, shown as one project each, exactl
 | `sources[].repo` | `string` | not set | Git remote to fetch: an https or ssh URL, `git@host:org/repo.git`, or a local path. Exactly one of `repo` or `dir`. |
 | `sources[].dir` | `string` | not set | A local folder, relative to the config file. Read in place, nothing is fetched. |
 | `sources[].branch` | `string` | the remote's default branch | Branch to follow. `repo` only. |
-| `sources[].provider` | `'github' \| 'gitlab' \| 'gitea'` | guessed from `repo` | Decides the edit and "New ADR" link format for that source. Guessed as `gitlab` or `gitea` when the URL contains "gitlab", "gitea", "forgejo" or `codeberg.org`; set it for other self-hosted instances. `repo` only. |
+| `sources[].provider` | `'github' \| 'gitlab' \| 'gitea'` | guessed from `repo` | Decides the edit and "New ADR" link format for that source. Guessed as `gitlab` or `gitea` when the host contains "gitlab", "gitea", "forgejo" or `codeberg.org`; set it for other self-hosted instances. `repo` only. |
 | `sources[].path` | `string` | `'docs/decisions'` | Records folder inside the source. A `<path>/<project>/<type>/` layout is accepted too. |
 
 ```ts title="inkan.config.ts"
