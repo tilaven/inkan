@@ -32,7 +32,7 @@ export const repoProvider = (repo) => (/gitlab/i.test(repo) ? 'gitlab' : 'github
 
 const canonical = (p) => {
   try {
-    return fs.realpathSync(p);
+    return fs.realpathSync.native(p);
   } catch {
     return p;
   }

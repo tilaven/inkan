@@ -22,6 +22,8 @@ function toDate(v) {
   return Number.isNaN(t) || !/\d{4}/.test(s) ? undefined : new Date(t).toISOString().slice(0, 10);
 }
 
+const lf = (text) => text.replace(/\r\n?/g, '\n');
+
 /** Lines before the first `## ` heading (the preamble) and the rest. */
 function splitPreamble(body) {
   const lines = body.split('\n');
@@ -31,7 +33,7 @@ function splitPreamble(body) {
 
 /** Detects the dialect of one file; "madr" covers log4brains and MADR 2–4. */
 export function detectFormat(text) {
-  const { body } = parseFrontMatter(text);
+  const { body } = parseFrontMatter(lf(text));
   const [preamble] = splitPreamble(body);
   if (/^##\s+Status\s*$/m.test(body) && preamble.some((l) => /^Date:\s*\S/.test(l))) return 'adr-tools';
   return 'madr';
@@ -55,7 +57,7 @@ export function detectFormat(text) {
  * @returns {Parsed | null}
  */
 export function parseSource(text, format) {
-  const { data: fm, body: raw } = parseFrontMatter(text);
+  const { data: fm, body: raw } = parseFrontMatter(lf(text));
   const lines = raw.split('\n');
   const headingAt = lines.findIndex((l) => /^#\s+\S/.test(l));
   let title = headingAt >= 0 ? lines[headingAt].replace(/^#\s+/, '').trim() : fm.title ? String(fm.title) : null;

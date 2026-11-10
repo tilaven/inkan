@@ -174,3 +174,20 @@ describe('inkan import edge cases', () => {
     await expect(importRecords({ args: ['x'], flags: { project: '../x' }, root, log: () => {}, warn: () => {} })).rejects.toThrow('Invalid project name');
   });
 });
+
+describe('Markdown with CRLF line endings', () => {
+  const crlf = (text) => text.replace(/\r?\n/g, '\r\n');
+  const files = [
+    ['log4brains', 'madr'],
+    ['madr', 'madr'],
+    ['adr-tools', 'adr-tools'],
+  ].flatMap(([dir, format]) => fs.readdirSync(path.join(fixtures, dir)).filter((f) => f.endsWith('.md')).map((f) => [path.join(fixtures, dir, f), format]));
+
+  it.each(files)('imports %s like its LF twin', (file, format) => {
+    const lf = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+    expect(detectFormat(crlf(lf))).toBe(detectFormat(lf));
+    const parsed = parseSource(crlf(lf), format);
+    expect(parsed).toEqual(parseSource(lf, format));
+    expect(JSON.stringify(parsed)).not.toContain('\\r');
+  });
+});

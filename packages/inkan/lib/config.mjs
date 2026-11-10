@@ -383,8 +383,8 @@ export async function loadConfig(root = process.cwd(), { warn = console.warn } =
 
   // Repo root (for edit links and `source` paths); falls back to the config folder outside git.
   const git = spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd: root, encoding: 'utf8' });
-  config.repoRoot = git.status === 0 ? fs.realpathSync(git.stdout.trim()) : root;
-  config.contentPath = path.relative(config.repoRoot, fs.existsSync(config.contentDir) ? fs.realpathSync(config.contentDir) : config.contentDir).split(path.sep).join('/');
+  config.repoRoot = git.status === 0 ? fs.realpathSync.native(git.stdout.trim()) : root;
+  config.contentPath = path.relative(config.repoRoot, fs.existsSync(config.contentDir) ? fs.realpathSync.native(config.contentDir) : config.contentDir).split(path.sep).join('/');
 
   // Hooks see absolute paths and must be idempotent: loadConfig runs on every dev-server restart.
   for (const plugin of config.plugins) {

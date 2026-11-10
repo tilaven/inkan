@@ -70,7 +70,7 @@ export function localSource(root) {
           supersededBy: asList(r.data.supersededBy),
           related: asList(r.data.related),
           url: cfg.url ? new URL(`${cfg.base.replace(/\/$/, '')}/${r.id}/`, cfg.url).toString() : null,
-          source: path.relative(cfg.repoRoot, fs.realpathSync(r.file)).split(path.sep).join('/'),
+          source: path.relative(cfg.repoRoot, fs.realpathSync.native(r.file)).split(path.sep).join('/'),
           review: reviewOf(schedule(r)),
           reviewers: recordReview(r.data, cfg).reviewers,
           rfcReview: rfcReviewOf(recordReview(r.data, cfg)),
@@ -168,7 +168,7 @@ export function remoteSource(url, { ttl = 30_000, timeout = 10_000, fetchImpl = 
       const records = await index();
       const names = new Map();
       try {
-        const lines = (await get('llms.txt', (r) => r.text())).split('\n');
+        const lines = (await get('llms.txt', (r) => r.text())).split(/\r?\n/);
         lines.forEach((line, i) => {
           const m = /^## (.+) \(([^()]+)\)$/.exec(line);
           if (m) names.set(m[2], { name: m[1], description: lines[i + 2]?.startsWith('- ') ? null : text(lines[i + 2]?.trim()) });

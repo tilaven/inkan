@@ -36,6 +36,35 @@ jobs:
           npx inkan build
           test -f dist/index.html && test -d dist/pagefind
 
+  # Inkan must work from a Windows checkout (CRLF line endings, backslash paths, npm .cmd shims).
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - run: git config --global core.autocrlf true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Smoke test packed package
+        run: |
+          tmp="$(cd "$RUNNER_TEMP" && pwd -W)"
+          npm pack -w packages/inkan --pack-destination "$tmp"
+          mkdir "$tmp/site" && cd "$tmp/site"
+          git init -q && npm init -y > /dev/null
+          npm install "$tmp"/tilaven-inkan-*.tgz
+          npx inkan init
+          npx inkan new rfc platform "Smoke test" --author ci
+          npx inkan check
+          npx inkan build
+          test -f dist/index.html && test -d dist/pagefind
+
   e2e:
     runs-on: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && vars.CI_RUNNER || 'ubuntu-latest' }}
     steps:

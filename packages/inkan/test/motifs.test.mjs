@@ -43,7 +43,7 @@ describe('pluginMotifs', () => {
     ]);
   });
   it('fails for a module that does not exist', () => {
-    expect(() => pluginMotifs([{ name: 'p', motifs: { stamp: '/nowhere/stamp.ts' } }])).toThrow('plugin "p" motif "stamp": module not found: /nowhere/stamp.ts');
+    expect(() => pluginMotifs([{ name: 'p', motifs: { stamp: '/nowhere/stamp.ts' } }])).toThrow(`plugin "p" motif "stamp": module not found: ${path.resolve('/nowhere/stamp.ts')}`);
   });
 });
 

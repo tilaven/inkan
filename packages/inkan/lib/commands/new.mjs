@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { loadConfig } from '../config.mjs';
@@ -10,7 +10,7 @@ const USAGE = 'Usage: inkan new <type> <project> "<title>" [--author handle]';
 
 const gitConfig = (key, cwd) => {
   try {
-    return execSync(`git config ${key}`, { encoding: 'utf8', cwd, stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    return execFileSync('git', ['config', key], { encoding: 'utf8', cwd, stdio: ['ignore', 'pipe', 'ignore'] }).trim();
   } catch {
     return '';
   }

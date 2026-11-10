@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { pathToFileURL } from 'node:url';
 import { packageDir } from '../lib/config.mjs';
 import { docId, assertNoCollisions, builtInRoutes, contentId, discoverPages, fileToRoute, pluginPages, projectFolders, recordRoutes, routesCollide } from '../lib/pages.mjs';
 import { tmpSite } from './helpers.mjs';
@@ -82,10 +83,10 @@ describe('pluginPages', () => {
   it('accepts paths and URLs and checks the file exists', () => {
     const root = tmpSite({ 'p/page.astro': '' });
     const file = path.join(root, 'p/page.astro');
-    const pages = pluginPages([{ name: 'p', pages: [{ pattern: '/a', entrypoint: file }, { pattern: '/b', entrypoint: new URL(`file://${file}`) }] }]);
+    const pages = pluginPages([{ name: 'p', pages: [{ pattern: '/a', entrypoint: file }, { pattern: '/b', entrypoint: pathToFileURL(file) }] }]);
     expect(pages.map((p) => p.entrypoint)).toEqual([file, file]);
     expect(pages[0].plugin).toBe('p');
-    expect(() => pluginPages([{ name: 'p', pages: [{ pattern: '/a', entrypoint: '/nope/x.astro' }] }])).toThrow(/plugin "p" page \/a: entrypoint not found: \/nope\/x\.astro/);
+    expect(() => pluginPages([{ name: 'p', pages: [{ pattern: '/a', entrypoint: '/nope/x.astro' }] }])).toThrow(`plugin "p" page /a: entrypoint not found: ${path.resolve('/nope/x.astro')}`);
   });
 });
 
@@ -183,5 +184,12 @@ describe('docId', () => {
     expect(docId('sre/guides/index.md')).toBe('sre/guides');
     expect(docId('sre/index.md')).toBe('sre/index');
     expect(docId('sre/adr/0001-x.md')).toBe('sre/adr/0001-x');
+  });
+});
+
+describe('contentId with CRLF front matter', () => {
+  it('reads the slug', () => {
+    const root = tmpSite({ 'a/x.md': '---\r\ntitle: X\r\nslug: /custom/x/\r\n---\r\n\r\nBody\r\n' });
+    expect(contentId('a/x.md', path.join(root, 'a/x.md'))).toBe('custom/x');
   });
 });
