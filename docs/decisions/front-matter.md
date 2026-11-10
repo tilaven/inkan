@@ -1,7 +1,7 @@
 ---
 title: "Front matter reference"
 description: "Every field of a record, a page, a _project.yml and _authors.yml, with its type and meaning."
-order: 5
+order: 6
 ---
 
 Inkan reads metadata from YAML front matter and from two small YAML files. All of it is validated when the site is built, so a wrong value fails `inkan build` with the file name and the field. Fields that are not listed here are ignored.

@@ -1,7 +1,7 @@
 ---
 title: "Configuration reference"
 description: "Every option of inkan.config with its type, default and a one-line explanation."
-order: 4
+order: 5
 ---
 
 All configuration lives in one file next to your content. Inkan looks for, in this order, `inkan.config.ts`, `inkan.config.mjs`, `inkan.config.js` and `inkan.config.json` in the folder it runs in (or in `--root`). No file at all is valid: every option has a default.
@@ -21,6 +21,25 @@ export default defineConfig({
 Every key is optional. Unknown keys are an error with a "did you mean" hint, so a typo cannot silently do nothing. Nested objects (`repo`, `theme`, `footer`, `landing`, `git`, `codeRefs`, `og`, `sidebar`, `export`, `reviews`, `reviewers`) are merged with the defaults key by key; `docTypes` and `statuses` replace the default maps as a whole. See [Validate config and content at build time](cli/adr/0004-validate-config-and-content-at-build-time.md).
 
 All paths are relative to the config file.
+
+## Most used options
+
+You rarely need more than these. The sections below list every option.
+
+| Option | What it does | More |
+| --- | --- | --- |
+| `title`, `tagline` | Site name and the line under it on the home page. | [Site](#site) |
+| `url` | Public address of the site, for `llms.txt`, RSS, the sitemap and notification links. | [Site](#site) |
+| `base` | Sub-path when the site is not at the domain root. `BASE_PATH` overrides it. | [Serve from a sub-path](deploy/adr/0004-serve-from-a-sub-path.md) |
+| `repo` | Your repository: turns on "Edit this page" and "New ADR". `provider` picks GitHub, GitLab or Gitea links. | [Site](#site) |
+| `contentDir` | Folder with your records, `decisions` by default. | [Content paths](#content-paths), [Repository layout](project-structure.md) |
+| `statuses`, `docTypes` | Your own status lifecycle and record types. | [Content model](#content-model), [Configurable status lifecycle](authoring/adr/0004-configurable-status-lifecycle.md) |
+| `sources` | Records kept in other repositories or folders, shown as projects. | [Sources](#sources), [Records from other repositories](deploy/adr/0005-records-from-other-repositories.md) |
+| `notify` | Slack, Teams or webhook messages when a decision is accepted. | [Notify chat when a decision is accepted](cli/adr/0008-notify-chat-when-a-decision-is-accepted.md) |
+| `git` | Fill missing dates and authors from Git history. | [Fill date and authors from git](authoring/adr/0009-fill-date-and-authors-from-git.md) |
+| `landing` | The home page: hero, buttons, feature cards, sections. | [Landing](#landing), [Landing page from config](site/adr/0001-landing-page-from-config.md) |
+| `theme.default`, `logo`, `customCss` | Start in light, dark or system theme, set the logo, and load your own CSS. Colours come from `--inkan-*` tokens in `customCss`. | [Look](#look), [Theme with --inkan-* CSS tokens](theming/adr/0003-theme-with-inkan-css-tokens.md) |
+| `authentication`, `protectedRoutes` | Sign-in and members-only pages. | [Access](#access), [Sign-in and protected projects](deploy/adr/0007-sign-in-and-protected-projects.md) |
 
 ## Site
 
@@ -173,7 +192,7 @@ Records kept in other repositories or folders, shown as one project each, exactl
 | `sources[].repo` | `string` | not set | Git remote to fetch: an https or ssh URL, `git@host:org/repo.git`, or a local path. Exactly one of `repo` or `dir`. |
 | `sources[].dir` | `string` | not set | A local folder, relative to the config file. Read in place, nothing is fetched. |
 | `sources[].branch` | `string` | the remote's default branch | Branch to follow. `repo` only. |
-| `sources[].provider` | `'github' \| 'gitlab' \| 'gitea'` | guessed from `repo` | Decides the edit and "New ADR" link format for that source. Guessed as `gitlab` or `gitea` when the URL contains "gitlab", "gitea", "forgejo" or `codeberg.org`; set it for other self-hosted instances. `repo` only. |
+| `sources[].provider` | `'github' \| 'gitlab' \| 'gitea'` | guessed from `repo` | Decides the edit and "New ADR" link format for that source. Guessed as `gitlab` or `gitea` when the host contains "gitlab", "gitea", "forgejo" or `codeberg.org`; set it for other self-hosted instances. `repo` only. |
 | `sources[].path` | `string` | `'docs/decisions'` | Records folder inside the source. A `<path>/<project>/<type>/` layout is accepted too. |
 
 ```ts title="inkan.config.ts"

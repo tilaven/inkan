@@ -55,7 +55,7 @@ export default defineConfig({
 | `dir` | none | Folder relative to the config folder, read as it is. Exactly one of `repo` or `dir` |
 | `path` | `docs/decisions` | Records folder inside the repository or folder. Relative, no `..` segments |
 | `branch` | remote default | Branch to follow. `repo` only |
-| `provider` | guessed | `'github'`, `'gitlab'` or `'gitea'` (Gitea and Forgejo), for edit links; guessed from `repo` (`gitlab` when the URL contains "gitlab", `gitea` when it contains "gitea", "forgejo" or `codeberg.org`). `repo` only |
+| `provider` | guessed | `'github'`, `'gitlab'` or `'gitea'` (Gitea and Forgejo), for edit links; guessed from `repo` (`gitlab` when the host contains "gitlab", `gitea` when it contains "gitea", "forgejo" or `codeberg.org`). `repo` only |
 
 `repo`, `branch` and `path` must not start with `-`. Listing the same `project` twice is an error.
 

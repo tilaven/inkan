@@ -1,7 +1,7 @@
 ---
 title: "Repository layout"
 description: "Where every file of an Inkan repository goes and which URL it gets on the site."
-order: 3
+order: 4
 ---
 
 An Inkan repository is content plus one config file. The site structure follows the folder structure, so there is nothing to register when you add a project, a type or a page.
