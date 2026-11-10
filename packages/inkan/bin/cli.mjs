@@ -107,6 +107,10 @@ async function runCommand(name, flags) {
 
 async function astro(cmd) {
   process.env.INKAN_ROOT = root;
+  // Astro stages builds below the working directory unless the output folder is there, and cannot move files between drives.
+  if (process.platform === 'win32' && path.parse(root).root.toLowerCase() !== path.parse(pkgDir).root.toLowerCase()) {
+    console.warn(`inkan: the site (${path.parse(root).root}) and the inkan package (${path.parse(pkgDir).root}) are on different drives; Astro cannot build images and assets across drives. Install inkan on the site's drive.`);
+  }
   if (cmd === 'preview' && fs.existsSync(path.join(root, 'dist-protected', '_server.json'))) {
     // A site built with `authentication` needs the sign-in server, not Astro's static preview.
     return runCommand('serve', { port: 4321, host: 'localhost', ...flags });
@@ -149,7 +153,7 @@ function init() {
         copy(src, dest);
       } else if (!fs.existsSync(dest)) {
         fs.copyFileSync(src, dest);
-        copied.push(path.relative(target, dest));
+        copied.push(path.relative(target, dest).split(path.sep).join('/'));
       }
     }
   };

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { globs } from './loaders';
 
@@ -31,7 +32,7 @@ function context(root: string) {
   return {
     entries,
     ctx: {
-      config: { root: new URL(`file://${root}/`), srcDir: new URL(`file://${root}/src/`) },
+      config: { root: pathToFileURL(`${root}${path.sep}`), srcDir: pathToFileURL(path.join(root, 'src', path.sep)) },
       collection: 'docs',
       logger: { warn: () => {}, error: () => {}, info: () => {} },
       parseData: async ({ data }: { data: unknown }) => data,

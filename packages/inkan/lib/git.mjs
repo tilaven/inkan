@@ -11,7 +11,7 @@ import { parseFrontMatter } from './records.mjs';
 /** Absolute, symlink-free path when the file exists; the plain resolved path otherwise. */
 export function realpath(file) {
   try {
-    return fs.realpathSync(file);
+    return fs.realpathSync.native(file);
   } catch {
     return path.resolve(file);
   }

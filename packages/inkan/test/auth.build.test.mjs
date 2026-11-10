@@ -243,7 +243,7 @@ describe('orphanedAssets', () => {
       'data.json': Buffer.concat([Buffer.from('{"logo":"/_astro/logo.Op56.svg","pad":"'), Buffer.from([0]), Buffer.from('"}')]),
       '_astro/logo.Op56.svg': '<svg/>',
     });
-    expect(orphanedAssets(root).map((f) => path.relative(root, f)).sort()).toEqual(['_astro/diagram.Ij90.svg', '_astro/photo.Kl12.png', '_astro/stale.Mn34.js']);
+    expect(orphanedAssets(root).map((f) => path.relative(root, f).split(path.sep).join('/')).sort()).toEqual(['_astro/diagram.Ij90.svg', '_astro/photo.Kl12.png', '_astro/stale.Mn34.js']);
     expect(orphanedAssets(tmpSite({ 'index.html': 'no assets' }))).toEqual([]);
   });
 });

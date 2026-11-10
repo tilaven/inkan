@@ -37,7 +37,7 @@ export function repoProvider(repo) {
 
 const canonical = (p) => {
   try {
-    return fs.realpathSync(p);
+    return fs.realpathSync.native(p);
   } catch {
     return p;
   }
@@ -76,7 +76,7 @@ export function resolveSources(sources, { root, contentDir, docTypes }) {
     seen.add(project);
     const local = localFolders.find((e) => projectId(e.name) === project);
     if (local) {
-      throw new Error(`inkan: sources: project "${s.project}" also exists locally (${path.relative(root, path.join(contentDir, local.name))}); remove one of them`);
+      throw new Error(`inkan: sources: project "${s.project}" also exists locally (${path.relative(root, path.join(contentDir, local.name)).split(path.sep).join('/')}); remove one of them`);
     }
     const source = {
       project,

@@ -118,9 +118,9 @@ describe('sources config', () => {
 
   it('resolves a dir source through symlinks', () => {
     const root = tmpSite({ 'real/docs/decisions/adr/0001-x.md': record('x') });
-    fs.symlinkSync(path.join(root, 'real'), path.join(root, 'link'));
+    fs.symlinkSync(path.join(root, 'real'), path.join(root, 'link'), 'junction');
     const [s] = resolveSources([{ project: 'a', dir: 'link' }], { root, contentDir: path.join(root, 'decisions'), docTypes: { adr: {} } });
-    expect(s.root).toBe(fs.realpathSync(path.join(root, 'real')));
+    expect(s.root).toBe(fs.realpathSync.native(path.join(root, 'real')));
     expect(s.contentDir).toBe(path.join(s.root, 'docs/decisions'));
   });
 });

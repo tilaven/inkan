@@ -17,7 +17,7 @@ export async function run({ root }) {
   await syncSources(config);
   for (const s of config.sources.filter((s) => s.dir)) {
     const count = markdownFiles(s.contentDir).length;
-    console.log(`sync: ${s.project} ← ${path.relative(root, s.contentDir) || '.'} (local): ${plural(count, 'record')}`);
+    console.log(`sync: ${s.project} ← ${path.relative(root, s.contentDir).split(path.sep).join('/') || '.'} (local): ${plural(count, 'record')}`);
   }
   return 0;
 }

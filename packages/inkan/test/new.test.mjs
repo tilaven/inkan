@@ -24,7 +24,7 @@ describe('inkan new', () => {
     });
     expect(runCli(['new', 'adr', 'sre', 'Use queues', '--author', 'ann'], root).status).toBe(0);
     const [file] = fs.readdirSync(path.join(root, 'decisions/sre/adr'));
-    const text = fs.readFileSync(path.join(root, 'decisions/sre/adr', file), 'utf8');
+    const text = fs.readFileSync(path.join(root, 'decisions/sre/adr', file), 'utf8').replace(/\r\n/g, '\n');
     expect(text).toMatch(/^---\ntitle: Use queues\ndescription: .*\nstatus: proposed\ndate: [\d-]+\nauthors: \[ann\]\ndeciders: \[\]\ntags: \[\]\nrisk: low\nareas: \[infra\]\npci: false\n---\n/);
   });
 

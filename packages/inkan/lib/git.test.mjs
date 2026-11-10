@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 import { tmpSite } from '../test/helpers.mjs';
 import { gitHistory, loadAuthors, matchAuthor, statusHistory } from './git.mjs';
@@ -27,7 +28,7 @@ const ann = { name: 'Ann Alpha', email: 'ann@acme.test', date: 1_700_000_000 };
 const bob = { name: 'Bob Beta', email: 'bob@acme.test', date: 1_700_500_000 };
 
 function repo() {
-  const root = tmpSite({ 'decisions/sre/adr/0001-first.md': '---\ntitle: First\n---\n', 'decisions/sre/adr/0002 second "q".md': '---\ntitle: Second\n---\n', 'pages/handbook.md': '# Hi\n' });
+  const root = tmpSite({ 'decisions/sre/adr/0001-first.md': '---\ntitle: First\n---\n', 'decisions/sre/adr/0002 second ü.md': '---\ntitle: Second\n---\n', 'pages/handbook.md': '# Hi\n' });
   git(root, ['init', '-q']);
   commit(root, 'first', ann);
   fs.appendFileSync(path.join(root, 'decisions/sre/adr/0001-first.md'), 'Body\n');
@@ -57,7 +58,7 @@ describe('statusHistory', () => {
     commit(root, 'give b a status', bob);
 
     const history = statusHistory([path.join(root, 'decisions')]);
-    const real = fs.realpathSync(root);
+    const real = fs.realpathSync.native(root);
     const a = history?.get(path.join(real, 'decisions/sre/adr/0001-a.md'));
     expect(a).toEqual([
       { status: 'proposed', date: new Date(ann.date * 1000), author: { name: ann.name, email: ann.email }, commit: first, path: 'decisions/sre/adr/0001-a.md', root: real },
@@ -83,7 +84,7 @@ describe('statusHistory', () => {
     commit(root, 'implement', { ...ann, date: ann.date + 200 });
     git(root, ['merge', '-q', '-X', 'ours', '--no-edit', 'side'], { GIT_AUTHOR_NAME: ann.name, GIT_AUTHOR_EMAIL: ann.email, GIT_COMMITTER_NAME: ann.name, GIT_COMMITTER_EMAIL: ann.email });
     const history = statusHistory([path.join(root, 'decisions')]);
-    expect(history?.get(path.join(fs.realpathSync(root), 'decisions/x/adr/0001-a.md'))?.map((c) => c.status)).toEqual(['proposed', 'accepted', 'implemented']);
+    expect(history?.get(path.join(fs.realpathSync.native(root), 'decisions/x/adr/0001-a.md'))?.map((c) => c.status)).toEqual(['proposed', 'accepted', 'implemented']);
   });
 
   it('ignores a status line in the body and files that never had a status', () => {
@@ -106,7 +107,7 @@ describe('statusHistory', () => {
     commit(root, 'restore', bob);
     fs.writeFileSync(file, adr());
     commit(root, 'drop status', { ...bob, date: bob.date + 10 });
-    const changes = statusHistory([path.join(root, 'decisions')])?.get(path.join(fs.realpathSync(root), 'decisions/x/adr/0001-a.md'));
+    const changes = statusHistory([path.join(root, 'decisions')])?.get(path.join(fs.realpathSync.native(root), 'decisions/x/adr/0001-a.md'));
     expect(changes?.map((c) => c.status)).toEqual(['accepted', null]);
     expect(changes?.[0].author.name).toBe(ann.name);
   });
@@ -119,16 +120,16 @@ describe('statusHistory', () => {
     git(b, ['init', '-q']);
     commit(b, 'add', bob);
     const shallow = path.join(tmpSite(), 'clone');
-    git(a, ['clone', '-q', '--depth', '1', `file://${a}`, shallow]);
+    git(a, ['clone', '-q', '--depth', '1', pathToFileURL(a).href, shallow]);
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
       const dirs = [path.join(a, 'decisions'), path.join(a, 'more'), path.join(b, 'decisions'), path.join(shallow, 'decisions')];
       const history = statusHistory(dirs);
       const keys = [...(history?.keys() ?? [])];
-      expect(keys).toContain(path.join(fs.realpathSync(a), 'decisions/sre/adr/0001-a.md'));
-      expect(keys).toContain(path.join(fs.realpathSync(a), 'more/0001-m.md'));
-      expect(keys).toContain(path.join(fs.realpathSync(b), 'decisions/sre/adr/0001-b.md'));
-      expect(keys.some((k) => k.startsWith(fs.realpathSync(shallow)))).toBe(false);
+      expect(keys).toContain(path.join(fs.realpathSync.native(a), 'decisions/sre/adr/0001-a.md'));
+      expect(keys).toContain(path.join(fs.realpathSync.native(a), 'more/0001-m.md'));
+      expect(keys).toContain(path.join(fs.realpathSync.native(b), 'decisions/sre/adr/0001-b.md'));
+      expect(keys.some((k) => k.startsWith(fs.realpathSync.native(shallow)))).toBe(false);
       statusHistory(dirs);
       expect(warn).toHaveBeenCalledTimes(1);
     } finally {
@@ -145,7 +146,7 @@ describe('gitHistory', () => {
   it('gives first commit (author date and author) and last change of every file in one pass', () => {
     const root = repo();
     const history = gitHistory([path.join(root, 'decisions'), path.join(root, 'pages'), path.join(root, 'missing')]);
-    const real = fs.realpathSync(root);
+    const real = fs.realpathSync.native(root);
     const at = (file) => {
       const h = history?.get(path.join(real, file));
       if (!h) throw new Error(`no history for ${file}`);
@@ -155,7 +156,7 @@ describe('gitHistory', () => {
     expect(first.created.getTime()).toBe(ann.date * 1000);
     expect(first.author).toEqual({ name: ann.name, email: ann.email });
     expect(first.updated.getTime()).toBe((bob.date + 1000) * 1000);
-    const quoted = at('decisions/sre/adr/0002 second "q".md');
+    const quoted = at('decisions/sre/adr/0002 second ü.md');
     expect(quoted.author.name).toBe(ann.name);
     expect(quoted.updated.getTime()).toBe((ann.date + 1000) * 1000);
     const third = at('decisions/sre/adr/0003-third.md');
@@ -168,14 +169,14 @@ describe('gitHistory', () => {
     const a = repo();
     const b = repo();
     const shallow = path.join(tmpSite(), 'clone');
-    git(a, ['clone', '-q', '--depth', '1', `file://${a}`, shallow]);
+    git(a, ['clone', '-q', '--depth', '1', pathToFileURL(a).href, shallow]);
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
       const dirs = [path.join(a, 'decisions'), path.join(b, 'decisions'), path.join(shallow, 'decisions')];
       const history = gitHistory(dirs);
-      expect(history?.has(path.join(fs.realpathSync(a), 'decisions/sre/adr/0001-first.md'))).toBe(true);
-      expect(history?.has(path.join(fs.realpathSync(b), 'decisions/sre/adr/0001-first.md'))).toBe(true);
-      expect([...(history?.keys() ?? [])].some((f) => f.startsWith(fs.realpathSync(shallow)))).toBe(false);
+      expect(history?.has(path.join(fs.realpathSync.native(a), 'decisions/sre/adr/0001-first.md'))).toBe(true);
+      expect(history?.has(path.join(fs.realpathSync.native(b), 'decisions/sre/adr/0001-first.md'))).toBe(true);
+      expect([...(history?.keys() ?? [])].some((f) => f.startsWith(fs.realpathSync.native(shallow)))).toBe(false);
       gitHistory(dirs);
       expect(warn).toHaveBeenCalledTimes(1);
       expect(warn.mock.calls[0][0]).toContain('shallow clone');

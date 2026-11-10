@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { run as rfcReview } from '../lib/commands/rfc-review.mjs';
 import { parseFrontMatter } from '../lib/records.mjs';
@@ -85,7 +86,7 @@ describe('inkan rfc-review', () => {
   it('is wired into the CLI', async () => {
     const { root } = site({ 'inkan.config.mjs': configModule('{ reviewers: { approvals: 1 } }') });
     const { spawnSync } = await import('node:child_process');
-    const cli = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../bin/cli.mjs');
+    const cli = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../bin/cli.mjs');
     const r = spawnSync(process.execPath, [cli, 'rfc-review', 'sre/rfc/1', 'alice', 'approve', '--root', root], { encoding: 'utf8' });
     expect(r.stdout.trim()).toBe('sre/rfc/0001-queues: alice approved (1 of 1 approvals)');
   });

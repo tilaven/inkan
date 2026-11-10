@@ -73,10 +73,15 @@ config.pages = userPages.map(({ route, kind }) => ({ route, kind }));
 
 /** Overridable components and empty slots, see ComponentName in lib/index.d.ts. */
 const COMPONENT_PREFIX = 'virtual:inkan/components/';
-const componentPath = (/** @type {string} */ name) => resolveComponent(name, config.components, appDir);
+/** Vite ids are slash-separated; Astro keys a component's hoisted scripts by that spelling, so a backslash id never finds them. */
+const slash = (/** @type {string} */ file) => file.split(path.sep).join('/');
+const componentPath = (/** @type {string} */ name) => slash(resolveComponent(name, config.components, appDir));
 
 /** Providers whose index lives elsewhere; the build writes `search.json` to feed it. */
 const EXTERNAL_SEARCH = new Set(['algolia', 'meilisearch', 'typesense', 'custom']);
+
+/** Import specifier for a file: Vite resolves `C:/dir/file` on Windows without trouble, backslashes it may not. */
+const spec = (/** @type {string} */ file) => JSON.stringify(slash(file));
 
 /** Virtual modules that hand the user's config, assets and CSS to the app. */
 const modules = {
@@ -84,28 +89,28 @@ const modules = {
   'virtual:inkan/config': () => `export default ${JSON.stringify({ ...config, plugins: undefined, notify: undefined })};`,
   'virtual:inkan/assets': () =>
     [
-      config.logo ? `export { default as logo } from ${JSON.stringify(config.logo + '?url')};` : 'export const logo = null;',
-      config.favicon ? `export { default as favicon } from ${JSON.stringify(config.favicon + '?url')};` : 'export const favicon = null;',
-      config.landing.image ? `export { default as landingImage } from ${JSON.stringify(config.landing.image.src + '?url')};` : 'export const landingImage = null;',
-      config.landing.image?.dark ? `export { default as landingImageDark } from ${JSON.stringify(config.landing.image.dark + '?url')};` : 'export const landingImageDark = null;',
+      config.logo ? `export { default as logo } from ${spec(config.logo + '?url')};` : 'export const logo = null;',
+      config.favicon ? `export { default as favicon } from ${spec(config.favicon + '?url')};` : 'export const favicon = null;',
+      config.landing.image ? `export { default as landingImage } from ${spec(config.landing.image.src + '?url')};` : 'export const landingImage = null;',
+      config.landing.image?.dark ? `export { default as landingImageDark } from ${spec(config.landing.image.dark + '?url')};` : 'export const landingImageDark = null;',
     ].join('\n'),
   'virtual:inkan/search': () => {
     const { enabled, type, maxResults, module, options, ...rest } = config.search;
     const file = type === 'custom' ? module : path.join(appDir, 'src/search', `${type}.ts`);
-    return `export { default } from ${JSON.stringify(file)};\nexport const options = ${JSON.stringify(type === 'custom' ? (options ?? {}) : rest)};`;
+    return `export { default } from ${spec(file)};\nexport const options = ${JSON.stringify(type === 'custom' ? (options ?? {}) : rest)};`;
   },
   'virtual:inkan/comments': () => {
     const { enabled, provider, types, statuses, component, options, ...rest } = config.comments;
     if (!provider) return 'export default null;\nexport const options = {};';
     const file = provider === 'custom' ? component : path.join(appDir, 'src/comments', `${provider}.astro`);
-    return `export { default } from ${JSON.stringify(file)};\nexport const options = ${JSON.stringify(provider === 'custom' ? options : { provider, ...rest })};`;
+    return `export { default } from ${spec(file)};\nexport const options = ${JSON.stringify(provider === 'custom' ? options : { provider, ...rest })};`;
   },
-  'virtual:inkan/user-css': () => config.customCss.map((f) => `import ${JSON.stringify(f)};`).join('\n'),
+  'virtual:inkan/user-css': () => config.customCss.map((f) => `import ${spec(f)};`).join('\n'),
   'virtual:inkan/mdx-components': () =>
-    config.mdxComponents ? `export { default } from ${JSON.stringify(config.mdxComponents)};` : 'export default {};',
+    config.mdxComponents ? `export { default } from ${spec(config.mdxComponents)};` : 'export default {};',
   'virtual:inkan/motifs': () =>
     [
-      ...pluginMotifs.map((m, i) => `import m${i} from ${JSON.stringify(m.entrypoint)};`),
+      ...pluginMotifs.map((m, i) => `import m${i} from ${spec(m.entrypoint)};`),
       `export default { ${pluginMotifs.map((m, i) => `${JSON.stringify(m.name)}: m${i}`).join(', ')} };`,
     ].join('\n'),
 };
@@ -142,7 +147,7 @@ const inkan = {
     'astro:server:setup': ({ server }) => {
       server.watcher.add(config.pagesDir);
       const restart = (/** @type {string} */ file) => {
-        if (file.startsWith(config.pagesDir + path.sep)) server.watcher.emit('change', config.pagesDir);
+        if (path.resolve(file).startsWith(config.pagesDir + path.sep)) server.watcher.emit('change', config.pagesDir);
       };
       server.watcher.on('add', restart).on('unlink', restart);
     },

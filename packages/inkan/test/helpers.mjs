@@ -5,7 +5,7 @@ import path from 'node:path';
 
 /** Temporary site folder with the given files (`{ 'inkan.config.mjs': '...' }`). */
 export function tmpSite(files = {}) {
-  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'inkan-test-')));
+  const root = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'inkan-test-')));
   for (const [file, content] of Object.entries(files)) {
     fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
     fs.writeFileSync(path.join(root, file), content);
@@ -23,7 +23,7 @@ export const git = (args, cwd) => {
 
 /** A bare "service repo" with records under `docs/decisions`; returns helpers to add commits to it. */
 export function bareRepo(files, { branch = 'main' } = {}) {
-  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'inkan-src-')));
+  const dir = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'inkan-src-')));
   const work = path.join(dir, 'work');
   const remote = path.join(dir, 'remote.git');
   fs.mkdirSync(work);

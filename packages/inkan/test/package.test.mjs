@@ -10,7 +10,7 @@ const pkg = readJson(path.join(pkgDir, 'package.json'));
 
 /** Paths npm would publish, relative to the package folder. */
 function packed(dir) {
-  const out = execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: dir, encoding: 'utf8' });
+  const out = execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: dir, encoding: 'utf8', shell: process.platform === 'win32' });
   return new Set(JSON.parse(out)[0].files.map((f) => f.path));
 }
 
@@ -35,7 +35,7 @@ describe('package', () => {
   it('ships the whole starter, dotfiles included', () => {
     const starter = (dir) =>
       fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? starter(path.join(dir, e.name)) : [path.join(dir, e.name)]));
-    const expected = starter(path.join(pkgDir, 'starter')).map((f) => path.relative(pkgDir, f));
+    const expected = starter(path.join(pkgDir, 'starter')).map((f) => path.relative(pkgDir, f).split(path.sep).join('/'));
     expect(expected.filter((f) => !files.has(f))).toEqual([]);
   });
 
