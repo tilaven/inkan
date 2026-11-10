@@ -1,0 +1,314 @@
+---
+/** Full-screen viewer for images and Mermaid diagrams in Markdown: zoom with buttons, wheel, pinch or keys, pan by dragging. */
+import Icon from './Icon.astro';
+import { t } from '../lib/i18n';
+---
+
+<template data-zoom-trigger>
+  <button class="zoomable__btn" type="button"><Icon name="maximize" /></button>
+</template>
+<dialog class="zoom" aria-labelledby="zoom-title" data-zoom data-pagefind-ignore>
+  <div class="zoom__bar">
+    <h2 class="zoom__title" id="zoom-title" data-zoom-title></h2>
+    <div class="zoom__tools">
+      <button class="icon-btn" type="button" aria-label={t('zoom.out')} data-zoom-step="-1"><Icon name="zoom-out" /></button>
+      <output class="zoom__level" data-zoom-level>100%</output>
+      <button class="icon-btn" type="button" aria-label={t('zoom.in')} data-zoom-step="1"><Icon name="zoom-in" /></button>
+      <button class="icon-btn" type="button" aria-label={t('zoom.fit')} data-zoom-fit><Icon name="fit" /></button>
+      <button class="icon-btn zoom__close" type="button" aria-label={t('zoom.close')} data-zoom-close><Icon name="x" /></button>
+    </div>
+  </div>
+  <div class="zoom__stage" role="region" tabindex="0" aria-label={t('zoom.view')} aria-describedby="zoom-hint" data-zoom-stage>
+    <div class="zoom__item" data-zoom-item></div>
+  </div>
+  <p class="zoom__hint" id="zoom-hint">{t('zoom.hint')}</p>
+</dialog>
+
+<script>
+  import { t } from '../lib/i18n';
+
+  const dialog = document.querySelector<HTMLDialogElement>('dialog[data-zoom]');
+  const trigger = document.querySelector<HTMLTemplateElement>('template[data-zoom-trigger]');
+  const media = document.querySelectorAll<HTMLElement>('.prose img, .prose pre.mermaid');
+
+  if (dialog && trigger && media.length) {
+    const title = dialog.querySelector<HTMLElement>('[data-zoom-title]')!;
+    const level = dialog.querySelector<HTMLOutputElement>('[data-zoom-level]')!;
+    const stage = dialog.querySelector<HTMLElement>('[data-zoom-stage]')!;
+    const item = dialog.querySelector<HTMLElement>('[data-zoom-item]')!;
+    const PAD = 24;
+    const STEP = 1.5;
+    const MAX = 8;
+
+    /** Natural size of what is shown, current scale, the scale that fits, and the top-left corner in the stage. */
+    let w = 1, h = 1, s = 1, fitS = 1, minS = 1, x = 0, y = 0;
+    let opener: HTMLElement | null = null;
+    let vector = false;
+    /** A diagram is moved into the viewer, not copied, so its ids and scoped styles keep working; it goes back on close. */
+    let moved: { svg: SVGSVGElement; home: HTMLElement } | null = null;
+
+    const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+    const place = (pos: number, size: number, room: number) => (size + 2 * PAD <= room ? (room - size) / 2 : clamp(pos, room - PAD - size, PAD));
+
+    const apply = () => {
+      const r = stage.getBoundingClientRect();
+      const cw = w * s, ch = h * s;
+      // Diagrams get the same paper margin they have on the page.
+      const inset = moved ? 16 : 0;
+      x = place(x, cw + 2 * inset, r.width);
+      y = place(y, ch + 2 * inset, r.height);
+      item.style.width = `${cw}px`;
+      item.style.height = `${ch}px`;
+      item.style.padding = `${inset}px`;
+      item.style.transform = `translate(${x}px, ${y}px)`;
+      level.value = `${Math.round(s * 100)}%`;
+      dialog.querySelector('[data-zoom-step="-1"]')!.setAttribute('aria-disabled', String(s <= minS));
+      dialog.querySelector('[data-zoom-step="1"]')!.setAttribute('aria-disabled', String(s >= MAX));
+    };
+
+    /** Zoom to `next`, keeping the point under (cx, cy) in the stage where it is. */
+    const zoomAt = (next: number, cx?: number, cy?: number) => {
+      const r = stage.getBoundingClientRect();
+      const px = cx ?? r.width / 2, py = cy ?? r.height / 2;
+      const n = clamp(next, minS, MAX);
+      x = px - ((px - x) * n) / s;
+      y = py - ((py - y) * n) / s;
+      s = n;
+      apply();
+    };
+
+    const fit = () => {
+      const r = stage.getBoundingClientRect();
+      // Vector pictures may grow a little to fill the screen; photos never grow past their own pixels.
+      const inset = moved ? 32 : 0;
+      fitS = Math.min((r.width - 2 * PAD - inset) / w, (r.height - 2 * PAD - inset) / h, vector ? 2 : 1);
+      minS = Math.min(fitS, 1) / 2;
+      s = fitS;
+      x = y = -Infinity;
+      apply();
+    };
+
+    const open = (el: HTMLElement, name: string, from: HTMLElement) => {
+      item.replaceChildren();
+      if (el instanceof HTMLImageElement) {
+        const img = new Image();
+        img.src = el.currentSrc || el.src;
+        img.alt = el.alt;
+        vector = /\.svg($|[?#])/i.test(img.src);
+        const r = el.getBoundingClientRect();
+        w = el.naturalWidth || r.width;
+        h = el.naturalHeight || r.height;
+        item.append(img);
+      } else {
+        const svg = el.querySelector('svg');
+        if (!svg) return;
+        const box = svg.viewBox.baseVal;
+        const r = svg.getBoundingClientRect();
+        w = box?.width || r.width;
+        h = box?.height || r.height;
+        el.style.minHeight = `${el.offsetHeight}px`;
+        moved = { svg, home: el };
+        vector = true;
+        item.append(svg);
+      }
+      title.textContent = name;
+      opener = from;
+      document.documentElement.classList.add('is-zooming');
+      dialog.showModal();
+      fit();
+      stage.focus();
+    };
+
+    dialog.addEventListener('close', () => {
+      if (moved) {
+        // Mermaid redraws diagrams when the theme changes; keep the new drawing if there is one.
+        if (!moved.home.querySelector('svg')) moved.home.append(moved.svg);
+        moved.home.style.minHeight = '';
+        moved = null;
+      }
+      item.replaceChildren();
+      document.documentElement.classList.remove('is-zooming');
+      // The page stays inert until the dialog leaves the top layer, so focus moves back a frame later.
+      requestAnimationFrame(() => opener?.focus());
+    });
+
+    let diagrams = 0;
+    for (const el of media) {
+      if (el.closest('a, .zoomable')) continue;
+      const isImage = el instanceof HTMLImageElement;
+      const name = isImage ? (el as HTMLImageElement).alt.trim() || t('zoom.image') : t('zoom.diagram', { n: ++diagrams });
+      const wrap = document.createElement(isImage ? 'span' : 'div');
+      wrap.className = `zoomable zoomable--${isImage ? 'image' : 'diagram'}`;
+      el.replaceWith(wrap);
+      const btn = (trigger.content.firstElementChild as HTMLButtonElement).cloneNode(true) as HTMLButtonElement;
+      btn.setAttribute('aria-label', t('zoom.open', { name }));
+      btn.setAttribute('aria-haspopup', 'dialog');
+      wrap.append(el, btn);
+      btn.addEventListener('click', () => open(el, name, btn));
+      el.addEventListener('click', (e) => {
+        if (!wrap.classList.contains('zoomable--off') && !(e.target as Element).closest('a')) open(el, name, btn);
+      });
+      if (isImage) {
+        // Icons and badges are too small to be worth enlarging.
+        const check = () => wrap.classList.toggle('zoomable--off', el.getBoundingClientRect().width < 48);
+        if ((el as HTMLImageElement).complete) check();
+        else el.addEventListener('load', check, { once: true });
+      } else {
+        const ready = () => wrap.classList.toggle('zoomable--off', !el.querySelector('svg'));
+        ready();
+        new MutationObserver(ready).observe(el, { childList: true });
+      }
+    }
+
+    dialog.querySelector('[data-zoom-close]')!.addEventListener('click', () => dialog.close());
+    dialog.querySelector('[data-zoom-fit]')!.addEventListener('click', fit);
+    for (const b of dialog.querySelectorAll<HTMLElement>('[data-zoom-step]')) {
+      b.addEventListener('click', () => zoomAt(s * STEP ** Number(b.dataset.zoomStep)));
+    }
+
+    dialog.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const move = e.shiftKey ? 160 : 40;
+      const keys: Record<string, () => void> = {
+        '+': () => zoomAt(s * STEP),
+        '=': () => zoomAt(s * STEP),
+        '-': () => zoomAt(s / STEP),
+        _: () => zoomAt(s / STEP),
+        '0': fit,
+        ArrowLeft: () => { x += move; apply(); },
+        ArrowRight: () => { x -= move; apply(); },
+        ArrowUp: () => { y += move; apply(); },
+        ArrowDown: () => { y -= move; apply(); },
+      };
+      const run = keys[e.key];
+      if (!run) return;
+      e.preventDefault();
+      run();
+    });
+
+    const local = (e: { clientX: number; clientY: number }) => {
+      const r = stage.getBoundingClientRect();
+      return [e.clientX - r.left, e.clientY - r.top] as const;
+    };
+
+    stage.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+      zoomAt(s * Math.exp(-dy * 0.002), ...local(e));
+    }, { passive: false });
+
+    stage.addEventListener('dblclick', (e) => {
+      if (s < fitS * 1.9) zoomAt(Math.max(fitS * 2, 1), ...local(e));
+      else fit();
+    });
+
+    // One pointer drags the view; two pinch to zoom around the point between them.
+    const pointers = new Map<number, { x: number; y: number }>();
+    const pinch = () => {
+      const [a, b] = [...pointers.values()];
+      return { d: Math.hypot(a.x - b.x, a.y - b.y), cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 };
+    };
+    stage.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      stage.setPointerCapture(e.pointerId);
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      stage.classList.add('is-dragging');
+    });
+    stage.addEventListener('pointermove', (e) => {
+      const prev = pointers.get(e.pointerId);
+      if (!prev) return;
+      if (pointers.size === 2) {
+        const before = pinch();
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        const after = pinch();
+        x += after.cx - before.cx;
+        y += after.cy - before.cy;
+        zoomAt((s * after.d) / (before.d || 1), ...local({ clientX: after.cx, clientY: after.cy }));
+        return;
+      }
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      x += e.clientX - prev.x;
+      y += e.clientY - prev.y;
+      apply();
+    });
+    const release = (e: PointerEvent) => {
+      pointers.delete(e.pointerId);
+      if (!pointers.size) stage.classList.remove('is-dragging');
+    };
+    stage.addEventListener('pointerup', release);
+    stage.addEventListener('pointercancel', release);
+
+    addEventListener('resize', () => {
+      if (!dialog.open) return;
+      if (s === fitS) fit();
+      else apply();
+    });
+  }
+</script>
+
+<style is:global>
+  .zoomable { position: relative; display: block; }
+  .zoomable--image { width: fit-content; max-width: 100%; margin: 26px 0; }
+  .zoomable--diagram { margin: 30px 0; }
+  .prose .zoomable > img, .prose .zoomable > pre.mermaid { margin: 0; }
+  .zoomable:not(.zoomable--off) > :is(img, pre) { cursor: zoom-in; }
+  .zoomable__btn {
+    position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 34px; height: 34px; padding: 0;
+    border: 1.5px solid var(--inkan-rule-strong); border-radius: 50%; background: var(--inkan-bg); color: var(--inkan-fg);
+    box-shadow: 2px 2px 0 0 color-mix(in srgb, var(--inkan-fg) 22%, transparent); cursor: pointer;
+    opacity: 0; transition: opacity .15s var(--inkan-ease-snap);
+  }
+  .zoomable__btn svg { width: 16px; height: 16px; }
+  .zoomable:hover .zoomable__btn, .zoomable__btn:focus-visible { opacity: 1; }
+  .zoomable__btn:hover { background: var(--inkan-fg); color: var(--inkan-bg); }
+  .zoomable--off .zoomable__btn { display: none; }
+  @media (hover: none) { .zoomable__btn { opacity: 1; } }
+
+  html.is-zooming { overflow: hidden; }
+  .zoom {
+    position: fixed; inset: 0; width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0;
+    border: 0; background: var(--inkan-bg); color: var(--inkan-fg);
+  }
+  .zoom[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .zoom::backdrop { background: var(--inkan-bg); }
+  .zoom__bar {
+    display: flex; align-items: center; gap: 16px; padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top));
+    border-bottom: 1.5px solid var(--inkan-rule-strong);
+  }
+  .zoom__title {
+    flex: 1; min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font: 700 .75rem/1.3 var(--inkan-font-mono); letter-spacing: .08em; text-transform: uppercase;
+  }
+  .zoom__tools { display: flex; align-items: center; gap: 8px; }
+  .zoom__tools [aria-disabled='true'] { opacity: .4; cursor: default; }
+  .zoom__tools [aria-disabled='true']:hover { background: transparent; color: var(--inkan-fg); }
+  .zoom__level { min-width: 4.5ch; text-align: center; font: 600 .75rem/1 var(--inkan-font-mono); font-variant-numeric: tabular-nums; }
+  .zoom__close { margin-left: 8px; }
+  .zoom__stage {
+    position: relative; overflow: hidden; touch-action: none; cursor: grab; user-select: none;
+    background-color: var(--inkan-bg-2);
+    background-image: radial-gradient(color-mix(in srgb, var(--inkan-fg) 14%, transparent) 1px, transparent 1.4px);
+    background-size: 18px 18px;
+  }
+  .zoom__stage.is-dragging { cursor: grabbing; }
+  .zoom__stage:focus-visible { outline: none; }
+  .zoom__stage:focus-visible::after { content: ''; position: absolute; inset: 0; z-index: 1; box-shadow: inset 0 0 0 3px var(--inkan-focus); pointer-events: none; }
+  .zoom__item {
+    position: absolute; top: 0; left: 0; box-sizing: content-box; transform-origin: 0 0;
+    background: var(--inkan-surface); border: 1.5px solid var(--inkan-rule-strong); border-radius: 4px;
+    box-shadow: 10px 12px 0 0 color-mix(in srgb, var(--inkan-fg) 22%, transparent);
+  }
+  .zoom__item > img, .zoom__item > svg { display: block; width: 100%; height: 100%; max-width: none !important; pointer-events: none; }
+  .zoom__hint {
+    margin: 0; padding: 10px 16px; padding-bottom: max(10px, env(safe-area-inset-bottom)); border-top: 1.5px dashed var(--inkan-rule);
+    font: 500 .65625rem/1.4 var(--inkan-font-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--inkan-fg-3);
+  }
+  @media (max-width: 720px) {
+    .zoom__bar { gap: 8px; padding-inline: 12px; }
+    .zoom__tools { gap: 4px; }
+    .zoom__close { margin-left: 4px; }
+  }
+  @media print {
+    .zoomable__btn, .zoom { display: none !important; }
+  }
+</style>

@@ -156,7 +156,7 @@ flowchart LR
   Kafka --> Analytics["Analytics<br/>consumer"]
 ```
 
-Diagrams are rendered in the browser and follow the site's light and dark theme. The Mermaid library is loaded only on pages that contain a diagram. Every diagram type Mermaid supports works: `sequenceDiagram`, `stateDiagram-v2`, `erDiagram`, `gantt` and so on.
+Diagrams are rendered in the browser and follow the site's light and dark theme. The Mermaid library is loaded only on pages that contain a diagram. Every diagram type Mermaid supports works: `sequenceDiagram`, `stateDiagram-v2`, `erDiagram`, `gantt` and so on. Click a diagram to open it full screen with zoom and pan, see [Enlarge images and diagrams](../../site/adr/0018-enlarge-images-and-diagrams.md).
 
 ### Math
 
@@ -219,7 +219,7 @@ Code blocks without a language are rendered as plain text. ` ```text ` is the ex
 
 ![Anatomy of a record: front matter on top, Markdown body below](./_images/record-anatomy.svg)
 
-Relative image paths are resolved from the Markdown file, optimised at build time and copied to `dist/`. A folder whose name starts with `_` is a good place for them: it is never treated as pages. Absolute URLs (`https://...`) are used as written.
+Relative image paths are resolved from the Markdown file, optimised at build time and copied to `dist/`. A folder whose name starts with `_` is a good place for them: it is never treated as pages. Absolute URLs (`https://...`) are used as written. Click an image to enlarge it.
 
 ### Also supported
 

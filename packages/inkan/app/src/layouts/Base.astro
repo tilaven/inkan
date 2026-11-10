@@ -16,6 +16,7 @@ import Sidebar from 'virtual:inkan/components/Sidebar';
 import HeadEnd from 'virtual:inkan/components/HeadEnd';
 import HeadTags from '../components/HeadTags.astro';
 import Icon from '../components/Icon.astro';
+import Zoom from '../components/Zoom.astro';
 import { site } from '../lib/config';
 import { t } from '../lib/i18n';
 import { url } from '../lib/decisions';
@@ -122,6 +123,7 @@ const theme = site.theme.default;
       </div>
     </div>
     <p class="toast" role="status" aria-live="polite" data-toast hidden></p>
+    <Zoom />
     <script>
       const side = document.getElementById('side');
       const main = document.querySelector<HTMLElement>('.main');

@@ -348,4 +348,14 @@ export default {
   'comments.pinCount': { one: '{count} review comment', other: '{count} review comments' },
   'comments.pinLine': 'Comment on line {line} in the review',
   'comments.pinFile': 'Comment on this file in the review (line {line})',
+
+  'zoom.image': 'Image',
+  'zoom.diagram': 'Diagram {n}',
+  'zoom.open': 'Enlarge: {name}',
+  'zoom.view': 'Zoomable view',
+  'zoom.in': 'Zoom in',
+  'zoom.out': 'Zoom out',
+  'zoom.fit': 'Fit to screen',
+  'zoom.close': 'Close',
+  'zoom.hint': 'Drag or use the arrow keys to move. Scroll, pinch or press + and − to zoom, 0 to fit.',
 };
