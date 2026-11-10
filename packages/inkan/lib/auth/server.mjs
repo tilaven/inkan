@@ -94,8 +94,8 @@ function cookie(name, value, { base, secure, maxAge }) {
 }
 
 /** Resolves a request path to a file inside `dir`; `null` when it would leave `dir`, hit a dotfile or the manifest. */
-function resolveIn(dir, rel) {
-  if (path.sep === '\\' && rel.includes('\\')) return null;
+export function resolveIn(dir, rel, windows = path.sep === '\\') {
+  if (windows && /[\\:]/.test(rel)) return null;
   if (rel.split('/').some((seg) => seg.startsWith('.') || seg === '_server.json')) return null;
   const file = path.resolve(dir, `.${rel}`);
   return file === dir || file.startsWith(dir + path.sep) ? file : null;

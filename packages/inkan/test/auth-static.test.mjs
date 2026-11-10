@@ -1,6 +1,7 @@
+import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { resolveAuthentication } from '../lib/auth/config.mjs';
-import { createHandler, sameOrigin } from '../lib/auth/server.mjs';
+import { createHandler, resolveIn, sameOrigin } from '../lib/auth/server.mjs';
 import { seal } from '../lib/auth/session.mjs';
 import { buildSite, SECRET, startServer } from './auth-helpers.mjs';
 
@@ -224,5 +225,19 @@ describe('sameOrigin', () => {
     expect(sameOrigin('null', 'decisions.example.com', 'https://decisions.example.com')).toBe(false);
     expect(sameOrigin(undefined, 'decisions.example.com', 'https://decisions.example.com')).toBe(false);
     expect(sameOrigin('https://decisions.example.com', 'decisions.example.com', 'not a url')).toBe(true);
+  });
+});
+
+describe('resolveIn', () => {
+  const dir = path.resolve('/srv/dist');
+  it('serves files below the folder and refuses dotfiles and the manifest', () => {
+    expect(resolveIn(dir, '/adr/0001/index.html')).toBe(path.join(dir, 'adr/0001/index.html'));
+    expect(resolveIn(dir, '/.env')).toBeNull();
+    expect(resolveIn(dir, '/_server.json')).toBeNull();
+    expect(resolveIn(dir, '/../secret')).toBeNull();
+  });
+  it('refuses backslashes and colons on Windows (separators, drives, alternate data streams)', () => {
+    for (const rel of ['/a\\.git/config', '/..\\x', '/index.html::$DATA', '/C:/x']) expect(resolveIn(dir, rel, true)).toBeNull();
+    expect(resolveIn(dir, '/a:b.html', false)).toBe(path.join(dir, 'a:b.html'));
   });
 });

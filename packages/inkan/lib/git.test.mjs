@@ -28,7 +28,7 @@ const ann = { name: 'Ann Alpha', email: 'ann@acme.test', date: 1_700_000_000 };
 const bob = { name: 'Bob Beta', email: 'bob@acme.test', date: 1_700_500_000 };
 
 function repo() {
-  const root = tmpSite({ 'decisions/sre/adr/0001-first.md': '---\ntitle: First\n---\n', 'decisions/sre/adr/0002 second "q".md': '---\ntitle: Second\n---\n', 'pages/handbook.md': '# Hi\n' });
+  const root = tmpSite({ 'decisions/sre/adr/0001-first.md': '---\ntitle: First\n---\n', 'decisions/sre/adr/0002 second ü.md': '---\ntitle: Second\n---\n', 'pages/handbook.md': '# Hi\n' });
   git(root, ['init', '-q']);
   commit(root, 'first', ann);
   fs.appendFileSync(path.join(root, 'decisions/sre/adr/0001-first.md'), 'Body\n');
@@ -156,7 +156,7 @@ describe('gitHistory', () => {
     expect(first.created.getTime()).toBe(ann.date * 1000);
     expect(first.author).toEqual({ name: ann.name, email: ann.email });
     expect(first.updated.getTime()).toBe((bob.date + 1000) * 1000);
-    const quoted = at('decisions/sre/adr/0002 second "q".md');
+    const quoted = at('decisions/sre/adr/0002 second ü.md');
     expect(quoted.author.name).toBe(ann.name);
     expect(quoted.updated.getTime()).toBe((ann.date + 1000) * 1000);
     const third = at('decisions/sre/adr/0003-third.md');

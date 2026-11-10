@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { OG_HEIGHT, OG_WIDTH, ogPng, ogSvg, type OgCard } from './og';
 
-const fontsDir = new URL('../og/fonts', import.meta.url).pathname;
+const fontsDir = fileURLToPath(new URL('../og/fonts', import.meta.url));
 const cover = { id: 'sre/adr/0001-define-slos', ink: 'c', motif: 'rings', project: 'sre' } as const;
 const record: OgCard = {
   kind: 'record',

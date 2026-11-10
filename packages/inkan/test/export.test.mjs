@@ -28,7 +28,7 @@ describe('exportTitle', () => {
 });
 
 describe('sitePath', () => {
-  const dist = '/srv/dist';
+  const dist = path.resolve('/srv/dist');
   it('maps site urls to dist files and strips the base', () => {
     expect(sitePath('/_astro/a.css', { dist })).toBe(path.join(dist, '_astro/a.css'));
     expect(sitePath('/docs/_astro/a.css?v=1', { dist, base: '/docs' })).toBe(path.join(dist, '_astro/a.css'));

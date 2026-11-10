@@ -5,8 +5,8 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { glob } from 'astro/loaders';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { file as fileLoader, glob } from 'astro/loaders';
 import type { Loader, LoaderContext } from 'astro/loaders';
 
 type Store = LoaderContext['store'];
@@ -14,6 +14,16 @@ type Store = LoaderContext['store'];
 /** The optional home page section in the content folder, if there is one. */
 export const landingFile = (contentDir: string) => ['_landing.md', '_landing.mdx'].find((f) => fs.existsSync(path.join(contentDir, f)));
 export type GlobOptions = Parameters<typeof glob>[0];
+
+/** Astro resolves a string `base` as a URL, which reads `C:\\dir` as a scheme: absolute paths go in as file URLs. */
+const withFileBase = (options: GlobOptions): GlobOptions =>
+  typeof options.base === 'string' ? { ...options, base: pathToFileURL(path.resolve(options.base)) } : options;
+
+/** Astro's `glob` loader for a folder given as a path. */
+export const globIn = (options: GlobOptions) => glob(withFileBase(options));
+
+/** Astro's `file` loader for a file given as a path. */
+export const fileAt = (file: string) => fileLoader(pathToFileURL(path.resolve(file)).href);
 
 /**
  * The store outlives the process but `owner` does not, so an entry nobody has claimed yet (first run after a restart)
@@ -48,7 +58,7 @@ const basePath = (base: GlobOptions['base']) => path.resolve(base instanceof URL
 
 /** Runs one glob loader per options object against the same collection. */
 export function globs(parts: GlobOptions[]): Loader {
-  const loaders = parts.map(glob);
+  const loaders = parts.map(globIn);
   const owner = new Map<string, number>();
   const bases = parts.map((p) => basePath(p.base));
   return {

@@ -1,13 +1,12 @@
 import { defineCollection } from 'astro:content';
 import { z } from 'astro/zod';
-import { file, glob } from 'astro/loaders';
 import path from 'node:path';
 import fs from 'node:fs';
 import { docId } from '../../lib/pages.mjs';
 import { projectId } from '../../lib/records.mjs';
 import { escapeGlob } from '../../lib/auth/protect.mjs';
 import { isInterval } from '../../lib/reviews.mjs';
-import { globs, landingFile as findLandingFile } from './lib/loaders';
+import { fileAt, globIn, globs, landingFile as findLandingFile } from './lib/loaders';
 import { parseReviewers } from '../../lib/rfc-reviews.mjs';
 import { projectFieldsSchema } from '../../lib/fields.mjs';
 
@@ -118,7 +117,7 @@ export const collections = {
 
   /** Optional `_landing.md` rendered on the home page (section "content"). */
   landing: defineCollection({
-    loader: landingFile ? glob({ base: contentDir, pattern: landingFile }) : empty('no-landing'),
+    loader: landingFile ? globIn({ base: contentDir, pattern: landingFile }) : empty('no-landing'),
     schema: z.looseObject({}),
   }),
 
@@ -127,7 +126,7 @@ export const collections = {
    * pages/handbook.md -> /handbook/, pages/guides/index.md -> /guides/
    */
   pages: defineCollection({
-    loader: pagesDir && fs.existsSync(pagesDir) ? glob({ base: pagesDir, pattern: content }) : empty('no-pages'),
+    loader: pagesDir && fs.existsSync(pagesDir) ? globIn({ base: pagesDir, pattern: content }) : empty('no-pages'),
     schema: z.object({
       title: z.string(),
       description: z.string().optional(),
@@ -137,7 +136,7 @@ export const collections = {
 
   /** Optional author directory (`_authors.yml`). Unknown authors still work. */
   authors: defineCollection({
-    loader: fs.existsSync(authorsFile) ? file(authorsFile) : empty('no-authors'),
+    loader: fs.existsSync(authorsFile) ? fileAt(authorsFile) : empty('no-authors'),
     schema: z.object({
       name: z.string(),
       /** Git author e-mail, so commits map to this handle when `authors` is inferred from history. */

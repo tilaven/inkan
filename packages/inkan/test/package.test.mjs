@@ -10,7 +10,7 @@ const pkg = readJson(path.join(pkgDir, 'package.json'));
 
 /** Paths npm would publish, relative to the package folder. */
 function packed(dir) {
-  const out = execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: dir, encoding: 'utf8' });
+  const out = execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: dir, encoding: 'utf8', shell: process.platform === 'win32' });
   return new Set(JSON.parse(out)[0].files.map((f) => f.path));
 }
 

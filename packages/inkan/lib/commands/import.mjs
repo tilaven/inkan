@@ -22,7 +22,7 @@ function toDate(v) {
   return Number.isNaN(t) || !/\d{4}/.test(s) ? undefined : new Date(t).toISOString().slice(0, 10);
 }
 
-const lf = (text) => text.replace(/\r\n?/g, '\n');
+const lf = (text) => text.replace(/\r\n/g, '\n');
 
 /** Lines before the first `## ` heading (the preamble) and the rest. */
 function splitPreamble(body) {
