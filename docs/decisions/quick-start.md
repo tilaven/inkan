@@ -8,7 +8,7 @@ order: 2
 
 - Node.js 22.22 or newer (the package declares `"engines": { "node": ">=22.22" }`).
 - npm, or any package manager that can run `npm create` and `npx`.
-- Git. Not required to build, but "Last updated" dates, edit links, the default author of `inkan new` and the `date` and `authors` of records that omit them come from it.
+- Git. Not required to build, but "Last updated" dates, the default author of `inkan new` and the `date` and `authors` of records that omit them come from it.
 
 ## 1. Create a site
 
@@ -176,7 +176,7 @@ export default defineConfig({
 | No "Last updated", authors or dates | The folder is not a Git repository, or the clone is shallow. Run `git init` and commit. In CI use `fetch-depth: 0` (GitHub) or `GIT_DEPTH: 0` (GitLab); the `init` workflows already do. |
 | Links on the deployed site start with the repository name, or 404 | A project site lives under `/<repo>/`, a custom domain at `/`. The workflows set `BASE_PATH` for the first case. Remove it for a custom domain. See [Serve from a sub-path](deploy/adr/0004-serve-from-a-sub-path.md). |
 | "Edit this page" buttons are missing | `repo.url` is not set in `inkan.config.ts`. |
-| `npm ci` fails in the Docker build or in CI | There is no `package-lock.json`. Run `npm install` once and commit the lock file. |
+| `npm ci` fails in the Docker build | The `Dockerfile` from `init` runs `npm ci`, which needs a `package-lock.json`. Run `npm install` once and commit the lock file. The CI files use `npm install` and do not need it. |
 
 ## Next steps
 

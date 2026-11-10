@@ -76,7 +76,7 @@ If your instance has no Pages, build in CI and serve `dist/` from any web server
 Gitea and Forgejo have no Pages job like GitHub's, but they run GitHub-style workflows with Gitea Actions and Forgejo Actions. You need a runner registered for the repository.
 
 1. Set `repo.provider: 'gitea'` in `inkan.config.ts`.
-2. Move the workflow into `.gitea/workflows/` (Gitea) or `.forgejo/workflows/` (Forgejo). Keep the `check` and `build` steps from `.github/workflows/decisions.yml`. Remove the `upload-pages-artifact` and `deploy-pages` steps, which only exist on GitHub.
+2. Move the workflow into `.gitea/workflows/` (Gitea) or `.forgejo/workflows/` (Forgejo). Keep the `check` and `build` steps from `.github/workflows/decisions.yml`. Remove the `upload-pages-artifact` step and the whole `deploy` job, which use GitHub Pages. Then remove `needs: deploy` from the `notify` job (or delete `notify` if you do not want messages), or the workflow is invalid.
 3. Publish `dist/` the way you publish other static sites. The easiest route is the Docker image that `init` already created:
 
    ```bash
@@ -117,28 +117,29 @@ export default defineConfig({
 
 ### Schedule and triggers
 
-Add a schedule to the workflow so source changes appear without a push:
+Replace the `on:` block of the workflow with this one, or merge the new triggers into the one you have. Keep a single `on:` per file:
 
-```yaml title=".github/workflows/decisions.yml (addition)"
+```yaml title=".github/workflows/decisions.yml (on: block)"
 on:
   push:
     branches: [main]
   pull_request:
   schedule:
     - cron: '0 6 * * 1-5' # weekday mornings
+  repository_dispatch: # rebuild at once when a source repository sends an event
 ```
 
-On GitLab create a schedule under Build, Pipeline schedules. Gitea and Forgejo workflows accept the same `schedule:` block. To rebuild at once, send a `repository_dispatch` event from the source repository's pipeline (GitHub) or call the hub's pipeline trigger API (GitLab).
+On GitLab create a schedule under Build, Pipeline schedules, and call the pipeline trigger API from the source repository to rebuild at once. Gitea and Forgejo workflows accept the same `schedule:` block. `repository_dispatch` is a GitHub Actions event: send it from the source repository's pipeline.
 
 ## Notify the team about accepted decisions
 
-`inkan notify` posts a message to Slack, Microsoft Teams or a webhook when a record moves into `accepted`. The workflow from `init` already has a `notify` job that runs on the default branch. It does nothing until you add a webhook URL:
+`inkan notify` posts a message to Slack, Microsoft Teams or a webhook when a record moves into `accepted`. The workflow from `init` already has a `notify` job that runs on the default branch. Without a webhook URL it only lists the changes in the job log. Add one to get messages:
 
 - GitHub: Settings, Secrets and variables, Actions, then a secret named `INKAN_SLACK_WEBHOOK` or `INKAN_TEAMS_WEBHOOK`.
 - GitLab: Settings, CI/CD, Variables, with the same names, masked.
 - Gitea and Forgejo: add the same names as repository secrets, and give the job `fetch-depth: 0` so it can compare with the previous commit.
 
-Try it locally first: `npx inkan notify --since main --dry-run` prints what a pull request would send. For several channels, filters by project or type, and other chat tools, see [Notify chat when a decision is accepted](cli/adr/0008-notify-chat-when-a-decision-is-accepted.md).
+Try it locally first: `npx inkan notify --since main --dry-run` lists the records that moved to `accepted` since `main`. Without a webhook it then says "No notification channels"; once a webhook is set, `--dry-run` prints the messages it would send. The CI job runs only on pushes to the default branch, not on pull requests. For several channels, filters by project or type, and other chat tools, see [Notify chat when a decision is accepted](cli/adr/0008-notify-chat-when-a-decision-is-accepted.md).
 
 ## The week, day by day
 
@@ -148,6 +149,6 @@ Try it locally first: `npx inkan notify --since main --dry-run` prints what a pu
 | 2 | Set `title`, `url` and `repo` in `inkan.config.ts`. Add your teams as folders and your people to `_authors.yml`. | [Configuration reference](configuration.md), [Repository layout](project-structure.md) |
 | 3 | Push to your host and publish with the workflow from `init`. Share the link. | This page, [GitHub and GitLab Pages](deploy/adr/0002-github-and-gitlab-pages.md) |
 | 4 | Bring in your existing ADRs with `inkan import`, or pull other repositories in with `sources`. | [Import from log4brains, MADR and adr-tools](cli/adr/0006-import-from-log4brains-madr-and-adr-tools.md), [Records from other repositories](deploy/adr/0005-records-from-other-repositories.md) |
-| 5 | Add the webhook for notifications. Make `inkan check --strict` a required check on pull requests. | [Notify chat](cli/adr/0008-notify-chat-when-a-decision-is-accepted.md), [Check records in CI](cli/adr/0007-check-records-in-ci.md) |
+| 5 | Add the webhook for notifications. Make the check a required check on pull requests; add `--strict` to its step if warnings should fail it too. | [Notify chat](cli/adr/0008-notify-chat-when-a-decision-is-accepted.md), [Check records in CI](cli/adr/0007-check-records-in-ci.md) |
 
 After the first week, tune the [status lifecycle](authoring/adr/0004-configurable-status-lifecycle.md), add [custom fields](authoring/adr/0012-custom-metadata-fields.md) and set up [periodic reviews](authoring/adr/0011-review-decisions-on-a-schedule.md).

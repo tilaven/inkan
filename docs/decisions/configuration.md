@@ -38,7 +38,7 @@ You rarely need more than these. The sections below list every option.
 | `notify` | Slack, Teams or webhook messages when a decision is accepted. | [Notify chat when a decision is accepted](cli/adr/0008-notify-chat-when-a-decision-is-accepted.md) |
 | `git` | Fill missing dates and authors from Git history. | [Fill date and authors from git](authoring/adr/0009-fill-date-and-authors-from-git.md) |
 | `landing` | The home page: hero, buttons, feature cards, sections. | [Landing](#landing), [Landing page from config](site/adr/0001-landing-page-from-config.md) |
-| `theme`, `logo`, `customCss` | Colours, logo and your own CSS. | [Look](#look), [Theme with --inkan-* CSS tokens](theming/adr/0003-theme-with-inkan-css-tokens.md) |
+| `theme.default`, `logo`, `customCss` | Start in light, dark or system theme, set the logo, and load your own CSS. Colours come from `--inkan-*` tokens in `customCss`. | [Look](#look), [Theme with --inkan-* CSS tokens](theming/adr/0003-theme-with-inkan-css-tokens.md) |
 | `authentication`, `protectedRoutes` | Sign-in and members-only pages. | [Access](#access), [Sign-in and protected projects](deploy/adr/0007-sign-in-and-protected-projects.md) |
 
 ## Site
