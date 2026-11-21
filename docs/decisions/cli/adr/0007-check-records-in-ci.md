@@ -60,6 +60,7 @@ Errors (the site would be wrong):
 | `field` | A custom field has an invalid value, or a `required` field has none. See [Custom metadata fields](../../authoring/adr/0012-custom-metadata-fields.md). |
 | `project-fields` | `fields` in a `_project.yml` is not a valid set of field definitions, or a field name has two types or units across projects. |
 | `missing-record` | An entry of `supersedes`, `supersededBy` or `related` names a record that does not exist, with the closest id of the same project and type as a hint. |
+| `broken-link` | A relative `.md` or `.mdx` link in the body points at a file that does not exist, with the line of the link and the closest record as a hint. Only links the site rewrites are checked (see [Link records by path](../../authoring/adr/0006-link-records-by-path.md#relative-links-in-the-body)); code blocks and inline code are skipped, and so are records from a `repo` source. |
 
 Warnings (the site is incomplete or misleading):
 
@@ -154,7 +155,7 @@ A failing check stops the job before the build runs. Add `--strict` to the step 
 
 ### What it does not check
 
-`check` reads the front matter and the folder layout. It does not render Markdown, so broken relative links in the body, missing images and Mermaid syntax errors are left to the build, and it does not validate `inkan.config.*` beyond loading it (the schema runs on load, so a bad config still fails). Content from `repo` sources is included: missing clones are fetched first, with progress on stderr. See [Validate config and content at build time](0004-validate-config-and-content-at-build-time.md) for what the build covers.
+`check` reads the front matter, the folder layout and the relative links in the body. It does not render Markdown, so missing images and Mermaid syntax errors are left to the build, and it does not validate `inkan.config.*` beyond loading it (the schema runs on load, so a bad config still fails). Content from `repo` sources is included: missing clones are fetched first, with progress on stderr. See [Validate config and content at build time](0004-validate-config-and-content-at-build-time.md) for what the build covers.
 
 ## Consequences
 

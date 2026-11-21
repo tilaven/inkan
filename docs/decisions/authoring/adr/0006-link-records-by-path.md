@@ -72,6 +72,8 @@ On GitHub and GitLab these open the source files. On the site they become `/sre/
 
 The rewrite applies to files inside the content folder only. Pages in `pagesDir` keep their links as written.
 
+The rewrite does not look at the target, so [`inkan check`](../../cli/adr/0007-check-records-in-ci.md) does: a link it would rewrite whose file does not exist is a `broken-link` error, reported on the line of the link.
+
 > [!TIP]
 > Mixed-case file names are lower-cased in URLs, so `0002-Second.md` is served at `/payments/rfc/0002-second/`. Keep file names lower-case to avoid surprises when linking from other tools.
 
@@ -84,7 +86,7 @@ The rewrite applies to files inside the content folder only. Pages in `pagesDir`
 
 ### When files move
 
-Renaming `0004-use-sqs.md` to `0004-use-sqs-as-the-event-bus.md` changes its path. Update the lineage fields in other records and the relative links that point at it, then add a redirect for the old URL in `inkan.config.ts`:
+Renaming `0004-use-sqs.md` to `0004-use-sqs-as-the-event-bus.md` changes its path. Update the lineage fields in other records and the relative links that point at it (`inkan check` lists the ones you missed), then add a redirect for the old URL in `inkan.config.ts`:
 
 ```ts title="inkan.config.ts"
 redirects: { '/platform/adr/0004-use-sqs': '/platform/adr/0004-use-sqs-as-the-event-bus/' },
@@ -95,4 +97,4 @@ redirects: { '/platform/adr/0004-use-sqs': '/platform/adr/0004-use-sqs-as-the-ev
 - One spelling for a target everywhere: the file path. It survives a change of domain or base path.
 - Lineage references are not validated at build time; a stale path becomes a dead link in the header.
 - `supersedes` and `supersededBy` are two edits in two files. `related` needs only one.
-- Links in the body are rewritten, not checked. A typo in a relative link is a 404 on the site and a 404 on GitHub, which at least fails in the same way in both places.
+- Links in the body are rewritten at build time and checked by `inkan check`, so a typo or a renamed record fails CI instead of becoming a 404. The check only asks whether the file exists: a link to a draft, or to a `README.md` that is not a page, still passes.
