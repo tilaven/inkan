@@ -68,6 +68,7 @@ Warnings (the site is incomplete or misleading):
 | --- | --- |
 | `one-sided-supersede` | A `supersedes` entry whose target does not list this record in `supersededBy`, or the other way round. `inkan supersede` writes both sides. |
 | `superseded-status` | The record has `supersededBy` but its status is not `superseded` (only when `superseded` is one of your statuses). |
+| `link-case` | A relative link in the body matches a file only when case is ignored, such as `./0001-Use-SLOs.md` for `0001-use-slos.md`. The site lower-cases URLs, so the link works there, but it breaks on GitHub and GitLab. Reported the same way on every operating system. |
 | `unknown-author` | A handle in `authors`, `deciders` or `reviewers` is not an `id` in `_authors.yml`. Only when that file exists; records from a `repo` source are skipped, since their handles belong to another repository. |
 | `review-blocked` | The status is a current one (`accepted`, `implemented`, …) while a reviewer still has `changes-requested`. |
 | `review-overdue` | `reviewBy` is in the past and the status is still one marked `open`. |

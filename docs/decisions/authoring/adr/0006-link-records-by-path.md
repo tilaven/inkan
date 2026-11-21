@@ -75,7 +75,7 @@ The rewrite applies to files inside the content folder only. Pages in `pagesDir`
 The rewrite does not look at the target, so [`inkan check`](../../cli/adr/0007-check-records-in-ci.md) does: a link it would rewrite whose file does not exist is a `broken-link` error, reported on the line of the link.
 
 > [!TIP]
-> Mixed-case file names are lower-cased in URLs, so `0002-Second.md` is served at `/payments/rfc/0002-second/`. Keep file names lower-case to avoid surprises when linking from other tools.
+> Mixed-case file names are lower-cased in URLs, so `0002-Second.md` is served at `/payments/rfc/0002-second/`. Keep file names lower-case to avoid surprises when linking from other tools. A link whose case differs from the file works on the site but not on GitHub or GitLab; `inkan check` warns about it (`link-case`).
 
 ### Links to pages and other targets
 

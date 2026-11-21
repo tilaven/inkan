@@ -68,6 +68,18 @@ describe('checkSite', () => {
     ]);
   });
 
+  it('warns about body links that match a file only when case is ignored, on every file system', async () => {
+    const r = await check({
+      'decisions/sre/adr/0001-a.md': record('title: A\nstatus: accepted'),
+      'decisions/sre/rfc/0001-r.md': record('title: R\nstatus: proposed'),
+      'decisions/sre/adr/0002-b.md': record('title: B\nstatus: accepted', '\n[A](./0001-A.md) and [R](../RFC/0001-r.md).\n'),
+    });
+    expect(r.problems).toMatchObject([
+      { level: 'warning', rule: 'link-case', line: 6, message: 'link to "./0001-A.md" differs in case from the file "0001-a.md"; it works on the site but not on GitHub or GitLab' },
+      { level: 'warning', rule: 'link-case', line: 6, message: 'link to "../RFC/0001-r.md" differs in case from the file "../rfc/0001-r.md"; it works on the site but not on GitHub or GitLab' },
+    ]);
+  });
+
   it('accepts body links that resolve, and ignores code, URLs and paths outside the content folder', async () => {
     const body = [
       '',
