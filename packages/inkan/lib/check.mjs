@@ -1,5 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fromMarkdown } from 'mdast-util-from-markdown';
+import { visit } from 'unist-util-visit';
 import { parseDocument } from 'yaml';
 import { closest } from './config.mjs';
 import { combineFields, mergeFields, projectFieldsSchema, readFields } from './fields.mjs';
@@ -190,6 +192,80 @@ function linkTargets(r, site) {
   }
 }
 
+/** The links `remark-md-links` rewrites to a page URL: relative, to a `.md` or `.mdx` file, with an optional `#fragment`. */
+const MD_LINK = /^([^:#?]+\.mdx?)(#.*)?$/i;
+const posix = (p) => p.split(path.sep).join('/');
+
+/**
+ * Finds `rel` (a `/`-separated path) under `dir` by reading each folder, so the answer is the same on case-sensitive
+ * and case-insensitive file systems: `exact` when every segment matches as written, otherwise the path on disk that
+ * matches ignoring case, or null when there is none.
+ * @returns {{ exact: true } | { exact: false, actual: string } | null}
+ */
+function lookupPath(dir, rel) {
+  let current = dir;
+  let exact = true;
+  for (const segment of rel.split('/')) {
+    let names;
+    try {
+      names = fs.readdirSync(current);
+    } catch {
+      return null;
+    }
+    let name = names.includes(segment) ? segment : undefined;
+    if (!name) {
+      name = names.find((n) => n.toLowerCase() === segment.toLowerCase());
+      exact = false;
+    }
+    if (!name) return null;
+    current = path.join(current, name);
+  }
+  return exact ? { exact } : { exact, actual: current };
+}
+
+/**
+ * Relative Markdown links in the body must point at a file that exists. The site rewrites them to page URLs without
+ * looking, so a typo or a renamed record becomes a link to a 404. Only links that resolve inside the content folder
+ * (or a source's folder) are checked, the same ones the site rewrites; records from a `repo` source are skipped.
+ * A link that matches a file only when case is ignored works on the site, which lower-cases URLs, but not on GitHub or
+ * GitLab, so it is a warning rather than an error.
+ */
+function bodyLinks(r, site) {
+  if (site.fromRepo(r)) return;
+  const roots = [
+    { dir: path.resolve(site.config.contentDir), prefix: '' },
+    ...(site.config.sources ?? []).map((s) => ({ dir: path.resolve(s.contentDir), prefix: `${s.project}/` })),
+  ];
+  const from = path.resolve(r.file);
+  const root = roots.find((d) => from.startsWith(d.dir + path.sep));
+  if (!root) return;
+  const text = site.texts.get(r) ?? '';
+  const start = splitFrontMatter(text)?.length ?? 0;
+  const offset = text.slice(0, start).split('\n').length - 1;
+  visit(fromMarkdown(text.slice(start)), ['link', 'definition'], (node) => {
+    const url = 'url' in node ? node.url : '';
+    const m = MD_LINK.exec(url);
+    if (!m || url.startsWith('/')) return;
+    const target = path.resolve(path.dirname(from), m[1]);
+    const rel = posix(path.relative(root.dir, target));
+    if (rel.startsWith('..')) return;
+    const found = lookupPath(root.dir, rel);
+    if (found?.exact) return;
+    const relFrom = (file) => posix(path.relative(path.dirname(from), file));
+    const line = node.position ? offset + node.position.start.line : undefined;
+    if (found) {
+      const message = `link to ${quote(m[1])} differs in case from the file "${relFrom(found.actual)}"; it works on the site but not on GitHub or GitLab`;
+      site.problems.push({ level: 'warning', rule: 'link-case', message, file: r.file, line, record: r.id });
+      return;
+    }
+    const hint = suggestId(`${root.prefix}${rel.replace(/\.mdx?$/i, '')}`, site.records);
+    const hintFile = hint ? site.records.find((h) => h.id === hint)?.file : undefined;
+    const suggestion = hintFile ? `, did you mean "${relFrom(hintFile)}"?` : '';
+    const message = `link to ${quote(m[1])} points to a file that does not exist${suggestion}`;
+    site.problems.push({ level: 'error', rule: 'broken-link', message, file: r.file, line, record: r.id });
+  });
+}
+
 /** Supersede links must be mirrored on the other record. */
 function supersedeMirrors(r, site) {
   const mirrors = { supersedes: 'supersededBy', supersededBy: 'supersedes' };
@@ -286,7 +362,7 @@ function projectMetadata(site) {
 /** Rules over the whole site, in order: the first two fill `broken` and `fieldsOf` for the record rules. */
 const SITE_RULES = [frontMatter, projectFields, numbering];
 /** Rules over each record whose front matter parses, in the order their problems are reported. */
-const RECORD_RULES = [fieldValues, knownStatus, dateFields, linkTargets, supersedeMirrors, supersededStatus, reviewerEntries, knownAuthors, reviewBlocked, reviewOverdue, reviewInterval, reviewDue];
+const RECORD_RULES = [fieldValues, knownStatus, dateFields, linkTargets, bodyLinks, supersedeMirrors, supersededStatus, reviewerEntries, knownAuthors, reviewBlocked, reviewOverdue, reviewInterval, reviewDue];
 
 /**
  * Runs every rule over the records of a resolved config.

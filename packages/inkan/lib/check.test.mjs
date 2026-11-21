@@ -50,6 +50,59 @@ describe('checkSite', () => {
     ]);
   });
 
+  it('reports relative links in the body to files that do not exist, with a suggestion', async () => {
+    const body = [
+      '',
+      'See [SLOs](./0001-use-slo.md#targets) and [the policy][policy].',
+      '',
+      '[policy]: ../rfc/0009-nope.md',
+      '',
+    ].join('\n');
+    const r = await check({
+      'decisions/sre/adr/0001-use-slos.md': record('title: A\nstatus: accepted'),
+      'decisions/sre/adr/0002-b.md': record('title: B\nstatus: accepted', body),
+    });
+    expect(r.problems).toMatchObject([
+      { level: 'error', rule: 'broken-link', file: 'decisions/sre/adr/0002-b.md', line: 6, message: 'link to "./0001-use-slo.md" points to a file that does not exist, did you mean "0001-use-slos.md"?' },
+      { level: 'error', rule: 'broken-link', line: 8, message: 'link to "../rfc/0009-nope.md" points to a file that does not exist' },
+    ]);
+  });
+
+  it('warns about body links that match a file only when case is ignored, on every file system', async () => {
+    const r = await check({
+      'decisions/sre/adr/0001-a.md': record('title: A\nstatus: accepted'),
+      'decisions/sre/rfc/0001-r.md': record('title: R\nstatus: proposed'),
+      'decisions/sre/adr/0002-b.md': record('title: B\nstatus: accepted', '\n[A](./0001-A.md) and [R](../RFC/0001-r.md).\n'),
+    });
+    expect(r.problems).toMatchObject([
+      { level: 'warning', rule: 'link-case', line: 6, message: 'link to "./0001-A.md" differs in case from the file "0001-a.md"; it works on the site but not on GitHub or GitLab' },
+      { level: 'warning', rule: 'link-case', line: 6, message: 'link to "../RFC/0001-r.md" differs in case from the file "../rfc/0001-r.md"; it works on the site but not on GitHub or GitLab' },
+    ]);
+  });
+
+  it('accepts body links that resolve, and ignores code, URLs and paths outside the content folder', async () => {
+    const body = [
+      '',
+      '[A](0001-a.md), [A again](./0001-a.md#context), [R](../rfc/0001-r.mdx), [Root page](../../guide.md).',
+      '[Site](https://example.com/x.md), [absolute](/sre/adr/0009-x.md), [anchor](#context), [folder](../rfc/).',
+      '[README](../../../README.md) is outside the content folder, so the site leaves it alone.',
+      '',
+      'Inline `[x](./0009-missing.md)` and a block:',
+      '',
+      '```md',
+      '[x](./0009-missing.md)',
+      '```',
+      '',
+    ].join('\n');
+    const r = await check({
+      'decisions/guide.md': '# Guide\n',
+      'decisions/sre/adr/0001-a.md': record('title: A\nstatus: accepted'),
+      'decisions/sre/rfc/0001-r.mdx': record('title: R\nstatus: proposed'),
+      'decisions/sre/adr/0002-b.md': record('title: B\nstatus: accepted', body),
+    });
+    expect(r.problems).toEqual([]);
+  });
+
   it('accepts short ids and refs in links', async () => {
     const r = await check({
       'decisions/sre/adr/0001-a.md': record('title: A\nstatus: superseded\nsupersededBy: [SRE-ADR-0002]'),
